@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Next.js
+client/.next/
+client/out/
+
+# Environment
+.env
+.env.local
+
+# Storage (uploaded photos)
+server/storage/
+
+# Database
+server/swarm.db
+server/swarm.db-shm
+server/swarm.db-wal
+
+# QR codes
+server/qr/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
