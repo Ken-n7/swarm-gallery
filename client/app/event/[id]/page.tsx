@@ -6,8 +6,8 @@ import { UploadZone } from '@/components/UploadZone';
 import { useUser } from '@/hooks/useUser';
 import { useGallery } from '@/hooks/useGallery';
 
-function GalleryView({ username }: { username: string }) {
-  const { photos } = useGallery();
+function GalleryView({ username, userId }: { username: string; userId: string }) {
+  const { photos } = useGallery(userId);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50">
@@ -34,9 +34,9 @@ function GalleryView({ username }: { username: string }) {
 }
 
 export default function EventPage() {
-  const { user, join } = useUser();
+  const { user, join, joining, error } = useUser();
 
-  if (!user) return <JoinScreen onJoin={join} />;
+  if (!user) return <JoinScreen onJoin={join} joining={joining} error={error} />;
 
-  return <GalleryView username={user.username} />;
+  return <GalleryView username={user.username} userId={user.userId} />;
 }

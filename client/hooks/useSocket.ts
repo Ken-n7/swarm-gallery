@@ -4,11 +4,17 @@ import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { SERVER } from '@/lib/api';
 
-export function useSocket(onEvent: (event: string, data: unknown) => void) {
+export function useSocket(
+  onEvent: (event: string, data: unknown) => void,
+  userId?: string,
+) {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const socket = io(SERVER, { transports: ['websocket'] });
+    const socket = io(SERVER, {
+      transports: ['websocket'],
+      auth: { userId },
+    });
     socketRef.current = socket;
 
     socket.onAny((event, data) => onEvent(event, data));

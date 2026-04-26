@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { Photo } from '@/types';
 import { useSocket } from './useSocket';
 
-export function useGallery() {
+export function useGallery(userId?: string) {
   const [photos, setPhotos] = useState<Photo[]>([]);
 
   const handleEvent = useCallback((event: string, data: unknown) => {
@@ -18,7 +18,7 @@ export function useGallery() {
     }
   }, []);
 
-  useSocket(handleEvent);
+  useSocket(handleEvent, userId);
 
   return { photos };
 }

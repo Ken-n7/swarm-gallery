@@ -9,6 +9,7 @@ const { nanoid } = require('nanoid');
 const config = require('./config');
 const db = require('./db');
 const adminRouter = require('./routes/admin');
+const usersRouter = require('./routes/users');
 
 // Ensure storage dirs exist
 fs.mkdirSync(config.STORAGE.EVENTS, { recursive: true });
@@ -68,6 +69,8 @@ app.use(express.json());
 app.use(cookieParser(config.COOKIE_SECRET));
 
 app.use('/admin', adminRouter);
+app.use('/users', usersRouter);
+app.use('/avatars', express.static(config.STORAGE.AVATARS));
 
 // Serve uploaded photos
 app.use('/photos', express.static(config.STORAGE.EVENTS));
