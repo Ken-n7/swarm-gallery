@@ -2,11 +2,13 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const { nanoid } = require('nanoid');
 const config = require('./config');
 const db = require('./db');
+const adminRouter = require('./routes/admin');
 
 // Ensure storage dirs exist
 fs.mkdirSync(config.STORAGE.EVENTS, { recursive: true });
@@ -63,6 +65,9 @@ app.use((_req, res, next) => {
   next();
 });
 app.use(express.json());
+app.use(cookieParser(config.COOKIE_SECRET));
+
+app.use('/admin', adminRouter);
 
 // Serve uploaded photos
 app.use('/photos', express.static(config.STORAGE.EVENTS));

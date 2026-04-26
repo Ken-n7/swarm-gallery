@@ -1,3 +1,4 @@
+require('dotenv').config();
 const path = require('path');
 
 const ROOT = path.join(__dirname);
@@ -15,6 +16,9 @@ module.exports = {
 
   DEMO_EVENT_ID: 'demo',
 
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'admin123',
+  COOKIE_SECRET: process.env.COOKIE_SECRET || 'dev-secret',
+
+  MAX_FILE_SIZE: 10 * 1024 * 1024,
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 };
