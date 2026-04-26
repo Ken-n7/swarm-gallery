@@ -16,6 +16,10 @@ server/storage/
 server/swarm.db
 server/swarm.db-shm
 server/swarm.db-wal
+server/data/
+
+# Design handoffs
+handoff/
 
 # QR codes
 server/qr/*.png

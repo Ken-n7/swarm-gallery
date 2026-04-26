@@ -142,8 +142,13 @@ io.on('connection', (socket) => {
     uploader: r.uploader_name,
   })));
 
+  io.emit('user-count', { count: io.engine.clientsCount });
+
   socket.on('ping', () => socket.emit('pong'));
-  socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+    io.emit('user-count', { count: io.engine.clientsCount });
+  });
 });
 
 server.listen(config.PORT, '0.0.0.0', () => {

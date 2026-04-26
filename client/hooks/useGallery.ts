@@ -6,6 +6,7 @@ import { useSocket } from './useSocket';
 
 export function useGallery(userId?: string) {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [userCount, setUserCount] = useState(0);
 
   const handleEvent = useCallback((event: string, data: unknown) => {
     if (event === 'photo-history') {
@@ -15,10 +16,12 @@ export function useGallery(userId?: string) {
     } else if (event === 'photo-deleted') {
       const { photoId } = data as { photoId: string };
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    } else if (event === 'user-count') {
+      setUserCount((data as { count: number }).count);
     }
   }, []);
 
   useSocket(handleEvent, userId);
 
-  return { photos };
+  return { photos, userCount };
 }

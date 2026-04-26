@@ -1,42 +1,109 @@
 'use client';
 
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { JoinScreen } from '@/components/JoinScreen';
-import { Gallery } from '@/components/Gallery';
-import { UploadZone } from '@/components/UploadZone';
+import { Gallery, GalleryFilter } from '@/components/Gallery';
+import { BottomNav } from '@/components/BottomNav';
+import { Sidebar } from '@/components/Sidebar';
+import { UploadPanel } from '@/components/UploadPanel';
 import { useUser } from '@/hooks/useUser';
 import { useGallery } from '@/hooks/useGallery';
+import { useOrientation } from '@/hooks/useOrientation';
 
-function GalleryView({ username, userId }: { username: string; userId: string }) {
-  const { photos } = useGallery(userId);
+function GalleryView({
+  username,
+  userId,
+  eventId,
+}: {
+  username: string;
+  userId: string;
+  eventId: string;
+}) {
+  const { photos, userCount } = useGallery(userId);
+  const orientation = useOrientation();
+  const router = useRouter();
 
-  return (
-    <div className="flex flex-col min-h-screen bg-zinc-50">
-      <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-zinc-100">
-        <h1 className="text-lg font-semibold text-zinc-900">Swarm Gallery</h1>
-        <span className="text-sm text-zinc-500">Hi, {username}</span>
-      </header>
+  const [filter, setFilter] = useState<GalleryFilter>('all');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-      <main className="flex-1 flex flex-col md:flex-row">
-        <div className="flex-1 overflow-y-auto">
-          <Gallery photos={photos} />
+  const { leave } = useUser();
+
+  function handleLeave() {
+    leave();
+    router.replace('/');
+  }
+
+  if (orientation === 'landscape') {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar — fixed left */}
+        <Sidebar
+          username={username}
+          eventId={eventId}
+          userCount={userCount}
+          photos={photos}
+          filter={filter}
+          onFilterChange={setFilter}
+          onLeave={handleLeave}
+        />
+
+        {/* Gallery — scrollable center */}
+        <div className="flex-1 overflow-y-auto bg-white">
+          <Gallery
+            photos={photos}
+            userCount={userCount}
+            currentUser={username}
+            filter={filter}
+            onFilterChange={setFilter}
+            hidePadBottom
+          />
         </div>
 
-        <aside className="md:w-72 p-4 border-t md:border-t-0 md:border-l border-zinc-100 bg-white">
-          <p className="text-xs font-medium text-zinc-500 mb-3 uppercase tracking-wide">Add photo</p>
-          <UploadZone username={username} />
-          <p className="text-xs text-zinc-400 mt-4 text-center">
-            {photos.length} photo{photos.length !== 1 ? 's' : ''} in gallery
-          </p>
-        </aside>
-      </main>
+        {/* Upload panel — fixed right */}
+        <UploadPanel username={username} photos={photos} />
+      </div>
+    );
+  }
+
+  // Portrait layout
+  return (
+    <div className="flex flex-col min-h-screen bg-white overflow-y-auto">
+      {/* Portrait sidebar drawer */}
+      <Sidebar
+        username={username}
+        eventId={eventId}
+        userCount={userCount}
+        photos={photos}
+        filter={filter}
+        onFilterChange={setFilter}
+        onLeave={handleLeave}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <Gallery
+        photos={photos}
+        userCount={userCount}
+        currentUser={username}
+        filter={filter}
+        onFilterChange={setFilter}
+        onOpenSidebar={() => setSidebarOpen(true)}
+      />
+
+      <BottomNav eventId={eventId} username={username} />
     </div>
   );
 }
 
 export default function EventPage() {
+  const params = useParams();
+  const eventId = params.id as string;
   const { user, join, joining, error } = useUser();
 
-  if (!user) return <JoinScreen onJoin={join} joining={joining} error={error} />;
+  if (!user) {
+    return <JoinScreen onJoin={join} joining={joining} error={error} />;
+  }
 
-  return <GalleryView username={user.username} userId={user.userId} />;
+  return <GalleryView username={user.username} userId={user.userId} eventId={eventId} />;
 }

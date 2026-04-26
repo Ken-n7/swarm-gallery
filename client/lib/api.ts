@@ -24,6 +24,30 @@ export async function uploadPhoto(file: File, username: string): Promise<Respons
   return fetch(`${SERVER}/upload/demo`, { method: 'POST', body: form });
 }
 
+export function uploadPhotoWithProgress(
+  file: File,
+  username: string,
+  onProgress: (pct: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const form = new FormData();
+    form.append('photo', file);
+    form.append('username', username);
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    });
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error('Upload failed'));
+    });
+    xhr.addEventListener('error', () => reject(new Error('Network error')));
+    xhr.open('POST', `${SERVER}/upload/demo`);
+    xhr.send(form);
+  });
+}
+
 export function photoUrl(url: string): string {
   return `${SERVER}${url}`;
 }

@@ -4,6 +4,7 @@ export interface Photo {
   url: string;
   uploadedAt: number;
   uploader: string;
+  likeCount?: number;
 }
 
 export interface User {

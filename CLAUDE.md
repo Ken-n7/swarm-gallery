@@ -258,14 +258,14 @@ Three screens exist:
 
 | Phase | Name | Status |
 |---|---|---|
-| 1 | Network connection proof | 🔲 TODO |
-| 2 | Express + Socket.IO + upload server | 🔲 TODO |
-| 3 | Next.js frontend — camera + gallery | 🔲 TODO |
-| 4 | SQLite setup | 🔲 TODO |
-| 5 | Admin auth | 🔲 TODO |
-| 6 | User identity (join screen, avatars, localStorage) | 🔲 TODO |
-| 7 | Multi-event management | 🔲 TODO |
-| 8 | Guest UI from Figma | 🔲 TODO |
+| 1 | Network connection proof | ✅ Done |
+| 2 | Express + Socket.IO + upload server | ✅ Done |
+| 3 | Next.js frontend — camera + gallery | ✅ Done |
+| 4 | SQLite setup | ✅ Done |
+| 5 | Admin auth | ✅ Done |
+| 6 | User identity (join screen, avatars, localStorage) | ✅ Done |
+| 7 | Multi-event management | ⏭ Skipped — single hardcoded event sufficient for now |
+| 8 | Guest UI from Figma | ✅ Done |
 | 9 | Admin dashboard from Figma | 🔲 TODO |
 | 10 | Rate limiting + upload queue | 🔲 TODO |
 | 11 | Photo cleanup + expiry | 🔲 TODO |
@@ -274,7 +274,7 @@ Three screens exist:
 | 14 | Photo flagging | 🔲 TODO |
 | 15 | Polish + event readiness | 🔲 TODO |
 
-**Current status: Phase 1 not yet started. All server and client files are empty placeholders.**
+**Current status: Phases 1–6 done. Phase 7 skipped. Phase 8 done. Starting Phase 9 (admin dashboard from Figma).**
 
 ---
 
