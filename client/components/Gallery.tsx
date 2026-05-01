@@ -40,6 +40,24 @@ function groupPhotos(photos: Photo[]): PhotoGroup[] {
   return Object.values(map).sort((a, b) => b.latestAt - a.latestAt);
 }
 
+function MediaThumb({ photo }: { photo: Photo }) {
+  if (photo.mimetype?.startsWith('video/')) {
+    return (
+      <>
+        <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.25)', backdropFilter: 'blur(8px)' }}>
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      </>
+    );
+  }
+  return <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover" />;
+}
+
 function GroupCard({
   group,
   currentUser,
@@ -64,10 +82,10 @@ function GroupCard({
       {all.length === 1 ? (
         <button
           onClick={() => onView(all, 0)}
-          className="w-full overflow-hidden rounded-[14px]"
+          className="w-full overflow-hidden rounded-[14px] relative"
           style={{ aspectRatio: '1.4/1' }}
         >
-          <img src={photoUrl(first.url)} alt="" className="w-full h-full object-cover" />
+          <MediaThumb photo={first} />
         </button>
       ) : (
         <div
@@ -80,8 +98,8 @@ function GroupCard({
           }}
         >
           {/* Hero — spans 2 rows */}
-          <button onClick={() => onView(all, 0)} className="row-span-2 overflow-hidden">
-            <img src={photoUrl(first.url)} alt="" className="w-full h-full object-cover" />
+          <button onClick={() => onView(all, 0)} className="row-span-2 overflow-hidden relative">
+            <MediaThumb photo={first} />
           </button>
 
           {/* 4 smaller cells */}
@@ -93,7 +111,7 @@ function GroupCard({
                 onClick={() => onView(all, i + 1)}
                 className="overflow-hidden relative"
               >
-                <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
+                <MediaThumb photo={p} />
                 {i === 3 && extra > 0 && (
                   <div
                     className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold"

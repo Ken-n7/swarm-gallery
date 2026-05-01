@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Photo } from '@/types';
-import { photoUrl, uploadPhotoWithProgress } from '@/lib/api';
+import { photoUrl, uploadPhotoWithProgress, SERVER } from '@/lib/api';
 
 interface UploadItem {
   id: string;
@@ -14,14 +14,16 @@ interface UploadItem {
 
 interface Props {
   username: string;
+  userId: string;
   photos: Photo[];
+  eventId?: string;
 }
 
 function fmtSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-export function UploadPanel({ username, photos }: Props) {
+export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -33,7 +35,7 @@ export function UploadPanel({ username, photos }: Props) {
   }
 
   async function handleFiles(files: FileList | File[]) {
-    const arr = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const arr = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
     if (!arr.length) return;
 
     const items: UploadItem[] = arr.map((f) => ({
@@ -103,7 +105,7 @@ export function UploadPanel({ username, photos }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={(e) => e.target.files && handleFiles(e.target.files)}
@@ -169,27 +171,22 @@ export function UploadPanel({ username, photos }: Props) {
         </div>
       )}
 
-      {/* Download buttons */}
-      <div className="flex flex-col gap-2 mt-auto pt-2">
-        <button
-          className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--ink)' }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Download my album
-        </button>
-        <button
-          className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-          style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Full gallery (ZIP)
-        </button>
-      </div>
+      {/* Download my album */}
+      {myPhotos.length > 0 && (
+        <div className="mt-auto pt-2">
+          <a
+            href={`${SERVER}/users/${userId}/album?eventId=${eventId}`}
+            download="my-album.zip"
+            className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+            style={{ background: 'var(--ink)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Download my album
+          </a>
+        </div>
+      )}
     </div>
   );
 }

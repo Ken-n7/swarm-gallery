@@ -127,8 +127,19 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
         )}
       </div>
 
-      {/* Photo */}
-      <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-contain" />
+      {/* Media */}
+      {photo.mimetype?.startsWith('video/') ? (
+        <video
+          key={photo.url}
+          src={photoUrl(photo.url)}
+          className="w-full h-full object-contain"
+          controls
+          autoPlay
+          playsInline
+        />
+      ) : (
+        <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-contain" />
+      )}
 
       {/* Bottom chrome */}
       <div

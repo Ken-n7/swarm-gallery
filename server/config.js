@@ -19,6 +19,9 @@ module.exports = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'admin123',
   COOKIE_SECRET: process.env.COOKIE_SECRET || 'dev-secret',
 
-  MAX_FILE_SIZE: 10 * 1024 * 1024,
-  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  MAX_FILE_SIZE: 200 * 1024 * 1024, // 200 MB — covers phone videos
+  ALLOWED_MIME_TYPES: [
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo',
+  ],
 };

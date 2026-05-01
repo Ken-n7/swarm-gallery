@@ -9,11 +9,15 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   event_id TEXT NOT NULL,
   username TEXT NOT NULL,
+  device_id TEXT,
   avatar_filename TEXT,
   joined_at INTEGER NOT NULL,
   last_seen INTEGER NOT NULL,
   FOREIGN KEY (event_id) REFERENCES events(id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_event_username ON users(event_id, username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_event_device   ON users(event_id, device_id) WHERE device_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS photos (
   id TEXT PRIMARY KEY,

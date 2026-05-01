@@ -61,7 +61,7 @@ function GalleryView({
         </div>
 
         {/* Upload panel — fixed right */}
-        <UploadPanel username={username} photos={photos} />
+        <UploadPanel username={username} userId={userId} photos={photos} eventId={eventId} />
       </div>
     );
   }
@@ -99,7 +99,10 @@ function GalleryView({
 export default function EventPage() {
   const params = useParams();
   const eventId = params.id as string;
-  const { user, join, joining, error } = useUser();
+  const { user, join, joining, checking, error } = useUser();
+
+  // Device check in flight — show nothing so join screen never flashes
+  if (checking) return null;
 
   if (!user) {
     return <JoinScreen onJoin={join} joining={joining} error={error} />;
