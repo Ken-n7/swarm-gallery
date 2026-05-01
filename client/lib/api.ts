@@ -48,6 +48,14 @@ export function uploadPhotoWithProgress(
   });
 }
 
+export async function deletePhoto(photoId: string, username: string): Promise<void> {
+  const res = await fetch(
+    `${SERVER}/photos/${photoId}?username=${encodeURIComponent(username)}`,
+    { method: 'DELETE' },
+  );
+  if (!res.ok) throw new Error('Delete failed');
+}
+
 export function photoUrl(url: string): string {
   return `${SERVER}${url}`;
 }

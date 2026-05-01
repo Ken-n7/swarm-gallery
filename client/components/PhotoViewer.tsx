@@ -1,24 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Photo } from '@/types';
-import { photoUrl } from '@/lib/api';
+import { deletePhoto, photoUrl } from '@/lib/api';
 import { UserAvatar } from './UserAvatar';
 import { timeAgo } from '@/lib/time';
 
 interface Props {
   photos: Photo[];
   startIndex: number;
+  currentUser: string;
   onClose: () => void;
 }
 
-export function PhotoViewer({ photos, startIndex, onClose }: Props) {
+export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, onClose }: Props) {
+  const [photos, setPhotos] = useState(initialPhotos);
   const [index, setIndex] = useState(startIndex);
   const [liked, setLiked] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const photo = photos[index];
+  const isOwn = photo?.uploader === currentUser;
 
   useEffect(() => {
     setLiked(false);
+    setConfirmDelete(false);
   }, [index]);
 
   useEffect(() => {
@@ -31,10 +40,50 @@ export function PhotoViewer({ photos, startIndex, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, photos.length]);
 
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) setIndex((i) => Math.min(i + 1, photos.length - 1));
+    else         setIndex((i) => Math.max(i - 1, 0));
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      confirmTimer.current = setTimeout(() => setConfirmDelete(false), 2500);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    setDeleting(true);
+    try {
+      await deletePhoto(photo.id, currentUser);
+      const next = photos.filter((p) => p.id !== photo.id);
+      if (next.length === 0) { onClose(); return; }
+      setPhotos(next);
+      setIndex((i) => Math.min(i, next.length - 1));
+      setConfirmDelete(false);
+    } catch {
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (!photo) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--ink)' }}>
+    <div
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: 'var(--ink)' }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Top chrome */}
       <div
         className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-4"
@@ -52,7 +101,30 @@ export function PhotoViewer({ photos, startIndex, onClose }: Props) {
 
         <span className="text-white/85 text-xs font-medium">{index + 1} of {photos.length}</span>
 
-        <div className="w-9" />
+        {/* Delete button — own photos only */}
+        {isOwn ? (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+            style={{
+              background: confirmDelete ? 'var(--danger)' : 'rgba(255,255,255,.2)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            {confirmDelete ? (
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            )}
+          </button>
+        ) : (
+          <div className="w-9" />
+        )}
       </div>
 
       {/* Photo */}

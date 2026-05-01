@@ -285,6 +285,7 @@ export function Gallery({
         <PhotoViewer
           photos={viewer.photos}
           startIndex={viewer.index}
+          currentUser={currentUser}
           onClose={() => setViewer(null)}
         />
       )}

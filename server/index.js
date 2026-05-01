@@ -63,6 +63,8 @@ const getPhoto = db.prepare(`SELECT * FROM photos WHERE id = ?`);
 app.use((_req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  if (_req.method === 'OPTIONS') return res.status(204).end();
   next();
 });
 app.use(express.json());
@@ -127,6 +129,25 @@ function listPhotos(req, res) {
 // List photos routes
 app.get('/photos-list', listPhotos);
 app.get('/photos-list/:eventId', listPhotos);
+
+// Delete photo (owner only)
+app.delete('/photos/:id', (req, res) => {
+  const row = getPhoto.get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+
+  const username = req.query.username;
+  if (row.uploader_name !== username) {
+    return res.status(403).json({ error: 'Not your photo' });
+  }
+
+  const filePath = path.join(config.STORAGE.EVENTS, row.event_id, row.filename);
+  fs.rm(filePath, { force: true }, () => {});
+
+  db.prepare('DELETE FROM photos WHERE id = ?').run(row.id);
+  io.emit('photo-deleted', { photoId: row.id });
+
+  res.json({ ok: true });
+});
 
 // Socket.IO
 io.on('connection', (socket) => {
