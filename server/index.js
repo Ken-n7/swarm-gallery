@@ -6,7 +6,11 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const archiver = require('archiver');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('ffmpeg-static');
 const { nanoid } = require('nanoid');
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 const config = require('./config');
 const db = require('./db');
 const adminRouter = require('./routes/admin');
@@ -51,10 +55,19 @@ const upload = multer({
   },
 });
 
+function extractThumb(videoPath, thumbPath) {
+  return new Promise((resolve) => {
+    ffmpeg(videoPath)
+      .screenshots({ timestamps: ['00:00:01'], filename: path.basename(thumbPath), folder: path.dirname(thumbPath), size: '480x?' })
+      .on('end', resolve)
+      .on('error', resolve); // don't fail upload if thumb fails
+  });
+}
+
 // Prepared statements
 const insertPhoto = db.prepare(`
-  INSERT INTO photos (id, event_id, filename, original_name, mimetype, size_bytes, uploaded_at, uploader_ip, uploader_name, user_id)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO photos (id, event_id, filename, original_name, mimetype, size_bytes, uploaded_at, uploader_ip, uploader_name, user_id, thumb_filename)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const getPhotos = db.prepare(`SELECT * FROM photos WHERE event_id = ? ORDER BY uploaded_at DESC`);
 const getPhoto  = db.prepare(`SELECT * FROM photos WHERE id = ?`);
@@ -86,13 +99,14 @@ function toPhotoObj(r, eventId) {
     id: r.id,
     filename: r.filename,
     url: `/photos/${eventId}/${r.filename}`,
+    thumbUrl: r.thumb_filename ? `/photos/${eventId}/${r.thumb_filename}` : null,
     uploadedAt: r.uploaded_at,
     uploader: r.uploader_name,
     mimetype: r.mimetype,
   };
 }
 
-function handleUpload(req, res) {
+async function handleUpload(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No valid file' });
 
   const eventId = req.params.eventId || config.DEMO_EVENT_ID;
@@ -100,14 +114,22 @@ function handleUpload(req, res) {
   const uploaderName = req.body.username || 'Guest';
   const userRow = getUserByName.get(eventId, uploaderName);
 
+  let thumbFilename = null;
+  if (req.file.mimetype.startsWith('video/')) {
+    thumbFilename = `thumb-${id}.jpg`;
+    const thumbPath = path.join(config.STORAGE.EVENTS, eventId, thumbFilename);
+    await extractThumb(req.file.path, thumbPath);
+    if (!fs.existsSync(thumbPath)) thumbFilename = null;
+  }
+
   insertPhoto.run(
     id, eventId, req.file.filename, req.file.originalname,
     req.file.mimetype, req.file.size, Date.now(), req.ip,
-    uploaderName, userRow ? userRow.id : null
+    uploaderName, userRow ? userRow.id : null, thumbFilename
   );
 
   const photo = toPhotoObj(
-    { id, filename: req.file.filename, uploaded_at: Date.now(), uploader_name: uploaderName, mimetype: req.file.mimetype },
+    { id, filename: req.file.filename, thumb_filename: thumbFilename, uploaded_at: Date.now(), uploader_name: uploaderName, mimetype: req.file.mimetype },
     eventId
   );
 
@@ -135,6 +157,9 @@ app.delete('/photos/:id', (req, res) => {
   }
 
   fs.rm(path.join(config.STORAGE.EVENTS, row.event_id, row.filename), { force: true }, () => {});
+  if (row.thumb_filename) {
+    fs.rm(path.join(config.STORAGE.EVENTS, row.event_id, row.thumb_filename), { force: true }, () => {});
+  }
   db.prepare('DELETE FROM photos WHERE id = ?').run(row.id);
   io.emit('photo-deleted', { photoId: row.id });
   res.json({ ok: true });

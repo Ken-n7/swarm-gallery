@@ -69,15 +69,11 @@ export default function UploadPage() {
 
     for (const item of items) {
       try {
-        await uploadPhotoWithProgress(item.file, user.username, (pct) => {
+        const saved = await uploadPhotoWithProgress(item.file, user.username, (pct) => {
           updateItem(item.id, { progress: pct });
         });
         updateItem(item.id, { status: 'done', progress: 100 });
-        // Add to my photos on success
-        setMyPhotos((prev) => [
-          { id: item.id, filename: item.name, url: '', uploadedAt: Date.now(), uploader: user.username },
-          ...prev,
-        ]);
+        setMyPhotos((prev) => [saved, ...prev]);
       } catch {
         updateItem(item.id, { status: 'error' });
       }
@@ -227,11 +223,19 @@ export default function UploadPage() {
               {myPhotos.map((p) => (
                 <div key={p.id} className="aspect-square rounded-[10px] overflow-hidden relative" style={{ background: 'var(--violet-tint)' }}>
                   {p.mimetype?.startsWith('video/') ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[var(--violet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                      </svg>
-                    </div>
+                    <>
+                      {p.thumbUrl
+                        ? <img src={photoUrl(p.thumbUrl)} alt="" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
+                      }
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,.45)' }}>
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </>
                   ) : p.url ? (
                     <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
                   ) : null}

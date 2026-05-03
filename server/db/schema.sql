@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS photos (
   user_id TEXT,
   uploader_ip TEXT,
   uploader_name TEXT NOT NULL DEFAULT 'Guest',
+  thumb_filename TEXT,
   flagged INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (event_id) REFERENCES events(id),
   FOREIGN KEY (user_id) REFERENCES users(id)

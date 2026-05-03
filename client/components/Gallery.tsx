@@ -44,9 +44,12 @@ function MediaThumb({ photo }: { photo: Photo }) {
   if (photo.mimetype?.startsWith('video/')) {
     return (
       <>
-        <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
+        {photo.thumbUrl
+          ? <img src={photoUrl(photo.thumbUrl)} alt="" className="w-full h-full object-cover" />
+          : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
+        }
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.25)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(8px)' }}>
             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>

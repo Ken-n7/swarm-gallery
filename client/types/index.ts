@@ -5,6 +5,7 @@ export interface Photo {
   uploadedAt: number;
   uploader: string;
   mimetype?: string;
+  thumbUrl?: string | null;
   likeCount?: number;
 }
 

@@ -46,7 +46,7 @@ export function uploadPhotoWithProgress(
   file: File,
   username: string,
   onProgress: (pct: number) => void,
-): Promise<void> {
+): Promise<import('@/types').Photo> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const form = new FormData();
@@ -57,7 +57,7 @@ export function uploadPhotoWithProgress(
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     });
     xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
       else reject(new Error('Upload failed'));
     });
     xhr.addEventListener('error', () => reject(new Error('Network error')));

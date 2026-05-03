@@ -163,8 +163,24 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
           </div>
           <div className="grid grid-cols-4 gap-1">
             {myPhotos.slice(0, 8).map((p) => (
-              <div key={p.id} className="aspect-square rounded-lg overflow-hidden">
-                <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
+              <div key={p.id} className="aspect-square rounded-lg overflow-hidden relative" style={{ background: 'var(--bg-deep)' }}>
+                {p.mimetype?.startsWith('video/') ? (
+                  <>
+                    {p.thumbUrl
+                      ? <img src={photoUrl(p.thumbUrl)} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
+                    }
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,.45)' }}>
+                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
+                )}
               </div>
             ))}
           </div>
