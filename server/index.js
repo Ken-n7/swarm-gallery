@@ -14,6 +14,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const config = require('./config');
 const db = require('./db');
 const adminRouter = require('./routes/admin');
+const eventsRouter = require('./routes/events');
 const usersRouter = require('./routes/users');
 
 // Ensure storage dirs exist
@@ -85,6 +86,7 @@ app.use(express.json());
 app.use(cookieParser(config.COOKIE_SECRET));
 
 app.use('/admin', adminRouter);
+app.use('/events', eventsRouter);
 app.use('/users', usersRouter);
 app.use('/avatars', express.static(config.STORAGE.AVATARS));
 

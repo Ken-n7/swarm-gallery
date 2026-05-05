@@ -91,4 +91,61 @@ export function photoUrl(url: string): string {
   return `${SERVER}${url}`;
 }
 
+export async function adminLogin(password: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${SERVER}/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) throw new Error('Invalid password');
+  return res.json();
+}
+
+export async function adminLogout(): Promise<{ ok: boolean }> {
+  const res = await fetch(`${SERVER}/admin/logout`, { method: 'GET' });
+  return res.json();
+}
+
+export async function checkAdmin(): Promise<{ admin: boolean }> {
+  const res = await fetch(`${SERVER}/admin/me`, { method: 'GET' });
+  if (res.status === 401) return { admin: false };
+  if (!res.ok) throw new Error('Server error');
+  return res.json();
+}
+
+export async function getAdminStats(eventId = 'demo'): Promise<{
+  photoCount: number;
+  guestCount: number;
+  activeGuests: number;
+  storageUsed: number;
+}> {
+  const res = await fetch(`${SERVER}/admin/stats?eventId=${encodeURIComponent(eventId)}`);
+  if (!res.ok) throw new Error('Failed to fetch stats');
+  return res.json();
+}
+
+export async function getRecentPhotos(eventId = 'demo', limit = 10): Promise<import('@/types').Photo[]> {
+  const res = await fetch(`${SERVER}/admin/recent-photos?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
+  if (!res.ok) throw new Error('Failed to fetch recent photos');
+  return res.json();
+}
+
+export async function getRecentGuests(eventId = 'demo', limit = 10): Promise<any[]> {
+  const res = await fetch(`${SERVER}/admin/recent-guests?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
+  if (!res.ok) throw new Error('Failed to fetch recent guests');
+  return res.json();
+}
+
+export async function getAllPhotos(eventId = 'demo'): Promise<import('@/types').Photo[]> {
+  const res = await fetch(`${SERVER}/admin/photos?eventId=${encodeURIComponent(eventId)}`);
+  if (!res.ok) throw new Error('Failed to fetch photos');
+  return res.json();
+}
+
+export async function getAllGuests(eventId = 'demo'): Promise<any[]> {
+  const res = await fetch(`${SERVER}/admin/guests?eventId=${encodeURIComponent(eventId)}`);
+  if (!res.ok) throw new Error('Failed to fetch guests');
+  return res.json();
+}
+
 export { SERVER };
