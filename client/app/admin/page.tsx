@@ -12,12 +12,32 @@ import { AdminSettings } from '@/components/Admin/pages/AdminSettings';
 
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsUpdatedAt, setStatsUpdatedAt] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   useEffect(() => {
-    getAdminStats().then(setStats).catch(() => {});
+    let cancelled = false;
+
+    const refreshStats = () => {
+      getAdminStats()
+        .then((data) => {
+          if (!cancelled) {
+            setStats(data);
+            setStatsUpdatedAt(Date.now());
+          }
+        })
+        .catch(() => {});
+    };
+
+    refreshStats();
+    const intervalId = window.setInterval(refreshStats, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -81,6 +101,7 @@ export default function AdminPage() {
       title={getPageTitle(currentPage)}
       subtitle={getPageSubtitle(currentPage)}
       activeGuests={stats?.activeGuests || 0}
+      lastSyncedAt={statsUpdatedAt}
     >
       {renderContent()}
     </AdminLayout>

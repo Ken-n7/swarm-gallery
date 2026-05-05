@@ -22,15 +22,39 @@ export function AdminGalleries() {
   });
 
   useEffect(() => {
-    getAllPhotos().then((data) => {
-      setPhotos(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    let cancelled = false;
+
+    const refreshPhotos = () => {
+      getAllPhotos()
+        .then((data) => {
+          if (cancelled) return;
+          setPhotos(data);
+          setSelectedPhotos((current) => {
+            const validIds = new Set(data.map((photo) => photo.id));
+            return new Set(Array.from(current).filter((id) => validIds.has(id)));
+          });
+          setFocusedPhotoId((current) => (
+            current && data.some((photo) => photo.id === current) ? current : null
+          ));
+          setLoading(false);
+        })
+        .catch(() => {
+          if (!cancelled) setLoading(false);
+        });
+    };
+
+    refreshPhotos();
+    const intervalId = window.setInterval(refreshPhotos, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
-  const enrichedPhotos = photos.map((photo, index) => ({
+  const enrichedPhotos = photos.map((photo) => ({
     ...photo,
-    flagged: typeof photo.flagged === 'boolean' ? photo.flagged : index % 7 === 0,
+    flagged: !!photo.flagged,
   }));
 
   const filteredPhotos = enrichedPhotos.filter((photo) => {
@@ -231,9 +255,12 @@ export function AdminGalleries() {
         <div className="bg-white rounded-[14px] p-4 mb-4" style={{ border: '1px solid var(--line)' }}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--muted)' }}>Review Queue</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--muted)' }}>Moderation Review</div>
               <div className="text-[16px] font-semibold" style={{ color: 'var(--ink)' }}>{focusedPhoto.uploader || 'Guest upload'}</div>
               <div className="text-[12px] mt-1" style={{ color: 'var(--muted)' }}>{focusedPhoto.filename} • {new Date(focusedPhoto.uploadedAt).toLocaleString()}</div>
+              <div className="text-[11px] mt-2" style={{ color: 'var(--muted)' }}>
+                {focusedPhoto.flagged ? 'This media is currently in the moderation queue.' : 'Mark this media for follow-up review if it needs attention.'}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {focusedPhoto.flagged ? <DestructiveNote>Flagged for moderation</DestructiveNote> : null}
@@ -344,7 +371,7 @@ export function AdminGalleries() {
             </svg>
           </div>
           <div style={{ color: 'var(--muted)' }}>
-            {filter === 'Flagged' ? 'No flagged photos need review right now' : 'No photos uploaded yet'}
+            {filter === 'Flagged' ? 'No media is currently flagged for moderation' : 'No photos uploaded yet'}
           </div>
         </div>
       )}

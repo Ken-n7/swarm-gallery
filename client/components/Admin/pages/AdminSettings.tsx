@@ -26,17 +26,16 @@ export function AdminSettings() {
   const [storageTotal] = useState(50);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [notice, setNotice] = useState<{ tone: 'success' | 'warning'; message: string } | null>(null);
-  const [confirmAction, setConfirmAction] = useState<'clearCache' | 'deleteMedia' | 'deleteEvent' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'deleteMedia' | 'deleteEvent' | null>(null);
   const [workflow, setWorkflow] = useState({
     handoffPrepared: false,
     handoffCompleted: false,
     mediaDeleted: false,
     eventClosed: false,
   });
-  const [actionState, setActionState] = useState<Record<'exportPackage' | 'markComplete' | 'clearCache' | 'deleteMedia' | 'deleteEvent', 'idle' | 'running' | 'success'>>({
+  const [actionState, setActionState] = useState<Record<'exportPackage' | 'markComplete' | 'deleteMedia' | 'deleteEvent', 'idle' | 'running' | 'success'>>({
     exportPackage: 'idle',
     markComplete: 'idle',
-    clearCache: 'idle',
     deleteMedia: 'idle',
     deleteEvent: 'idle',
   });
@@ -70,7 +69,7 @@ export function AdminSettings() {
   }, []);
 
   const setActionProgress = (
-    action: 'exportPackage' | 'markComplete' | 'clearCache' | 'deleteMedia' | 'deleteEvent',
+    action: 'exportPackage' | 'markComplete' | 'deleteMedia' | 'deleteEvent',
     next: 'idle' | 'running' | 'success'
   ) => setActionState((current) => ({ ...current, [action]: next }));
 
@@ -119,7 +118,7 @@ export function AdminSettings() {
   };
 
   const runAction = (
-    action: 'exportPackage' | 'markComplete' | 'clearCache' | 'deleteMedia' | 'deleteEvent'
+    action: 'exportPackage' | 'markComplete' | 'deleteMedia' | 'deleteEvent'
   ) => {
     setActionProgress(action, 'running');
     setConfirmAction(null);
@@ -168,15 +167,6 @@ export function AdminSettings() {
           setActionProgress(action, 'idle');
           setNotice({ tone: 'warning', message: 'Could not mark handoff complete yet.' });
         });
-      return;
-    }
-
-    if (action === 'clearCache') {
-      window.setTimeout(() => {
-        setStorageUsed((current) => Math.max(1.2, Number((current - 0.6).toFixed(1))));
-        setActionProgress(action, 'success');
-        setNotice({ tone: 'success', message: 'Temporary cache cleared locally. Server cache controls can be added later.' });
-      }, 400);
       return;
     }
 
@@ -307,12 +297,10 @@ export function AdminSettings() {
                 </div>
                 <div className="text-xs text-slate-500">{storagePercent.toFixed(1)}% used • {(storageTotal - storageUsed).toFixed(1)} GB available</div>
                 <div className="pt-2 border-t border-slate-200 space-y-4">
-                  <FormRow label="Retention before handoff" sub="How long media may remain on the system before client handoff is completed.">
-                    <select value={retentionPolicy} onChange={(e) => { setRetentionPolicy(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent bg-white">
-                      <option>Until handoff</option>
-                      <option>24 hours</option>
-                      <option>7 days</option>
-                    </select>
+                  <FormRow label="Retention before handoff" sub="Event media remains on the laptop only until the client handoff is completed.">
+                    <span className="inline-flex px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
+                      {retentionPolicy || 'Until handoff'}
+                    </span>
                   </FormRow>
                   <FormRow label="Storage warning" sub="Alert the team when temporary event storage is nearing capacity before export.">
                     <div className="flex items-center gap-2">
@@ -320,20 +308,14 @@ export function AdminSettings() {
                       <span className="text-sm text-slate-600">%</span>
                     </div>
                   </FormRow>
-                  <div className="space-y-3">
-                    <button onClick={() => setConfirmAction(confirmAction === 'clearCache' ? null : 'clearCache')} disabled={actionState.clearCache === 'running'} className="w-full px-4 py-3 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 disabled:opacity-60">
-                      {actionState.clearCache === 'running' ? 'Clearing cache...' : actionState.clearCache === 'success' ? 'Cache cleared' : 'Clear temporary cache'}
-                    </button>
-                    {confirmAction === 'clearCache' && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3">
-                        <div className="text-sm font-semibold text-red-900">Clear cached derivatives?</div>
-                        <div className="text-sm text-red-700">This removes temporary cached files only. Event media remains until you explicitly delete it after client handoff.</div>
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => runAction('clearCache')} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold">Confirm Clear</button>
-                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
-                        </div>
-                      </div>
-                    )}
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+                    <div className="text-sm font-semibold text-slate-900">Storage cleanup happens through event closeout</div>
+                    <div className="text-sm text-slate-600">
+                      Generated thumbnails and original media are removed together when you complete handoff, delete event media, and close the event.
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      There is no separate cache-clearing step for this workflow.
+                    </div>
                   </div>
                 </div>
               </div>

@@ -13,11 +13,25 @@ interface Props {
 
 export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJoin, joining, error }: Props) {
   const [username, setUsername] = useState('');
+  const [localError, setLocalError] = useState('');
+
+  function validateName(value: string) {
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    if (!trimmed) return 'Enter a nickname to join';
+    if (trimmed.length < 2) return 'Use at least 2 characters';
+    return '';
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const name = username.trim();
-    if (name) onJoin(name);
+    const name = username.trim().replace(/\s+/g, ' ');
+    const validationError = validateName(name);
+    if (validationError) {
+      setLocalError(validationError);
+      return;
+    }
+    setLocalError('');
+    onJoin(name);
   }
 
   return (
@@ -50,18 +64,21 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
               type="text"
               placeholder="Your nickname"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (localError) setLocalError('');
+              }}
               maxLength={32}
               required
               className="w-full text-base text-zinc-900 outline-none bg-transparent placeholder:text-zinc-300"
-            />
+              />
           </div>
 
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          {(localError || error) && <p className="text-sm text-red-500 text-center">{localError || error}</p>}
 
           <button
             type="submit"
-            disabled={joining}
+            disabled={joining || !username.trim()}
             className="w-full bg-zinc-900 text-white font-bold text-base py-4 rounded-2xl hover:bg-zinc-700 disabled:opacity-50 transition-colors"
           >
             {joining ? 'Joining...' : 'Join the celebration'}

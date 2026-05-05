@@ -16,7 +16,6 @@ interface Props {
 export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, onClose }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [index, setIndex] = useState(startIndex);
-  const [liked, setLiked] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -26,7 +25,6 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
   const isOwn = photo?.uploader === currentUser;
 
   useEffect(() => {
-    setLiked(false);
     setConfirmDelete(false);
   }, [index]);
 
@@ -155,25 +153,14 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setLiked(!liked)}
-            className="w-11 h-11 rounded-full flex items-center justify-center"
-            style={{ background: liked ? 'var(--pink)' : 'rgba(255,255,255,.2)', backdropFilter: 'blur(12px)' }}
-          >
-            <svg
-              className="w-5 h-5"
-              fill={liked ? 'white' : 'none'}
-              stroke="white"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
           <a
             href={photoUrl(photo.url)}
             download={photo.filename}
+            target="_blank"
+            rel="noreferrer"
             className="w-11 h-11 rounded-full flex items-center justify-center"
             style={{ background: 'rgba(255,255,255,.2)', backdropFilter: 'blur(12px)' }}
+            aria-label="Download or open original media"
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />

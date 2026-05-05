@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Photo } from '@/types';
 import { GalleryFilter } from './Gallery';
 import { UserAvatar } from './UserAvatar';
+import { useGuestPreferences } from '@/hooks/useGuestPreferences';
 
 interface Props {
   username: string;
@@ -79,6 +80,7 @@ function SidebarContent({
 }: Omit<Props, 'open'>) {
   const myPhotos = photos.filter((p) => p.uploader === username).length;
   const newPhotos = photos.filter((p) => Date.now() - p.uploadedAt < 5 * 60 * 1000).length;
+  const { faceBlurEnabled, setFaceBlurEnabled } = useGuestPreferences();
 
   const router = useRouter();
 
@@ -181,10 +183,19 @@ function SidebarContent({
               </svg>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,.65)' }}>Face blur</span>
             </div>
-            {/* Toggle — UI only */}
-            <div className="w-11 h-6 rounded-full relative" style={{ background: 'var(--violet)' }}>
-              <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow" />
-            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={faceBlurEnabled}
+              onClick={() => setFaceBlurEnabled(!faceBlurEnabled)}
+              className="w-11 h-6 rounded-full relative transition-colors"
+              style={{ background: faceBlurEnabled ? 'var(--violet)' : 'rgba(255,255,255,.18)' }}
+            >
+              <div
+                className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200"
+                style={{ left: faceBlurEnabled ? 'calc(100% - 22px)' : 2 }}
+              />
+            </button>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

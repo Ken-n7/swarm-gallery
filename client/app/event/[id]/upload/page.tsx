@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { uploadPhotoWithProgress, photoUrl, SERVER } from '@/lib/api';
 import { useUser } from '@/hooks/useUser';
+import { useGuestPreferences } from '@/hooks/useGuestPreferences';
+import { useFaceBlurWorkflow } from '@/hooks/useFaceBlurWorkflow';
+import { FaceBlurEditor } from '@/components/FaceBlurEditor';
 import { Photo } from '@/types';
 
 interface QueueItem {
@@ -15,6 +18,7 @@ interface QueueItem {
   previewUrl: string;
   progress: number;
   status: 'uploading' | 'done' | 'error';
+  error?: string;
 }
 
 function fmtSize(bytes: number) {
@@ -27,6 +31,16 @@ export default function UploadPage() {
   const params = useParams();
   const eventId = (params.id as string) || 'demo';
   const { user } = useUser();
+  const { faceBlurEnabled } = useGuestPreferences();
+  const {
+    currentFile: blurFile,
+    currentIndex: blurIndex,
+    totalFiles: blurTotal,
+    prepareFiles,
+    useOriginalFile,
+    applyBlurredFile,
+    cancelWorkflow,
+  } = useFaceBlurWorkflow(faceBlurEnabled);
 
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [myPhotos, setMyPhotos] = useState<Photo[]>([]);
@@ -43,15 +57,59 @@ export default function UploadPage() {
       .catch(() => {});
   }, [user, eventId]);
 
+  useEffect(() => {
+    return () => {
+      setQueue((prev) => {
+        prev.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+        return prev;
+      });
+    };
+  }, []);
+
   function updateItem(id: string, patch: Partial<QueueItem>) {
     setQueue((prev) => prev.map((q) => (q.id === id ? { ...q, ...patch } : q)));
   }
 
+  function removeItem(id: string) {
+    setQueue((prev) => {
+      const item = prev.find((entry) => entry.id === id);
+      if (item) URL.revokeObjectURL(item.previewUrl);
+      return prev.filter((entry) => entry.id !== id);
+    });
+  }
+
+  async function uploadItem(item: QueueItem) {
+    if (!user) return;
+    updateItem(item.id, { status: 'uploading', progress: 0, error: undefined });
+
+    try {
+      const saved = await uploadPhotoWithProgress(item.file, user.username, (pct) => {
+        updateItem(item.id, { progress: pct });
+      });
+      updateItem(item.id, { status: 'done', progress: 100 });
+      setMyPhotos((prev) => (prev.some((photo) => photo.id === saved.id) ? prev : [saved, ...prev]));
+    } catch {
+      updateItem(item.id, {
+        status: 'error',
+        error: 'Upload failed. Check your connection and retry.',
+      });
+    }
+  }
+
+  function retryItem(id: string) {
+    const item = queue.find((entry) => entry.id === id);
+    if (!item || item.status !== 'error') return;
+    void uploadItem(item);
+  }
+
   async function enqueue(files: FileList | File[]) {
     if (!user) return;
-    const arr = Array.from(files).filter(
+    const selected = Array.from(files).filter(
       (f) => f.type.startsWith('image/') || f.type.startsWith('video/')
     );
+    if (!selected.length) return;
+
+    const arr = await prepareFiles(selected);
     if (!arr.length) return;
 
     const items: QueueItem[] = arr.map((f) => ({
@@ -68,20 +126,13 @@ export default function UploadPage() {
     setQueue((prev) => [...items, ...prev]);
 
     for (const item of items) {
-      try {
-        const saved = await uploadPhotoWithProgress(item.file, user.username, (pct) => {
-          updateItem(item.id, { progress: pct });
-        });
-        updateItem(item.id, { status: 'done', progress: 100 });
-        setMyPhotos((prev) => [saved, ...prev]);
-      } catch {
-        updateItem(item.id, { status: 'error' });
-      }
+      await uploadItem(item);
     }
   }
 
   const uploading = queue.some((q) => q.status === 'uploading');
   const allDone   = queue.length > 0 && queue.every((q) => q.status === 'done');
+  const failedCount = queue.filter((q) => q.status === 'error').length;
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -102,6 +153,21 @@ export default function UploadPage() {
       </header>
 
       <div className="flex-1 flex flex-col px-5 gap-5 pb-28">
+        {faceBlurEnabled && (
+          <div className="rounded-[16px] px-4 py-3 flex items-start gap-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,246,.18)' }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'white', color: 'var(--violet)' }}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3.98 8.223A10.477 10.477 0 0112 5.25c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7a10.523 10.523 0 012.214-3.592M3 3l18 18" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>Face blur is on</div>
+              <p className="text-[12px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                Photos pause for a quick on-device blur step before upload. Videos upload unchanged.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Action buttons — always visible */}
         <div className="flex flex-col gap-3">
@@ -148,16 +214,24 @@ export default function UploadPage() {
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--muted)', letterSpacing: '0.08em' }}>
                 {uploading ? 'Uploading…' : allDone ? 'Done' : 'Queue'}
               </p>
-              {allDone && (
+              {(allDone || failedCount > 0) && (
                 <button
-                  onClick={() => setQueue([])}
+                  onClick={() => {
+                    queue.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+                    setQueue([]);
+                  }}
                   className="text-[11px] font-semibold"
                   style={{ color: 'var(--violet)' }}
                 >
-                  Clear
+                  Clear all
                 </button>
               )}
             </div>
+            {failedCount > 0 && (
+              <div className="rounded-[12px] px-3 py-2 text-[12px] font-medium" style={{ background: 'var(--danger-tint)', color: 'var(--danger)' }}>
+                {failedCount} {failedCount === 1 ? 'upload needs' : 'uploads need'} attention. Retry failed items or remove them from the queue.
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               {queue.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 rounded-[12px] p-3" style={{ background: 'white', border: '1px solid var(--line)' }}>
@@ -183,18 +257,43 @@ export default function UploadPage() {
                         />
                       </div>
                     )}
+                    {item.status === 'error' && item.error && (
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--danger)' }}>{item.error}</p>
+                    )}
                   </div>
 
-                  <span
-                    className="text-[11px] font-bold shrink-0"
-                    style={{
-                      color: item.status === 'done' ? 'var(--good)'
-                           : item.status === 'error' ? 'var(--danger)'
-                           : 'var(--muted)',
-                    }}
-                  >
-                    {item.status === 'done' ? '✓' : item.status === 'error' ? 'Error' : `${item.progress}%`}
-                  </span>
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <span
+                      className="text-[11px] font-bold"
+                      style={{
+                        color: item.status === 'done' ? 'var(--good)'
+                             : item.status === 'error' ? 'var(--danger)'
+                             : 'var(--muted)',
+                      }}
+                    >
+                      {item.status === 'done' ? '✓' : item.status === 'error' ? 'Error' : `${item.progress}%`}
+                    </span>
+                    {item.status === 'error' && (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => retryItem(item.id)}
+                          className="text-[10px] font-semibold"
+                          style={{ color: 'var(--violet)' }}
+                        >
+                          Retry
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          className="text-[10px] font-semibold"
+                          style={{ color: 'var(--muted)' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -212,10 +311,12 @@ export default function UploadPage() {
                 <a
                   href={`${SERVER}/users/${user.userId}/album?eventId=${eventId}`}
                   download="my-album.zip"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-[11px] font-semibold"
                   style={{ color: 'var(--violet)' }}
                 >
-                  Download all
+                  Download / open all
                 </a>
               )}
             </div>
@@ -267,6 +368,14 @@ export default function UploadPage() {
         onChange={(e) => e.target.files && enqueue(e.target.files)} />
       <input ref={filesRef} type="file" accept="image/*,video/*" multiple className="hidden"
         onChange={(e) => e.target.files && enqueue(e.target.files)} />
+      <FaceBlurEditor
+        open={!!blurFile}
+        file={blurFile}
+        indexLabel={blurTotal > 1 ? `${blurIndex} of ${blurTotal}` : undefined}
+        onCancel={cancelWorkflow}
+        onUseOriginal={useOriginalFile}
+        onApply={applyBlurredFile}
+      />
     </div>
   );
 }

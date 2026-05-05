@@ -10,10 +10,11 @@ interface AdminLayoutProps {
   title: string;
   subtitle?: string;
   activeGuests?: number;
+  lastSyncedAt?: number | null;
   children: React.ReactNode;
 }
 
-export function AdminLayout({ currentPage, onPageChange, title, subtitle, activeGuests = 0, children }: AdminLayoutProps) {
+export function AdminLayout({ currentPage, onPageChange, title, subtitle, activeGuests = 0, lastSyncedAt = null, children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
@@ -39,7 +40,7 @@ export function AdminLayout({ currentPage, onPageChange, title, subtitle, active
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <AdminTopBar title={title} subtitle={subtitle} onMenu={() => setSidebarOpen(true)} activeGuests={activeGuests} />
+        <AdminTopBar title={title} subtitle={subtitle} onMenu={() => setSidebarOpen(true)} activeGuests={activeGuests} lastSyncedAt={lastSyncedAt} />
         <div className="flex-1 overflow-auto">
           {children}
         </div>

@@ -37,6 +37,28 @@ const upsertEventSettings = db.prepare(`
     storage_warning_pct = excluded.storage_warning_pct
 `);
 const getPhotoById = db.prepare(`SELECT * FROM photos WHERE id = ?`);
+const getPhotoRowsForEvent = db.prepare(`
+  SELECT p.*, u.username
+  FROM photos p
+  LEFT JOIN users u ON p.user_id = u.id
+  WHERE p.event_id = ?
+  ORDER BY p.uploaded_at DESC
+`);
+const getGuestRowsForEvent = db.prepare(`
+  SELECT u.*, COUNT(p.id) as photo_count
+  FROM users u
+  LEFT JOIN photos p ON u.id = p.user_id AND p.event_id = u.event_id
+  WHERE u.event_id = ?
+  GROUP BY u.id
+  ORDER BY u.joined_at DESC
+`);
+const getGuestById = db.prepare(`
+  SELECT u.*, COUNT(p.id) as photo_count
+  FROM users u
+  LEFT JOIN photos p ON u.id = p.user_id AND p.event_id = u.event_id
+  WHERE u.event_id = ? AND u.id = ?
+  GROUP BY u.id
+`);
 
 function calculateStorageUsed(eventId) {
   let storageUsed = 0;
@@ -84,6 +106,31 @@ function eventStateResponse(eventId) {
     activeGuests,
     storageUsed: Number((storageUsedBytes / 1024 / 1024 / 1024).toFixed(1)),
     storageTotal: 50,
+  };
+}
+
+function mapPhotoRow(row, eventId) {
+  return {
+    id: row.id,
+    filename: row.filename,
+    url: `/photos/${eventId}/${row.filename}`,
+    thumbUrl: row.thumb_filename ? `/photos/${eventId}/${row.thumb_filename}` : null,
+    uploadedAt: row.uploaded_at,
+    uploader: row.uploader_name || row.username,
+    mimetype: row.mimetype,
+    sizeBytes: row.size_bytes,
+    flagged: !!row.flagged,
+  };
+}
+
+function mapGuestRow(row, eventId) {
+  return {
+    id: row.id,
+    username: row.username,
+    avatarUrl: row.avatar_filename ? `/avatars/${eventId}/${row.avatar_filename}` : null,
+    joinedAt: row.joined_at,
+    lastSeen: row.last_seen,
+    photoCount: row.photo_count,
   };
 }
 
@@ -179,17 +226,7 @@ router.get('/photos', requireAdmin, (req, res) => {
     ORDER BY p.uploaded_at DESC
   `).all(eventId);
 
-  res.json(photos.map((p) => ({
-    id: p.id,
-    filename: p.filename,
-    url: `/photos/${eventId}/${p.filename}`,
-    thumbUrl: p.thumb_filename ? `/photos/${eventId}/${p.thumb_filename}` : null,
-    uploadedAt: p.uploaded_at,
-    uploader: p.uploader_name || p.username,
-    mimetype: p.mimetype,
-    sizeBytes: p.size_bytes,
-    flagged: !!p.flagged,
-  })));
+  res.json(photos.map((p) => mapPhotoRow(p, eventId)));
 });
 
 router.get('/photos/export', requireAdmin, (req, res) => {
@@ -277,28 +314,12 @@ router.post('/photos/delete', requireAdmin, (req, res) => {
 
   db.prepare(`DELETE FROM photos WHERE event_id = ? AND id IN (${photoIds.map(() => '?').join(',')})`).run(eventId, ...photoIds);
 
-  const photos = db.prepare(`
-    SELECT p.*, u.username
-    FROM photos p
-    LEFT JOIN users u ON p.user_id = u.id
-    WHERE p.event_id = ?
-    ORDER BY p.uploaded_at DESC
-  `).all(eventId);
+  const photos = getPhotoRowsForEvent.all(eventId);
 
   res.json({
     ok: true,
     deletedCount: rows.length,
-    photos: photos.map((p) => ({
-      id: p.id,
-      filename: p.filename,
-      url: `/photos/${eventId}/${p.filename}`,
-      thumbUrl: p.thumb_filename ? `/photos/${eventId}/${p.thumb_filename}` : null,
-      uploadedAt: p.uploaded_at,
-      uploader: p.uploader_name || p.username,
-      mimetype: p.mimetype,
-      sizeBytes: p.size_bytes,
-      flagged: !!p.flagged,
-    })),
+    photos: photos.map((p) => mapPhotoRow(p, eventId)),
   });
 });
 
@@ -321,24 +342,118 @@ router.patch('/photos/:id/flag', requireAdmin, (req, res) => {
 
 router.get('/guests', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const guests = getGuestRowsForEvent.all(eventId);
+  res.json(guests.map((g) => mapGuestRow(g, eventId)));
+});
 
-  const guests = db.prepare(`
-    SELECT u.*, COUNT(p.id) as photo_count
-    FROM users u
-    LEFT JOIN photos p ON u.id = p.user_id AND p.event_id = u.event_id
-    WHERE u.event_id = ?
-    GROUP BY u.id
-    ORDER BY u.joined_at DESC
-  `).all(eventId);
+router.get('/guests/export', requireAdmin, (req, res) => {
+  const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const guestIds = typeof req.query.guestIds === 'string' && req.query.guestIds.length
+    ? req.query.guestIds.split(',').filter(Boolean)
+    : [];
 
-  res.json(guests.map((g) => ({
-    id: g.id,
-    username: g.username,
-    avatarUrl: g.avatar_filename ? `/avatars/${eventId}/${g.avatar_filename}` : null,
-    joinedAt: g.joined_at,
-    lastSeen: g.last_seen,
-    photoCount: g.photo_count,
-  })));
+  const rows = guestIds.length
+    ? db.prepare(`
+        SELECT u.*, COUNT(p.id) as photo_count
+        FROM users u
+        LEFT JOIN photos p ON u.id = p.user_id AND p.event_id = u.event_id
+        WHERE u.event_id = ? AND u.id IN (${guestIds.map(() => '?').join(',')})
+        GROUP BY u.id
+        ORDER BY u.joined_at DESC
+      `).all(eventId, ...guestIds)
+    : getGuestRowsForEvent.all(eventId);
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${eventId}-guests.csv"`);
+
+  const header = ['Guest ID', 'Username', 'Joined At', 'Last Seen', 'Photo Count'];
+  const lines = rows.map((row) => (
+    [
+      row.id,
+      `"${String(row.username).replace(/"/g, '""')}"`,
+      new Date(row.joined_at).toISOString(),
+      new Date(row.last_seen).toISOString(),
+      row.photo_count,
+    ].join(',')
+  ));
+
+  res.send([header.join(','), ...lines].join('\n'));
+});
+
+router.get('/guests/:id/album', requireAdmin, (req, res) => {
+  const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const guest = getGuestById.get(eventId, req.params.id);
+  if (!guest) return res.status(404).json({ error: 'Guest not found' });
+
+  const rows = db.prepare(`
+    SELECT p.*, u.username
+    FROM photos p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.event_id = ? AND p.user_id = ?
+    ORDER BY p.uploaded_at DESC
+  `).all(eventId, guest.id);
+
+  if (!rows.length) return res.status(404).json({ error: 'No photos found for this guest' });
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${eventId}-${guest.username}-album.zip"`);
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', (err) => {
+    console.error('Guest album ZIP error:', err);
+    if (!res.headersSent) res.status(500).end();
+    else res.end();
+  });
+  archive.pipe(res);
+
+  for (const row of rows) {
+    const filePath = path.join(config.STORAGE.EVENTS, eventId, row.filename);
+    if (fs.existsSync(filePath)) archive.file(filePath, { name: row.filename });
+  }
+
+  archive.append(JSON.stringify({
+    exportedAt: Date.now(),
+    eventId,
+    guest: {
+      id: guest.id,
+      username: guest.username,
+    },
+    photoCount: rows.length,
+  }, null, 2), { name: 'manifest.json' });
+
+  archive.finalize();
+});
+
+router.post('/guests/:id/photos/delete', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const guest = getGuestById.get(eventId, req.params.id);
+  if (!guest) return res.status(404).json({ error: 'Guest not found' });
+
+  const rows = db.prepare(`
+    SELECT * FROM photos
+    WHERE event_id = ? AND user_id = ?
+  `).all(eventId, guest.id);
+
+  for (const row of rows) {
+    const filePath = path.join(config.STORAGE.EVENTS, eventId, row.filename);
+    if (fs.existsSync(filePath)) fs.rmSync(filePath, { force: true });
+    if (row.thumb_filename) {
+      const thumbPath = path.join(config.STORAGE.EVENTS, eventId, row.thumb_filename);
+      if (fs.existsSync(thumbPath)) fs.rmSync(thumbPath, { force: true });
+    }
+  }
+
+  db.prepare('DELETE FROM photos WHERE event_id = ? AND user_id = ?').run(eventId, guest.id);
+
+  const guests = getGuestRowsForEvent.all(eventId);
+  const photos = getPhotoRowsForEvent.all(eventId);
+
+  res.json({
+    ok: true,
+    deletedCount: rows.length,
+    guests: guests.map((row) => mapGuestRow(row, eventId)),
+    photos: photos.map((row) => mapPhotoRow(row, eventId)),
+  });
 });
 
 router.get('/event-settings', requireAdmin, (req, res) => {

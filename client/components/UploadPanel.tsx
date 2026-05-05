@@ -3,13 +3,18 @@
 import { useRef, useState } from 'react';
 import { Photo } from '@/types';
 import { photoUrl, uploadPhotoWithProgress, SERVER } from '@/lib/api';
+import { useGuestPreferences } from '@/hooks/useGuestPreferences';
+import { useFaceBlurWorkflow } from '@/hooks/useFaceBlurWorkflow';
+import { FaceBlurEditor } from './FaceBlurEditor';
 
 interface UploadItem {
   id: string;
+  file: File;
   name: string;
   size: string;
   progress: number;
   status: 'uploading' | 'done' | 'error';
+  error?: string;
 }
 
 interface Props {
@@ -27,6 +32,16 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
+  const { faceBlurEnabled } = useGuestPreferences();
+  const {
+    currentFile: blurFile,
+    currentIndex: blurIndex,
+    totalFiles: blurTotal,
+    prepareFiles,
+    useOriginalFile,
+    applyBlurredFile,
+    cancelWorkflow,
+  } = useFaceBlurWorkflow(faceBlurEnabled);
 
   const myPhotos = photos.filter((p) => p.uploader === username);
 
@@ -34,12 +49,42 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
     setUploads((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
   }
 
+  async function uploadItem(item: UploadItem) {
+    updateItem(item.id, { status: 'uploading', progress: 0, error: undefined });
+
+    try {
+      await uploadPhotoWithProgress(item.file, username, (pct) => {
+        updateItem(item.id, { progress: pct });
+      });
+      updateItem(item.id, { status: 'done', progress: 100 });
+    } catch {
+      updateItem(item.id, {
+        status: 'error',
+        error: 'Upload failed. Please retry.',
+      });
+    }
+  }
+
+  function retryItem(id: string) {
+    const item = uploads.find((entry) => entry.id === id);
+    if (!item || item.status !== 'error') return;
+    void uploadItem(item);
+  }
+
+  function removeItem(id: string) {
+    setUploads((prev) => prev.filter((entry) => entry.id !== id));
+  }
+
   async function handleFiles(files: FileList | File[]) {
-    const arr = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    const selected = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    if (!selected.length) return;
+
+    const arr = await prepareFiles(selected);
     if (!arr.length) return;
 
     const items: UploadItem[] = arr.map((f) => ({
       id: `${Date.now()}-${Math.random()}`,
+      file: f,
       name: f.name,
       size: fmtSize(f.size),
       progress: 0,
@@ -49,15 +94,8 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
     setUploads((prev) => [...items, ...prev]);
 
     for (const [i, file] of arr.entries()) {
-      const item = items[i];
-      try {
-        await uploadPhotoWithProgress(file, username, (pct) => {
-          updateItem(item.id, { progress: pct });
-        });
-        updateItem(item.id, { status: 'done', progress: 100 });
-      } catch {
-        updateItem(item.id, { status: 'error' });
-      }
+      const item = { ...items[i], file };
+      await uploadItem(item);
     }
   }
 
@@ -102,6 +140,15 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
         </button>
       </div>
 
+      {faceBlurEnabled && (
+        <div className="rounded-2xl px-4 py-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,246,.18)' }}>
+          <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>Face blur is on</div>
+          <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--ink-soft)' }}>
+            Selected photos open a quick blur step before upload. Videos keep uploading normally.
+          </p>
+        </div>
+      )}
+
       <input
         ref={inputRef}
         type="file"
@@ -137,15 +184,30 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
                       />
                     </div>
                   )}
+                  {u.status === 'error' && u.error && (
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--danger)' }}>{u.error}</p>
+                  )}
                 </div>
-                <span
-                  className="text-[10px] font-semibold shrink-0"
-                  style={{
-                    color: u.status === 'done' ? 'var(--good)' : u.status === 'error' ? 'var(--danger)' : 'var(--muted)',
-                  }}
-                >
-                  {u.status === 'done' ? 'Done' : u.status === 'error' ? 'Error' : `${u.progress}%`}
-                </span>
+                <div className="shrink-0 flex flex-col items-end gap-1">
+                  <span
+                    className="text-[10px] font-semibold"
+                    style={{
+                      color: u.status === 'done' ? 'var(--good)' : u.status === 'error' ? 'var(--danger)' : 'var(--muted)',
+                    }}
+                  >
+                    {u.status === 'done' ? 'Done' : u.status === 'error' ? 'Error' : `${u.progress}%`}
+                  </span>
+                  {u.status === 'error' && (
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => retryItem(u.id)} className="text-[10px] font-semibold" style={{ color: 'var(--violet)' }}>
+                        Retry
+                      </button>
+                      <button type="button" onClick={() => removeItem(u.id)} className="text-[10px] font-semibold" style={{ color: 'var(--muted)' }}>
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -193,16 +255,27 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
           <a
             href={`${SERVER}/users/${userId}/album?eventId=${eventId}`}
             download="my-album.zip"
+            target="_blank"
+            rel="noreferrer"
             className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
             style={{ background: 'var(--ink)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            Download my album
+            Download / open my album
           </a>
         </div>
       )}
+
+      <FaceBlurEditor
+        open={!!blurFile}
+        file={blurFile}
+        indexLabel={blurTotal > 1 ? `${blurIndex} of ${blurTotal}` : undefined}
+        onCancel={cancelWorkflow}
+        onUseOriginal={useOriginalFile}
+        onApply={applyBlurredFile}
+      />
     </div>
   );
 }

@@ -75,11 +75,18 @@ const getPhoto  = db.prepare(`SELECT * FROM photos WHERE id = ?`);
 const getUserById   = db.prepare(`SELECT * FROM users WHERE id = ?`);
 const getUserByName = db.prepare(`SELECT id FROM users WHERE event_id = ? AND username = ?`);
 
-app.use((_req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PATCH, OPTIONS');
-  if (_req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
   next();
 });
 app.use(express.json());

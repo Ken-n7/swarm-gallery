@@ -2,6 +2,10 @@ import type { Photo } from '@/types';
 
 const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
 
+function adminFetch(input: string, init?: RequestInit) {
+  return fetch(input, { ...init, credentials: 'include' });
+}
+
 export interface AdminGuestSummary {
   id: string;
   username: string;
@@ -130,7 +134,7 @@ export function photoUrl(url: string): string {
 }
 
 export async function adminLogin(password: string): Promise<{ ok: boolean }> {
-  const res = await fetch(`${SERVER}/admin/login`, {
+  const res = await adminFetch(`${SERVER}/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
@@ -140,12 +144,12 @@ export async function adminLogin(password: string): Promise<{ ok: boolean }> {
 }
 
 export async function adminLogout(): Promise<{ ok: boolean }> {
-  const res = await fetch(`${SERVER}/admin/logout`, { method: 'GET' });
+  const res = await adminFetch(`${SERVER}/admin/logout`, { method: 'GET' });
   return res.json();
 }
 
 export async function checkAdmin(): Promise<{ admin: boolean }> {
-  const res = await fetch(`${SERVER}/admin/me`, { method: 'GET' });
+  const res = await adminFetch(`${SERVER}/admin/me`, { method: 'GET' });
   if (res.status === 401) return { admin: false };
   if (!res.ok) throw new Error('Server error');
   return res.json();
@@ -157,37 +161,37 @@ export async function getAdminStats(eventId = 'demo'): Promise<{
   activeGuests: number;
   storageUsed: number;
 }> {
-  const res = await fetch(`${SERVER}/admin/stats?eventId=${encodeURIComponent(eventId)}`);
+  const res = await adminFetch(`${SERVER}/admin/stats?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
 
 export async function getRecentPhotos(eventId = 'demo', limit = 10): Promise<Photo[]> {
-  const res = await fetch(`${SERVER}/admin/recent-photos?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
+  const res = await adminFetch(`${SERVER}/admin/recent-photos?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch recent photos');
   return res.json();
 }
 
 export async function getRecentGuests(eventId = 'demo', limit = 10): Promise<AdminGuestSummary[]> {
-  const res = await fetch(`${SERVER}/admin/recent-guests?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
+  const res = await adminFetch(`${SERVER}/admin/recent-guests?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch recent guests');
   return res.json();
 }
 
 export async function getAllPhotos(eventId = 'demo'): Promise<AdminPhotoRecord[]> {
-  const res = await fetch(`${SERVER}/admin/photos?eventId=${encodeURIComponent(eventId)}`);
+  const res = await adminFetch(`${SERVER}/admin/photos?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch photos');
   return res.json();
 }
 
 export async function getAllGuests(eventId = 'demo'): Promise<AdminGuestSummary[]> {
-  const res = await fetch(`${SERVER}/admin/guests?eventId=${encodeURIComponent(eventId)}`);
+  const res = await adminFetch(`${SERVER}/admin/guests?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch guests');
   return res.json();
 }
 
 export async function getAdminEventSettings(eventId = 'demo'): Promise<AdminEventSettingsResponse> {
-  const res = await fetch(`${SERVER}/admin/event-settings?eventId=${encodeURIComponent(eventId)}`);
+  const res = await adminFetch(`${SERVER}/admin/event-settings?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch admin event settings');
   return res.json();
 }
@@ -202,7 +206,7 @@ export async function saveAdminEventSettings(payload: {
   retentionPolicy: string;
   storageWarning: string;
 }) {
-  const res = await fetch(`${SERVER}/admin/event-settings`, {
+  const res = await adminFetch(`${SERVER}/admin/event-settings`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -212,7 +216,7 @@ export async function saveAdminEventSettings(payload: {
 }
 
 export async function prepareAdminEventExport(eventId = 'demo') {
-  const res = await fetch(`${SERVER}/admin/export-package`, {
+  const res = await adminFetch(`${SERVER}/admin/export-package`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId }),
@@ -222,7 +226,7 @@ export async function prepareAdminEventExport(eventId = 'demo') {
 }
 
 export async function markAdminHandoffComplete(eventId = 'demo') {
-  const res = await fetch(`${SERVER}/admin/handoff-complete`, {
+  const res = await adminFetch(`${SERVER}/admin/handoff-complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId }),
@@ -232,7 +236,7 @@ export async function markAdminHandoffComplete(eventId = 'demo') {
 }
 
 export async function deleteAdminEventMedia(eventId = 'demo') {
-  const res = await fetch(`${SERVER}/admin/delete-media`, {
+  const res = await adminFetch(`${SERVER}/admin/delete-media`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId }),
@@ -242,7 +246,7 @@ export async function deleteAdminEventMedia(eventId = 'demo') {
 }
 
 export async function deleteAdminEventRecord(eventId = 'demo') {
-  const res = await fetch(`${SERVER}/admin/delete-event`, {
+  const res = await adminFetch(`${SERVER}/admin/delete-event`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId }),
@@ -260,7 +264,7 @@ export function exportAdminPhotos(payload: { eventId?: string; photoIds?: string
 }
 
 export async function deleteAdminPhotos(payload: { eventId?: string; photoIds: string[] }) {
-  const res = await fetch(`${SERVER}/admin/photos/delete`, {
+  const res = await adminFetch(`${SERVER}/admin/photos/delete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId: payload.eventId || 'demo', photoIds: payload.photoIds }),
@@ -270,13 +274,36 @@ export async function deleteAdminPhotos(payload: { eventId?: string; photoIds: s
 }
 
 export async function setAdminPhotoFlag(payload: { eventId?: string; photoId: string; flagged: boolean }) {
-  const res = await fetch(`${SERVER}/admin/photos/${payload.photoId}/flag`, {
+  const res = await adminFetch(`${SERVER}/admin/photos/${payload.photoId}/flag`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventId: payload.eventId || 'demo', flagged: payload.flagged }),
   });
   if (!res.ok) throw new Error('Failed to update photo moderation flag');
   return res.json() as Promise<{ ok: boolean; photo: { id: string; flagged: boolean } }>;
+}
+
+export function exportAdminGuests(payload: { eventId?: string; guestIds?: string[] }) {
+  const params = new URLSearchParams();
+  params.set('eventId', payload.eventId || 'demo');
+  if (payload.guestIds?.length) params.set('guestIds', payload.guestIds.join(','));
+  return `${SERVER}/admin/guests/export?${params.toString()}`;
+}
+
+export function exportAdminGuestAlbum(payload: { eventId?: string; guestId: string }) {
+  const params = new URLSearchParams();
+  params.set('eventId', payload.eventId || 'demo');
+  return `${SERVER}/admin/guests/${payload.guestId}/album?${params.toString()}`;
+}
+
+export async function deleteAdminGuestPhotos(payload: { eventId?: string; guestId: string }) {
+  const res = await adminFetch(`${SERVER}/admin/guests/${payload.guestId}/photos/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId: payload.eventId || 'demo' }),
+  });
+  if (!res.ok) throw new Error('Failed to delete guest photos');
+  return res.json() as Promise<{ ok: boolean; deletedCount: number; guests: AdminGuestSummary[]; photos: AdminPhotoRecord[] }>;
 }
 
 export { SERVER };

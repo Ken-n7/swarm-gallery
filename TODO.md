@@ -64,8 +64,8 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] Guest settings UI exists
 - [x] Photo viewer UI exists
 - [x] Orientation-aware guest layout exists
-- [ ] Face blur tool is not implemented yet
-- [ ] Like state is still local-only and not synced to server
+- [x] Face blur preference and manual pre-upload blur editor now exist on the guest side
+- [~] Likes are out of the current launch scope and have been removed from the guest viewer
 - [ ] Guest bottom sheets version of upload/settings is not implemented
 - [ ] Responsive mini/collapsed variants for sidebar/upload panel are not finished
 
@@ -83,6 +83,9 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] `client/app/admin/page.tsx` is now lint-clean and no longer uses raw `<img>` tags
 - [x] Admin page has been split into dedicated page components and shared admin UI modules
 - [x] Admin UI structure is largely complete
+- [x] Admin overview pages now refresh counts, guests, and photos periodically instead of staying static after first load
+- [x] Admin top bar now shows visible last-sync status for periodic refresh
+- [x] Guest list export, guest album download, and guest photo removal now use backend routes
 - [-] Some actions are still client-only and not wired to backend operations yet
 - [-] Some HCI safety work still needs deeper confirmation/error/success flows outside Settings
 - [ ] Decide whether the broader client codebase should also be migrated away from remaining raw `<img>` usage
@@ -128,10 +131,11 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
 
 - [ ] Make all `View all` actions navigate to the correct admin pages or filtered states
 - [ ] Decide whether dashboard cards are purely summary cards or should drill into detail
-- [ ] Ensure loading, empty, and error states are distinct and polished
-- [ ] Add consistent skeleton/loading behavior if desired
+- [x] Ensure loading, empty, and error states are distinct and polished
+- [x] Add consistent skeleton/loading behavior if desired
 - [ ] Review chart labels and time framing for clarity
-- [ ] Make the dashboard status language match real system behavior
+- [-] Make the dashboard status language match real system behavior
+- [x] Refresh dashboard counts and recent uploads without requiring a manual page reload
 
 ### A2. Galleries
 
@@ -158,16 +162,18 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
 - [-] Decide whether guest bulk actions are truly needed for the product
 - [x] Define correct client behavior for:
   - `Export guest list`
-  - `Remove selected`
   - `View all photos`
   - `Download their album`
   - `Remove photos`
+- [x] Wire guest list export to a real backend route
+- [x] Wire guest album download to a real backend route
+- [x] Wire guest photo removal to a real backend route
 - [x] Add empty-state behavior when no guest is selected
 - [x] Add empty-state behavior when a guest has no photos
 - [x] Ensure filter/search and selected guest state stay in sync
 - [x] Add confirmation UX for destructive guest/media actions
 - [x] Add loading, success, and error states for guest actions
-- [ ] Decide whether guest removal remains a real product action after workflow review
+- [x] Confirm that guest removal is not part of the product; admin moderates media only
 
 ### A4. Settings
 
@@ -244,28 +250,28 @@ Goal: make the admin a real tool instead of a polished mock.
 
 ### B4. Temporary Storage / Cleanup
 
-- [ ] Decide what `Clear temporary cache` really means
-- [ ] Distinguish cached derivatives vs canonical event media
+- [x] Remove `Clear temporary cache` because event closeout already removes generated thumbnails and media
+- [x] Distinguish cached derivatives vs canonical event media
 - [x] Add backend persistence for storage warning threshold and retention setting
-- [ ] Add real retention policy handling if `Until handoff / 24 hours / 7 days` remains visible
-- [ ] Ensure cleanup logic matches the privacy-first handoff model
+- [x] Simplify retention to `Until handoff` instead of exposing fake multi-option retention controls
+- [x] Ensure cleanup logic matches the privacy-first handoff model
 
 ### B5. Moderation / Flagged Media
 
-- [ ] Decide how media becomes `flagged`
-- [-] Add backend field/process for moderation state if placeholder-only today
-- [-] Add admin action(s) for flagged media review
-- [ ] Define whether moderation is only visual tagging or actual workflow
-- [-] Ensure flagged filters in Galleries use real backend data
+- [x] Decide that media becomes `flagged` through manual admin review actions
+- [x] Add backend field/process for moderation state if placeholder-only today
+- [x] Add admin action(s) for flagged media review
+- [x] Define moderation as a lightweight visual review workflow, not participant removal
+- [x] Ensure flagged filters in Galleries use real backend data
 
 ### B6. Guest / Gallery Operations
 
-- [ ] Add backend support for guest list export if required
-- [ ] Add backend support for guest album export if required
+- [x] Add backend support for guest list export if required
+- [x] Add backend support for guest album export if required
 - [x] Add backend support for deleting selected photos from admin
 - [x] Add backend support for exporting selected or all photos from admin galleries
-- [ ] Add backend support for deleting photos belonging to a selected guest
-- [ ] Decide whether guest removal is a real product requirement
+- [x] Add backend support for deleting photos belonging to a selected guest
+- [x] Decide that guest removal is not a product requirement
 
 ---
 
@@ -275,19 +281,20 @@ Goal: finish the remaining guest features that matter for the real system.
 
 ### C1. Face Blur
 
-- [ ] Implement optional face blur before upload
-- [ ] Decide whether blur is:
+- [x] Implement optional face blur before upload
+- [x] Decide whether blur is:
   - manual placement only
   - assisted detection + manual adjustment
-- [ ] Ensure blur is applied before upload leaves the device
-- [ ] Add clear guest explanation that blur is optional and guest-controlled
+- [x] Ensure blur is applied before upload leaves the device
+- [x] Add clear guest explanation that blur is optional and guest-controlled
 - [ ] Verify blurred output quality and export behavior
 
 ### C2. Likes
 
-- [ ] Decide whether likes matter for launch
-- [ ] If yes, add server sync for likes
-- [ ] Add persistence across reloads/devices if likes remain a feature
+- [x] Decide whether likes matter for launch
+  Current decision: no. Likes are out of scope for the current launch.
+- [~] If yes, add server sync for likes
+- [~] Add persistence across reloads/devices if likes remain a feature
 
 ### C3. Guest Responsive Refinements
 
@@ -298,10 +305,10 @@ Goal: finish the remaining guest features that matter for the real system.
 
 ### C4. Guest Polish
 
-- [ ] Review upload progress/error/retry behavior
-- [ ] Review join flow validation and duplicate-name handling
-- [ ] Review download behavior on mobile devices
-- [ ] Confirm guest settings labels still match current privacy model
+- [x] Review upload progress/error/retry behavior
+- [x] Review join flow validation and duplicate-name handling
+- [x] Review download behavior on mobile devices
+- [x] Confirm guest settings labels still match current privacy model
 
 ---
 
@@ -325,17 +332,19 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 ### E1. Admin Verification
 
-- [ ] Test admin login/logout flow
+- [x] Test admin login/logout flow
+- [x] Verify dashboard visual behavior in browser
 - [ ] Test dashboard loading and empty states
-- [ ] Test galleries search/filter/selection behavior
-- [ ] Test guest search/filter/selection behavior
-- [ ] Test settings save/discard flow
-- [ ] Test all destructive confirmation flows
-- [ ] Test tablet layouts:
+- [x] Test periodic admin refresh for guest count and new uploads
+- [x] Test galleries search/filter/selection behavior
+- [x] Test guest search/filter/selection behavior
+- [x] Test settings save/discard flow
+- [x] Test all destructive confirmation flows
+- [x] Test tablet layouts:
   - iPad portrait
   - iPad landscape
   - smaller tablet / narrow laptop
-- [ ] Test desktop layouts:
+- [x] Test desktop layouts:
   - 1280px width
   - 1440px+
 
@@ -351,20 +360,20 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 ### E3. End-to-End Verification
 
-- [ ] Host event
-- [ ] Join with multiple guest devices
-- [ ] Upload multiple photos
-- [ ] Confirm guest uploads appear in admin
-- [ ] Confirm guest/media counts update as expected
-- [ ] Run handoff/export flow end-to-end
-- [ ] Run media deletion flow end-to-end
-- [ ] Confirm post-handoff privacy behavior is correct
+- [x] Host event
+- [x] Join with multiple guest devices
+- [x] Upload multiple photos
+- [x] Confirm guest uploads appear in admin
+- [x] Confirm guest/media counts update as expected
+- [x] Run handoff/export flow end-to-end
+- [x] Run media deletion flow end-to-end
+- [x] Confirm post-handoff privacy behavior is correct
 
 ### E4. Code Quality
 
 - [ ] Clear admin lint debt
-- [ ] Run client build cleanly
-- [-] Run server sanity tests / smoke checks
+- [x] Run client build cleanly
+- [x] Run server sanity tests / smoke checks
 - [ ] Add targeted tests where valuable
 
 ---
@@ -373,16 +382,15 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 Goal: keep context accurate as the system evolves.
 
-- [ ] Keep `handoff/README.md` in sync with actual implementation
-- [ ] Update `RUNBOOK.md` with real startup and verification steps
-- [ ] Update `TESTING.md` with current test workflow and known issues
-- [ ] Document admin operational flows once wired:
+- [x] Create `docs/RUNBOOK.md` with current startup and verification steps
+- [x] Create `docs/TESTING.md` with current test workflow and known issues
+- [x] Document admin operational flows once wired:
   - export package
   - mark handoff complete
   - delete media
   - delete event
-- [ ] Document privacy assumptions and post-event deletion policy
-- [ ] Document any moderation workflow if `Flagged` becomes real
+- [x] Document privacy assumptions and post-event deletion policy
+- [x] Document any moderation workflow if `Flagged` becomes real
 
 ---
 
@@ -437,7 +445,9 @@ These are the best next steps from the current state:
 - [x] Decide the next backend wiring target after Settings
 - [x] Wire gallery export/delete operations to real backend routes
 - [-] Start backend wiring for gallery moderation actions
-- [ ] Start backend wiring for guest-level export/remove actions
+- [x] Refresh admin guest count and upload listings without requiring a manual page reload
+- [x] Start backend wiring for guest-level export/remove actions
+- [x] Decide that backend guest removal should not exist
 
 ---
 

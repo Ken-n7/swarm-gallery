@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 import { useOrientation } from '@/hooks/useOrientation';
+import { useGuestPreferences } from '@/hooks/useGuestPreferences';
+import { SERVER } from '@/lib/api';
 
 interface ToggleProps {
   on: boolean;
@@ -83,8 +85,11 @@ function Divider() {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const params = useParams();
+  const eventId = (params.id as string) || 'demo';
   const orientation = useOrientation();
   const { user, rename, leave, joining, error } = useUser();
+  const { faceBlurEnabled, setFaceBlurEnabled } = useGuestPreferences();
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -203,8 +208,8 @@ export default function SettingsPage() {
       <Card>
         <Row
           title="Face blur"
-          subtitle="Blur your face in all photos"
-          right={<Toggle on={true} onChange={() => {}} />}
+          subtitle="Pause photos for manual face blur before upload"
+          right={<Toggle on={faceBlurEnabled} onChange={setFaceBlurEnabled} />}
         />
         <Divider />
         <Row
@@ -220,17 +225,23 @@ export default function SettingsPage() {
     <div className="flex flex-col gap-2">
       <SectionLabel>Your Photos</SectionLabel>
       <div className="rounded-[14px]" style={{ border: '1px solid var(--line)', background: 'white' }}>
-        <div className="flex items-center justify-between px-4 py-4">
+        <a
+          href={user ? `${SERVER}/users/${user.userId}/album?eventId=${eventId}` : undefined}
+          download="my-album.zip"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-between px-4 py-4"
+        >
           <div>
             <p className="text-[15px] font-semibold text-[var(--ink)]">Download all my photos</p>
-            <p className="text-[13px] text-[var(--muted)] mt-0.5">Coming soon</p>
+            <p className="text-[13px] text-[var(--muted)] mt-0.5">Downloads on desktop and opens in-browser where mobile download is limited</p>
           </div>
           <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--violet-tint)' }}>
             <svg className="w-4 h-4 text-[var(--violet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </div>
-        </div>
+        </a>
       </div>
     </div>
   );

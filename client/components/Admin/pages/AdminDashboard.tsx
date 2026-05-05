@@ -9,26 +9,98 @@ export function AdminDashboard() {
   const [recentPhotos, setRecentPhotos] = useState<AdminPhoto[]>([]);
   const [recentGuests, setRecentGuests] = useState<AdminGuest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      getAdminStats(),
-      getRecentPhotos('demo', 6),
-      getRecentGuests('demo', 5)
-    ]).then(([statsData, photosData, guestsData]) => {
-      setStats(statsData);
-      setRecentPhotos(photosData);
-      setRecentGuests(guestsData);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    let cancelled = false;
+
+    const refreshDashboard = () => {
+      Promise.all([
+        getAdminStats(),
+        getRecentPhotos('demo', 6),
+        getRecentGuests('demo', 5),
+      ])
+        .then(([statsData, photosData, guestsData]) => {
+          if (cancelled) return;
+          setStats(statsData);
+          setRecentPhotos(photosData);
+          setRecentGuests(guestsData);
+          setLoadFailed(false);
+          setLoading(false);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setLoadFailed(true);
+            setLoading(false);
+          }
+        });
+    };
+
+    refreshDashboard();
+    const intervalId = window.setInterval(refreshDashboard, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   if (loading) {
-    return <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>Loading dashboard...</div>;
+    return (
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-[14px] p-6 animate-pulse bg-white" style={{ border: '1px solid var(--line)' }}>
+              <div className="h-3 w-24 rounded-full mb-4" style={{ background: 'var(--bg-deep)' }} />
+              <div className="h-8 w-20 rounded-full" style={{ background: 'var(--bg-deep)' }} />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-[14px] p-6 animate-pulse bg-white" style={{ border: '1px solid var(--line)' }}>
+          <div className="h-4 w-40 rounded-full mb-3" style={{ background: 'var(--bg-deep)' }} />
+          <div className="h-3 w-28 rounded-full mb-6" style={{ background: 'var(--bg-deep)' }} />
+          <div className="h-24 rounded-[12px]" style={{ background: 'var(--bg-deep)' }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="p-6">
+        <div className="rounded-[14px] p-6 bg-white" style={{ border: '1px solid rgba(224,92,92,.2)' }}>
+          <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--danger)' }}>Dashboard unavailable</div>
+          <div className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+            Admin metrics could not be loaded from the server. Refresh the page or check that the server is still reachable.
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const guestStatuses: GuestStatus[] = ['Active', 'Active', 'Active', 'Active', 'Idle'];
   const topUploader = [...recentGuests].sort((a, b) => (b.photoCount || 0) - (a.photoCount || 0))[0];
+  const hasActivity = (stats?.photoCount || 0) > 0 || (stats?.guestCount || 0) > 0;
+
+  if (!hasActivity) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Total Photos" value={0} />
+          <StatCard title="Total Guests" value={0} />
+          <StatCard title="Active Guests" value={0} />
+          <StatCard title="Temp Storage" value="0 MB" />
+        </div>
+
+        <div className="rounded-[14px] p-8 bg-white text-center" style={{ border: '1px solid var(--line)' }}>
+          <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>This event is ready for guests</div>
+          <div className="text-sm max-w-xl mx-auto" style={{ color: 'var(--muted)' }}>
+            No guests or media have been added yet. Once people join and upload, this dashboard will start showing recent activity, guest counts, and gallery snapshots.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
