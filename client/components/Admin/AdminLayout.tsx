@@ -17,9 +17,9 @@ export function AdminLayout({ currentPage, onPageChange, title, subtitle, active
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
-    <div className="h-screen bg-slate-50 flex">
+    <div className="h-screen flex" style={{ background: 'var(--bg-soft)' }}>
       {/* Desktop sidebar */}
-      <div className="hidden lg:block w-64 border-r border-slate-200">
+      <div className="hidden lg:block w-64" style={{ borderRight: '1px solid var(--line)' }}>
         <AdminSidebar currentPage={currentPage} onPageChange={onPageChange} />
       </div>
 

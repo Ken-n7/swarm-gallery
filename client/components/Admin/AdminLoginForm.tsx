@@ -20,7 +20,7 @@ export function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
     try {
       await adminLogin(password);
       onLogin();
-    } catch (err) {
+    } catch {
       setError('Invalid password');
     } finally {
       setLoading(false);
@@ -28,14 +28,17 @@ export function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg-soft)' }}>
+      <div className="w-full max-w-md bg-white rounded-[18px] p-8" style={{ border: '1px solid var(--line)' }}>
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-400 flex items-center justify-center text-white font-black text-2xl mx-auto mb-4">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4"
+            style={{ background: 'var(--neon-gradient)', fontFamily: 'var(--font-paytone)' }}
+          >
             S
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Swarm Admin</h1>
-          <p className="text-slate-600 mt-2">Enter admin password to continue</p>
+          <h1 className="text-[22px]" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>Swarm Admin</h1>
+          <p className="mt-2 text-[14px]" style={{ color: 'var(--ink-soft)' }}>Enter admin password to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,27 +48,25 @@ export function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Admin password"
-              className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-[12px] focus:outline-none focus:ring-2 focus:border-transparent"
+              style={{ border: '1px solid var(--line)', color: 'var(--ink)' }}
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="text-sm text-center" style={{ color: 'var(--danger)' }}>{error}</div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+            className="w-full text-white font-semibold py-3 px-4 rounded-[14px] transition-colors disabled:opacity-60"
+            style={{ background: 'var(--violet)' }}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-slate-500">
-          Default password: admin123
-        </div>
       </div>
     </div>
   );
