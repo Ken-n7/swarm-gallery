@@ -79,9 +79,11 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] Single-page Settings flow is in place
 - [x] Settings now has client-side workflow behavior for save/discard, handoff state, and destructive confirmations
 - [x] Galleries now has client-side selection, moderation review, and destructive-action behavior
+- [x] Guests now has client-side export, review, and destructive-action behavior
 - [x] `client/app/admin/page.tsx` is now lint-clean and no longer uses raw `<img>` tags
+- [x] Admin page has been split into dedicated page components and shared admin UI modules
 - [x] Admin UI structure is largely complete
-- [-] Many actions are still placeholder/client-only and not operational yet
+- [-] Many actions are still client-only and not wired to backend operations yet
 - [-] Some HCI safety work still needs deeper confirmation/error/success flows outside Settings
 - [ ] Decide whether the broader client codebase should also be migrated away from remaining raw `<img>` usage
 
@@ -153,18 +155,19 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
 
 ### A3. Guests
 
-- [ ] Decide whether guest bulk actions are truly needed for the product
-- [ ] Define correct client behavior for:
+- [-] Decide whether guest bulk actions are truly needed for the product
+- [x] Define correct client behavior for:
   - `Export guest list`
   - `Remove selected`
   - `View all photos`
   - `Download their album`
   - `Remove photos`
-- [ ] Add empty-state behavior when no guest is selected
-- [ ] Add empty-state behavior when a guest has no photos
-- [ ] Ensure filter/search and selected guest state stay in sync
-- [ ] Add confirmation UX for destructive guest/media actions
-- [ ] Add loading, success, and error states for guest actions
+- [x] Add empty-state behavior when no guest is selected
+- [x] Add empty-state behavior when a guest has no photos
+- [x] Ensure filter/search and selected guest state stay in sync
+- [x] Add confirmation UX for destructive guest/media actions
+- [x] Add loading, success, and error states for guest actions
+- [ ] Decide whether guest removal remains a real product action after workflow review
 
 ### A4. Settings
 
@@ -200,9 +203,9 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
 
 - [x] Replace `any` usage in `client/app/admin/page.tsx`
 - [x] Decide whether to migrate admin images to `next/image`
-- [ ] Break up `client/app/admin/page.tsx` if it becomes too large to maintain
-- [ ] Extract repeated card/list/action UI into smaller admin components
-- [ ] Add clearer local types for admin stats, guests, and photos
+- [x] Break up `client/app/admin/page.tsx` if it becomes too large to maintain
+- [x] Extract repeated card/list/action UI into smaller admin components
+- [x] Add clearer local types for admin stats, guests, and photos
 
 ---
 
@@ -424,9 +427,11 @@ These are the best next steps from the current state:
 - [-] Finish admin client-side operational behavior for all visible actions
 - [-] Add confirmation and status flows to admin destructive actions
 - [x] Remove admin `any` types and clean the biggest maintainability issues in `client/app/admin/page.tsx`
+- [x] Split the admin page into maintainable components before backend wiring
 - [ ] Decide whether guest face blur is required before backend admin operations
 - [ ] Design the backend handoff/export/delete contract before wiring admin actions
-- [ ] Continue the admin client pass in `Guests`
+- [ ] Decide which remaining admin actions are real enough to wire first
+- [ ] Start backend operational APIs for export, handoff complete, delete media, and delete event
 
 ---
 
