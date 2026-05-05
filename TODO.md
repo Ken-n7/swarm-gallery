@@ -83,7 +83,7 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] `client/app/admin/page.tsx` is now lint-clean and no longer uses raw `<img>` tags
 - [x] Admin page has been split into dedicated page components and shared admin UI modules
 - [x] Admin UI structure is largely complete
-- [-] Many actions are still client-only and not wired to backend operations yet
+- [-] Some actions are still client-only and not wired to backend operations yet
 - [-] Some HCI safety work still needs deeper confirmation/error/success flows outside Settings
 - [ ] Decide whether the broader client codebase should also be migrated away from remaining raw `<img>` usage
 
@@ -101,9 +101,9 @@ Swarm Gallery is an event photo-sharing system with:
   - all photos
   - all guests
 - [x] Event QR endpoint exists
-- [ ] Operational admin APIs for handoff/export/delete flows are not complete
-- [ ] Moderation workflow APIs are not complete
-- [ ] Event closeout lifecycle is not fully modeled yet
+- [-] Operational admin APIs for handoff/export/delete flows are in progress
+- [-] Moderation workflow APIs are now partially implemented for gallery flag toggles
+- [-] Event closeout lifecycle is now partially modeled on the backend
 
 ---
 
@@ -171,7 +171,7 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
 
 ### A4. Settings
 
-- [-] Finish interaction behavior for:
+- [x] Finish interaction behavior for:
   - `Export Package`
   - `Mark Complete`
   - `Delete Media`
@@ -188,6 +188,7 @@ Goal: make the admin UI fully behave correctly before wiring every operation to 
   - failed
   - complete
 - [ ] Decide whether any additional Settings actions need undo or retry behavior
+- [x] Wire Settings to backend state for load/save and workflow actions
 
 ### A5. Admin HCI / Accessibility Polish
 
@@ -215,53 +216,54 @@ Goal: make the admin a real tool instead of a polished mock.
 
 ### B1. Export / Handoff
 
-- [ ] Design the backend flow for `Prepare Client Handoff`
+- [x] Design the backend flow for `Prepare Client Handoff`
 - [ ] Decide export format:
   - single ZIP of all media
   - ZIP + metadata manifest
   - separate guest/media manifests if needed
-- [ ] Add endpoint to build/download event handoff package
+- [x] Add endpoint to build/download event handoff package
 - [ ] Decide whether exports are synchronous or background jobs
 - [ ] Add server-side status tracking for export generation
-- [ ] Reflect export history/status in admin UI
+- [-] Reflect export history/status in admin UI
 
 ### B2. Handoff Completion
 
-- [ ] Add backend state for `handoff pending / ready / complete`
-- [ ] Add endpoint for `Mark Handoff Complete`
-- [ ] Prevent misleading UI states when handoff is not complete
+- [x] Add backend state for `handoff pending / ready / complete`
+- [x] Add endpoint for `Mark Handoff Complete`
+- [x] Prevent misleading UI states when handoff is not complete
 - [ ] Decide whether handoff completion requires a successful export first
 
 ### B3. Media Deletion / Event Closeout
 
-- [ ] Add endpoint for `Delete Event Media`
-- [ ] Add endpoint for `Delete Event Record`
+- [x] Add endpoint for `Delete Event Media`
+- [x] Add endpoint for `Delete Event Record`
 - [ ] Define deletion ordering and safeguards
-- [ ] Decide what metadata survives after media deletion, if any
-- [ ] Add audit-safe status responses so the UI can explain what happened
-- [ ] Ensure delete operations cannot be triggered accidentally
+- [-] Decide what metadata survives after media deletion, if any
+- [x] Add audit-safe status responses so the UI can explain what happened
+- [x] Ensure delete operations cannot be triggered accidentally
 
 ### B4. Temporary Storage / Cleanup
 
 - [ ] Decide what `Clear temporary cache` really means
 - [ ] Distinguish cached derivatives vs canonical event media
-- [ ] Add backend logic for storage warning thresholds if needed
+- [x] Add backend persistence for storage warning threshold and retention setting
 - [ ] Add real retention policy handling if `Until handoff / 24 hours / 7 days` remains visible
 - [ ] Ensure cleanup logic matches the privacy-first handoff model
 
 ### B5. Moderation / Flagged Media
 
 - [ ] Decide how media becomes `flagged`
-- [ ] Add backend field/process for moderation state if placeholder-only today
-- [ ] Add admin action(s) for flagged media review
+- [-] Add backend field/process for moderation state if placeholder-only today
+- [-] Add admin action(s) for flagged media review
 - [ ] Define whether moderation is only visual tagging or actual workflow
-- [ ] Ensure flagged filters in Galleries use real backend data
+- [-] Ensure flagged filters in Galleries use real backend data
 
 ### B6. Guest / Gallery Operations
 
 - [ ] Add backend support for guest list export if required
 - [ ] Add backend support for guest album export if required
-- [ ] Add backend support for deleting selected photos from admin
+- [x] Add backend support for deleting selected photos from admin
+- [x] Add backend support for exporting selected or all photos from admin galleries
 - [ ] Add backend support for deleting photos belonging to a selected guest
 - [ ] Decide whether guest removal is a real product requirement
 
@@ -362,7 +364,7 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 - [ ] Clear admin lint debt
 - [ ] Run client build cleanly
-- [ ] Run server sanity tests / smoke checks
+- [-] Run server sanity tests / smoke checks
 - [ ] Add targeted tests where valuable
 
 ---
@@ -388,9 +390,9 @@ Goal: keep context accurate as the system evolves.
 
 ### Phase 1: Finish Admin Client Behavior
 
-- [ ] Complete all admin page interactions
-- [ ] Add confirmations, disabled states, success/error states
-- [ ] Clean up admin code debt enough to make future wiring easier
+- [x] Complete all admin page interactions
+- [x] Add confirmations, disabled states, success/error states
+- [x] Clean up admin code debt enough to make future wiring easier
 
 ### Phase 2: Finish Launch-Critical Guest Features
 
@@ -399,11 +401,11 @@ Goal: keep context accurate as the system evolves.
 
 ### Phase 3: Build Admin Operations Backend
 
-- [ ] Export package
-- [ ] Handoff complete state
-- [ ] Delete media
-- [ ] Delete event
-- [ ] Moderation / flagged behavior
+- [x] Export package
+- [x] Handoff complete state
+- [x] Delete media
+- [x] Delete event
+- [-] Moderation / flagged behavior
 
 ### Phase 4: Wire Client to Backend
 
@@ -429,9 +431,13 @@ These are the best next steps from the current state:
 - [x] Remove admin `any` types and clean the biggest maintainability issues in `client/app/admin/page.tsx`
 - [x] Split the admin page into maintainable components before backend wiring
 - [ ] Decide whether guest face blur is required before backend admin operations
-- [ ] Design the backend handoff/export/delete contract before wiring admin actions
-- [ ] Decide which remaining admin actions are real enough to wire first
-- [ ] Start backend operational APIs for export, handoff complete, delete media, and delete event
+- [x] Design the backend handoff/export/delete contract before wiring admin actions
+- [-] Decide which remaining admin actions are real enough to wire first
+- [x] Start backend operational APIs for export, handoff complete, delete media, and delete event
+- [x] Decide the next backend wiring target after Settings
+- [x] Wire gallery export/delete operations to real backend routes
+- [-] Start backend wiring for gallery moderation actions
+- [ ] Start backend wiring for guest-level export/remove actions
 
 ---
 

@@ -1,4 +1,42 @@
+import type { Photo } from '@/types';
+
 const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+
+export interface AdminGuestSummary {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  joinedAt: number;
+  lastSeen: number;
+  photoCount: number;
+}
+
+export interface AdminEventSettingsResponse {
+  id: string;
+  name: string;
+  organizerName: string;
+  eventDate: string;
+  eventType: string;
+  expectedGuests: number;
+  retentionPolicy: string;
+  storageWarning: number;
+  status: string;
+  createdAt: number;
+  handoffPreparedAt: number | null;
+  handoffCompletedAt: number | null;
+  mediaDeletedAt: number | null;
+  closedAt: number | null;
+  photoCount: number;
+  guestCount: number;
+  activeGuests: number;
+  storageUsed: number;
+  storageTotal: number;
+}
+
+export interface AdminPhotoRecord extends Photo {
+  sizeBytes?: number;
+  flagged?: boolean;
+}
 
 export async function joinEvent(params: {
   username: string;
@@ -46,7 +84,7 @@ export function uploadPhotoWithProgress(
   file: File,
   username: string,
   onProgress: (pct: number) => void,
-): Promise<import('@/types').Photo> {
+): Promise<Photo> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const form = new FormData();
@@ -124,28 +162,121 @@ export async function getAdminStats(eventId = 'demo'): Promise<{
   return res.json();
 }
 
-export async function getRecentPhotos(eventId = 'demo', limit = 10): Promise<import('@/types').Photo[]> {
+export async function getRecentPhotos(eventId = 'demo', limit = 10): Promise<Photo[]> {
   const res = await fetch(`${SERVER}/admin/recent-photos?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch recent photos');
   return res.json();
 }
 
-export async function getRecentGuests(eventId = 'demo', limit = 10): Promise<any[]> {
+export async function getRecentGuests(eventId = 'demo', limit = 10): Promise<AdminGuestSummary[]> {
   const res = await fetch(`${SERVER}/admin/recent-guests?eventId=${encodeURIComponent(eventId)}&limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch recent guests');
   return res.json();
 }
 
-export async function getAllPhotos(eventId = 'demo'): Promise<import('@/types').Photo[]> {
+export async function getAllPhotos(eventId = 'demo'): Promise<AdminPhotoRecord[]> {
   const res = await fetch(`${SERVER}/admin/photos?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch photos');
   return res.json();
 }
 
-export async function getAllGuests(eventId = 'demo'): Promise<any[]> {
+export async function getAllGuests(eventId = 'demo'): Promise<AdminGuestSummary[]> {
   const res = await fetch(`${SERVER}/admin/guests?eventId=${encodeURIComponent(eventId)}`);
   if (!res.ok) throw new Error('Failed to fetch guests');
   return res.json();
+}
+
+export async function getAdminEventSettings(eventId = 'demo'): Promise<AdminEventSettingsResponse> {
+  const res = await fetch(`${SERVER}/admin/event-settings?eventId=${encodeURIComponent(eventId)}`);
+  if (!res.ok) throw new Error('Failed to fetch admin event settings');
+  return res.json();
+}
+
+export async function saveAdminEventSettings(payload: {
+  eventId?: string;
+  name: string;
+  organizerName: string;
+  eventDate: string;
+  eventType: string;
+  expectedGuests: string;
+  retentionPolicy: string;
+  storageWarning: string;
+}) {
+  const res = await fetch(`${SERVER}/admin/event-settings`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to save admin event settings');
+  return res.json() as Promise<AdminEventSettingsResponse>;
+}
+
+export async function prepareAdminEventExport(eventId = 'demo') {
+  const res = await fetch(`${SERVER}/admin/export-package`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId }),
+  });
+  if (!res.ok) throw new Error('Failed to prepare export package');
+  return res.json();
+}
+
+export async function markAdminHandoffComplete(eventId = 'demo') {
+  const res = await fetch(`${SERVER}/admin/handoff-complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId }),
+  });
+  if (!res.ok) throw new Error('Failed to mark handoff complete');
+  return res.json();
+}
+
+export async function deleteAdminEventMedia(eventId = 'demo') {
+  const res = await fetch(`${SERVER}/admin/delete-media`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId }),
+  });
+  if (!res.ok) throw new Error('Failed to delete event media');
+  return res.json();
+}
+
+export async function deleteAdminEventRecord(eventId = 'demo') {
+  const res = await fetch(`${SERVER}/admin/delete-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId }),
+  });
+  if (!res.ok) throw new Error('Failed to delete event record');
+  return res.json();
+}
+
+export function exportAdminPhotos(payload: { eventId?: string; photoIds?: string[]; exportAll?: boolean }) {
+  const params = new URLSearchParams();
+  params.set('eventId', payload.eventId || 'demo');
+  if (payload.exportAll) params.set('exportAll', '1');
+  if (payload.photoIds?.length) params.set('photoIds', payload.photoIds.join(','));
+  return `${SERVER}/admin/photos/export?${params.toString()}`;
+}
+
+export async function deleteAdminPhotos(payload: { eventId?: string; photoIds: string[] }) {
+  const res = await fetch(`${SERVER}/admin/photos/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId: payload.eventId || 'demo', photoIds: payload.photoIds }),
+  });
+  if (!res.ok) throw new Error('Failed to delete selected photos');
+  return res.json() as Promise<{ ok: boolean; deletedCount: number; photos: AdminPhotoRecord[] }>;
+}
+
+export async function setAdminPhotoFlag(payload: { eventId?: string; photoId: string; flagged: boolean }) {
+  const res = await fetch(`${SERVER}/admin/photos/${payload.photoId}/flag`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId: payload.eventId || 'demo', flagged: payload.flagged }),
+  });
+  if (!res.ok) throw new Error('Failed to update photo moderation flag');
+  return res.json() as Promise<{ ok: boolean; photo: { id: string; flagged: boolean } }>;
 }
 
 export { SERVER };

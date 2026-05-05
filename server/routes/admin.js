@@ -1,4 +1,7 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
 const config = require('../config');
 const db = require('../db');
 const { requireAdmin } = require('../middleware/auth');
@@ -9,8 +12,80 @@ const COOKIE_OPTS = {
   httpOnly: true,
   signed: true,
   sameSite: 'lax',
-  maxAge: 8 * 60 * 60 * 1000, // 8 hours
+  maxAge: 8 * 60 * 60 * 1000,
 };
+
+const getEvent = db.prepare(`
+  SELECT e.*, s.organizer_name, s.event_date, s.event_type, s.expected_guests, s.retention_policy, s.storage_warning_pct
+  FROM events e
+  LEFT JOIN event_settings s ON s.event_id = e.id
+  WHERE e.id = ?
+`);
+
+const upsertEventSettings = db.prepare(`
+  INSERT INTO event_settings (
+    event_id, organizer_name, event_date, event_type, expected_guests, retention_policy, storage_warning_pct
+  ) VALUES (
+    @event_id, @organizer_name, @event_date, @event_type, @expected_guests, @retention_policy, @storage_warning_pct
+  )
+  ON CONFLICT(event_id) DO UPDATE SET
+    organizer_name = excluded.organizer_name,
+    event_date = excluded.event_date,
+    event_type = excluded.event_type,
+    expected_guests = excluded.expected_guests,
+    retention_policy = excluded.retention_policy,
+    storage_warning_pct = excluded.storage_warning_pct
+`);
+const getPhotoById = db.prepare(`SELECT * FROM photos WHERE id = ?`);
+
+function calculateStorageUsed(eventId) {
+  let storageUsed = 0;
+  try {
+    const eventDir = path.join(config.STORAGE.EVENTS, eventId);
+    if (fs.existsSync(eventDir)) {
+      const files = fs.readdirSync(eventDir);
+      storageUsed = files.reduce((total, file) => {
+        const filePath = path.join(eventDir, file);
+        return total + (fs.statSync(filePath).size || 0);
+      }, 0);
+    }
+  } catch (err) {
+    console.error('Error calculating storage:', err);
+  }
+  return storageUsed;
+}
+
+function eventStateResponse(eventId) {
+  const event = getEvent.get(eventId);
+  if (!event) return null;
+
+  const photoCount = db.prepare('SELECT COUNT(*) as count FROM photos WHERE event_id = ?').get(eventId).count;
+  const guestCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ?').get(eventId).count;
+  const activeGuests = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ? AND last_seen > ?').get(eventId, Date.now() - 5 * 60 * 1000).count;
+  const storageUsedBytes = calculateStorageUsed(eventId);
+
+  return {
+    id: event.id,
+    name: event.name,
+    organizerName: event.organizer_name || 'Swarm Gallery',
+    eventDate: event.event_date || new Date().toISOString().slice(0, 10),
+    eventType: event.event_type || 'Corporate / Conference',
+    expectedGuests: event.expected_guests || 300,
+    retentionPolicy: event.retention_policy || 'Until handoff',
+    storageWarning: event.storage_warning_pct || 80,
+    status: event.status,
+    createdAt: event.created_at,
+    handoffPreparedAt: event.handoff_prepared_at,
+    handoffCompletedAt: event.handoff_completed_at,
+    mediaDeletedAt: event.media_deleted_at,
+    closedAt: event.closed_at,
+    photoCount,
+    guestCount,
+    activeGuests,
+    storageUsed: Number((storageUsedBytes / 1024 / 1024 / 1024).toFixed(1)),
+    storageTotal: 50,
+  };
+}
 
 router.post('/login', (req, res) => {
   const { password } = req.body;
@@ -30,43 +105,24 @@ router.get('/me', requireAdmin, (_req, res) => {
   res.json({ admin: true });
 });
 
-// Admin stats
 router.get('/stats', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
-
   const photoCount = db.prepare('SELECT COUNT(*) as count FROM photos WHERE event_id = ?').get(eventId).count;
   const guestCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ?').get(eventId).count;
-  const activeGuests = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE event_id = ? AND last_seen > ?').get(eventId, Date.now() - 5 * 60 * 1000).count; // Active in last 5 min
-
-  // Calculate storage used
-  const fs = require('fs');
-  const path = require('path');
-  let storageUsed = 0;
-  try {
-    const eventDir = path.join(config.STORAGE.EVENTS, eventId);
-    if (fs.existsSync(eventDir)) {
-      const files = fs.readdirSync(eventDir);
-      storageUsed = files.reduce((total, file) => {
-        const filePath = path.join(eventDir, file);
-        return total + (fs.statSync(filePath).size || 0);
-      }, 0);
-    }
-  } catch (err) {
-    console.error('Error calculating storage:', err);
-  }
+  const activeGuests = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ? AND last_seen > ?').get(eventId, Date.now() - 5 * 60 * 1000).count;
+  const storageUsed = calculateStorageUsed(eventId);
 
   res.json({
     photoCount,
     guestCount,
     activeGuests,
-    storageUsed: Math.round(storageUsed / (1024 * 1024)), // MB
+    storageUsed: Math.round(storageUsed / (1024 * 1024)),
   });
 });
 
-// Recent photos for dashboard
 router.get('/recent-photos', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   const photos = db.prepare(`
     SELECT p.*, u.username
@@ -77,7 +133,7 @@ router.get('/recent-photos', requireAdmin, (req, res) => {
     LIMIT ?
   `).all(eventId, limit);
 
-  res.json(photos.map(p => ({
+  res.json(photos.map((p) => ({
     id: p.id,
     filename: p.filename,
     url: `/photos/${eventId}/${p.filename}`,
@@ -88,10 +144,9 @@ router.get('/recent-photos', requireAdmin, (req, res) => {
   })));
 });
 
-// Recent guests for dashboard
 router.get('/recent-guests', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   const guests = db.prepare(`
     SELECT u.*, COUNT(p.id) as photo_count
@@ -103,7 +158,7 @@ router.get('/recent-guests', requireAdmin, (req, res) => {
     LIMIT ?
   `).all(eventId, limit);
 
-  res.json(guests.map(g => ({
+  res.json(guests.map((g) => ({
     id: g.id,
     username: g.username,
     avatarUrl: g.avatar_filename ? `/avatars/${eventId}/${g.avatar_filename}` : null,
@@ -113,7 +168,6 @@ router.get('/recent-guests', requireAdmin, (req, res) => {
   })));
 });
 
-// All photos for galleries page
 router.get('/photos', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
 
@@ -125,7 +179,7 @@ router.get('/photos', requireAdmin, (req, res) => {
     ORDER BY p.uploaded_at DESC
   `).all(eventId);
 
-  res.json(photos.map(p => ({
+  res.json(photos.map((p) => ({
     id: p.id,
     filename: p.filename,
     url: `/photos/${eventId}/${p.filename}`,
@@ -134,11 +188,137 @@ router.get('/photos', requireAdmin, (req, res) => {
     uploader: p.uploader_name || p.username,
     mimetype: p.mimetype,
     sizeBytes: p.size_bytes,
-    flagged: p.flagged,
+    flagged: !!p.flagged,
   })));
 });
 
-// All guests for guests page
+router.get('/photos/export', requireAdmin, (req, res) => {
+  const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const exportAll = req.query.exportAll === '1';
+  const photoIds = typeof req.query.photoIds === 'string' && req.query.photoIds.length
+    ? req.query.photoIds.split(',').filter(Boolean)
+    : [];
+
+  const rows = exportAll
+    ? db.prepare(`
+        SELECT p.*, u.username
+        FROM photos p
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.event_id = ?
+        ORDER BY p.uploaded_at DESC
+      `).all(eventId)
+    : photoIds.length
+      ? db.prepare(`
+          SELECT p.*, u.username
+          FROM photos p
+          LEFT JOIN users u ON p.user_id = u.id
+          WHERE p.event_id = ? AND p.id IN (${photoIds.map(() => '?').join(',')})
+          ORDER BY p.uploaded_at DESC
+        `).all(eventId, ...photoIds)
+      : [];
+
+  if (!rows.length) return res.status(404).json({ error: 'No photos selected for export' });
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${eventId}-${exportAll ? 'gallery' : 'selection'}.zip"`);
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', (err) => {
+    console.error('Gallery export ZIP error:', err);
+    if (!res.headersSent) res.status(500).end();
+    else res.end();
+  });
+  archive.pipe(res);
+
+  for (const row of rows) {
+    const filePath = path.join(config.STORAGE.EVENTS, eventId, row.filename);
+    if (fs.existsSync(filePath)) archive.file(filePath, { name: row.filename });
+  }
+
+  archive.append(JSON.stringify({
+    exportedAt: Date.now(),
+    eventId,
+    photoCount: rows.length,
+    exportAll,
+    media: rows.map((row) => ({
+      id: row.id,
+      filename: row.filename,
+      originalName: row.original_name,
+      uploadedAt: row.uploaded_at,
+      uploader: row.uploader_name || row.username,
+      mimetype: row.mimetype,
+      sizeBytes: row.size_bytes,
+      flagged: !!row.flagged,
+    })),
+  }, null, 2), { name: 'manifest.json' });
+
+  archive.finalize();
+});
+
+router.post('/photos/delete', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const photoIds = Array.isArray(req.body.photoIds) ? req.body.photoIds : [];
+
+  if (!photoIds.length) return res.status(400).json({ error: 'photoIds required' });
+
+  const rows = db.prepare(`
+    SELECT * FROM photos
+    WHERE event_id = ? AND id IN (${photoIds.map(() => '?').join(',')})
+  `).all(eventId, ...photoIds);
+
+  for (const row of rows) {
+    const filePath = path.join(config.STORAGE.EVENTS, eventId, row.filename);
+    if (fs.existsSync(filePath)) fs.rmSync(filePath, { force: true });
+    if (row.thumb_filename) {
+      const thumbPath = path.join(config.STORAGE.EVENTS, eventId, row.thumb_filename);
+      if (fs.existsSync(thumbPath)) fs.rmSync(thumbPath, { force: true });
+    }
+  }
+
+  db.prepare(`DELETE FROM photos WHERE event_id = ? AND id IN (${photoIds.map(() => '?').join(',')})`).run(eventId, ...photoIds);
+
+  const photos = db.prepare(`
+    SELECT p.*, u.username
+    FROM photos p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.event_id = ?
+    ORDER BY p.uploaded_at DESC
+  `).all(eventId);
+
+  res.json({
+    ok: true,
+    deletedCount: rows.length,
+    photos: photos.map((p) => ({
+      id: p.id,
+      filename: p.filename,
+      url: `/photos/${eventId}/${p.filename}`,
+      thumbUrl: p.thumb_filename ? `/photos/${eventId}/${p.thumb_filename}` : null,
+      uploadedAt: p.uploaded_at,
+      uploader: p.uploader_name || p.username,
+      mimetype: p.mimetype,
+      sizeBytes: p.size_bytes,
+      flagged: !!p.flagged,
+    })),
+  });
+});
+
+router.patch('/photos/:id/flag', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || req.query.eventId || config.DEMO_EVENT_ID;
+  const photo = getPhotoById.get(req.params.id);
+  if (!photo || photo.event_id !== eventId) return res.status(404).json({ error: 'Photo not found' });
+
+  const nextFlagged = typeof req.body.flagged === 'boolean' ? req.body.flagged : !photo.flagged;
+  db.prepare('UPDATE photos SET flagged = ? WHERE id = ?').run(nextFlagged ? 1 : 0, req.params.id);
+
+  res.json({
+    ok: true,
+    photo: {
+      id: photo.id,
+      flagged: nextFlagged,
+    },
+  });
+});
+
 router.get('/guests', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
 
@@ -151,7 +331,7 @@ router.get('/guests', requireAdmin, (req, res) => {
     ORDER BY u.joined_at DESC
   `).all(eventId);
 
-  res.json(guests.map(g => ({
+  res.json(guests.map((g) => ({
     id: g.id,
     username: g.username,
     avatarUrl: g.avatar_filename ? `/avatars/${eventId}/${g.avatar_filename}` : null,
@@ -159,6 +339,154 @@ router.get('/guests', requireAdmin, (req, res) => {
     lastSeen: g.last_seen,
     photoCount: g.photo_count,
   })));
+});
+
+router.get('/event-settings', requireAdmin, (req, res) => {
+  const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const state = eventStateResponse(eventId);
+  if (!state) return res.status(404).json({ error: 'Event not found' });
+  res.json(state);
+});
+
+router.patch('/event-settings', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+
+  const {
+    name,
+    organizerName,
+    eventDate,
+    eventType,
+    expectedGuests,
+    retentionPolicy,
+    storageWarning,
+  } = req.body;
+
+  db.prepare('UPDATE events SET name = ? WHERE id = ?').run(name || event.name, eventId);
+  upsertEventSettings.run({
+    event_id: eventId,
+    organizer_name: organizerName || null,
+    event_date: eventDate || null,
+    event_type: eventType || null,
+    expected_guests: expectedGuests ? Number(expectedGuests) : null,
+    retention_policy: retentionPolicy || null,
+    storage_warning_pct: storageWarning ? Number(storageWarning) : null,
+  });
+
+  res.json(eventStateResponse(eventId));
+});
+
+router.post('/export-package', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+
+  const preparedAt = Date.now();
+  db.prepare('UPDATE events SET handoff_prepared_at = ?, status = ? WHERE id = ?')
+    .run(preparedAt, 'handoff_prepared', eventId);
+
+  res.json({
+    ok: true,
+    preparedAt,
+    downloadUrl: `/admin/export-package/download?eventId=${encodeURIComponent(eventId)}`,
+    event: eventStateResponse(eventId),
+  });
+});
+
+router.get('/export-package/download', requireAdmin, (req, res) => {
+  const eventId = req.query.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+
+  const rows = db.prepare(`
+    SELECT p.*, u.username
+    FROM photos p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.event_id = ?
+    ORDER BY p.uploaded_at DESC
+  `).all(eventId);
+  const state = eventStateResponse(eventId);
+  const eventDir = path.join(config.STORAGE.EVENTS, eventId);
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${eventId}-handoff.zip"`);
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', (err) => {
+    console.error('Export ZIP error:', err);
+    if (!res.headersSent) res.status(500).end();
+    else res.end();
+  });
+  archive.pipe(res);
+
+  archive.append(JSON.stringify({
+    exportedAt: Date.now(),
+    event: state,
+    media: rows.map((row) => ({
+      id: row.id,
+      filename: row.filename,
+      originalName: row.original_name,
+      uploadedAt: row.uploaded_at,
+      uploader: row.uploader_name || row.username,
+      mimetype: row.mimetype,
+      sizeBytes: row.size_bytes,
+      flagged: !!row.flagged,
+    })),
+  }, null, 2), { name: 'manifest.json' });
+
+  if (fs.existsSync(eventDir)) {
+    archive.directory(eventDir, 'media');
+  }
+
+  archive.finalize();
+});
+
+router.post('/handoff-complete', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+  if (!event.handoff_prepared_at) return res.status(409).json({ error: 'Prepare export package first' });
+
+  db.prepare('UPDATE events SET handoff_completed_at = ?, status = ? WHERE id = ?')
+    .run(Date.now(), 'handoff_completed', eventId);
+
+  res.json({ ok: true, event: eventStateResponse(eventId) });
+});
+
+router.post('/delete-media', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+  if (!event.handoff_completed_at) return res.status(409).json({ error: 'Complete handoff first' });
+
+  const eventDir = path.join(config.STORAGE.EVENTS, eventId);
+  if (fs.existsSync(eventDir)) {
+    fs.rmSync(eventDir, { recursive: true, force: true });
+    fs.mkdirSync(eventDir, { recursive: true });
+  }
+  db.prepare('DELETE FROM photos WHERE event_id = ?').run(eventId);
+  db.prepare('UPDATE events SET media_deleted_at = ?, status = ? WHERE id = ?')
+    .run(Date.now(), 'media_deleted', eventId);
+
+  res.json({ ok: true, event: eventStateResponse(eventId) });
+});
+
+router.post('/delete-event', requireAdmin, (req, res) => {
+  const eventId = req.body.eventId || config.DEMO_EVENT_ID;
+  const event = getEvent.get(eventId);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+  if (!event.media_deleted_at) return res.status(409).json({ error: 'Delete event media first' });
+
+  const avatarDir = path.join(config.STORAGE.AVATARS, eventId);
+  if (fs.existsSync(avatarDir)) {
+    fs.rmSync(avatarDir, { recursive: true, force: true });
+  }
+  db.prepare('DELETE FROM users WHERE event_id = ?').run(eventId);
+  db.prepare('UPDATE events SET closed_at = ?, status = ? WHERE id = ?')
+    .run(Date.now(), 'closed', eventId);
+
+  res.json({ ok: true, event: eventStateResponse(eventId) });
 });
 
 module.exports = router;

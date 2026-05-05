@@ -1,8 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
-import { SERVER } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import {
+  SERVER,
+  deleteAdminEventMedia,
+  deleteAdminEventRecord,
+  getAdminEventSettings,
+  markAdminHandoffComplete,
+  prepareAdminEventExport,
+  saveAdminEventSettings,
+} from '@/lib/api';
 import { FormRow } from '@/components/Admin/shared/AdminShared';
 
 export function AdminSettings() {
@@ -32,9 +40,34 @@ export function AdminSettings() {
     deleteMedia: 'idle',
     deleteEvent: 'idle',
   });
+  const [loading, setLoading] = useState(true);
   const storagePercent = (storageUsed / storageTotal) * 100;
   const qrUrl = `${SERVER}/events/demo/qr`;
   const joinUrl = typeof window === 'undefined' ? '' : `${window.location.origin}/event/demo`;
+
+  useEffect(() => {
+    getAdminEventSettings('demo')
+      .then((data) => {
+        setEventName(data.name || 'Demo Event');
+        setOrganizerName(data.organizerName || 'Swarm Gallery');
+        setEventDate(data.eventDate || '2026-05-05');
+        setEventType(data.eventType || 'Corporate / Conference');
+        setExpectedGuests(String(data.expectedGuests || 300));
+        setRetentionPolicy(data.retentionPolicy || 'Until handoff');
+        setStorageWarning(String(data.storageWarning || 80));
+        setStorageUsed(data.storageUsed || 0);
+        setWorkflow({
+          handoffPrepared: !!data.handoffPreparedAt,
+          handoffCompleted: !!data.handoffCompletedAt,
+          mediaDeleted: !!data.mediaDeletedAt,
+          eventClosed: !!data.closedAt,
+        });
+      })
+      .catch(() => {
+        setNotice({ tone: 'warning', message: 'Could not load event settings from the server.' });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const setActionProgress = (
     action: 'exportPackage' | 'markComplete' | 'clearCache' | 'deleteMedia' | 'deleteEvent',
@@ -44,20 +77,32 @@ export function AdminSettings() {
   const handleSave = () => {
     setSaveState('saving');
     setNotice(null);
-    window.setTimeout(() => {
-      console.log('Saving event info:', {
-        eventName,
-        organizerName,
-        eventDate,
-        eventType,
-        expectedGuests,
-        retentionPolicy,
-        storageWarning,
+    saveAdminEventSettings({
+      eventId: 'demo',
+      name: eventName,
+      organizerName,
+      eventDate,
+      eventType,
+      expectedGuests,
+      retentionPolicy,
+      storageWarning,
+    })
+      .then((data) => {
+        setStorageUsed(data.storageUsed || storageUsed);
+        setWorkflow({
+          handoffPrepared: !!data.handoffPreparedAt,
+          handoffCompleted: !!data.handoffCompletedAt,
+          mediaDeleted: !!data.mediaDeletedAt,
+          eventClosed: !!data.closedAt,
+        });
+        setHasChanges(false);
+        setSaveState('saved');
+        setNotice({ tone: 'success', message: 'Event settings saved to the server.' });
+      })
+      .catch(() => {
+        setSaveState('idle');
+        setNotice({ tone: 'warning', message: 'Saving failed. Please retry.' });
       });
-      setHasChanges(false);
-      setSaveState('saved');
-      setNotice({ tone: 'success', message: 'Settings saved locally. Backend wiring can use this client-side contract next.' });
-    }, 500);
   };
 
   const handleDiscard = () => {
@@ -79,31 +124,86 @@ export function AdminSettings() {
     setActionProgress(action, 'running');
     setConfirmAction(null);
 
-    window.setTimeout(() => {
-      if (action === 'exportPackage') {
-        setWorkflow((current) => ({ ...current, handoffPrepared: true }));
-        setNotice({ tone: 'success', message: 'Client handoff package prepared. You can now mark handoff complete once delivery is done.' });
-      }
-      if (action === 'markComplete') {
-        setWorkflow((current) => ({ ...current, handoffCompleted: true }));
-        setNotice({ tone: 'success', message: 'Handoff marked complete. Media deletion is now unlocked.' });
-      }
-      if (action === 'clearCache') {
-        setStorageUsed((current) => Math.max(1.2, Number((current - 0.6).toFixed(1))));
-        setNotice({ tone: 'success', message: 'Temporary cache cleared. Event media remains intact until handoff cleanup.' });
-      }
-      if (action === 'deleteMedia') {
-        setWorkflow((current) => ({ ...current, mediaDeleted: true }));
-        setStorageUsed(0.3);
-        setNotice({ tone: 'success', message: 'Event media marked as deleted. You may now delete the event record.' });
-      }
-      if (action === 'deleteEvent') {
-        setWorkflow((current) => ({ ...current, eventClosed: true }));
-        setNotice({ tone: 'success', message: 'Event record marked for closeout. This client-side flow is ready for backend wiring.' });
-      }
+    const applyServerState = (data: {
+      handoffPreparedAt?: number | null;
+      handoffCompletedAt?: number | null;
+      mediaDeletedAt?: number | null;
+      closedAt?: number | null;
+      storageUsed?: number;
+    }) => {
+      setWorkflow({
+        handoffPrepared: !!data.handoffPreparedAt,
+        handoffCompleted: !!data.handoffCompletedAt,
+        mediaDeleted: !!data.mediaDeletedAt,
+        eventClosed: !!data.closedAt,
+      });
+      if (typeof data.storageUsed === 'number') setStorageUsed(data.storageUsed);
+    };
 
-      setActionProgress(action, 'success');
-    }, 700);
+    if (action === 'exportPackage') {
+      prepareAdminEventExport('demo')
+        .then((data) => {
+          applyServerState(data.event);
+          setActionProgress(action, 'success');
+          setNotice({ tone: 'success', message: 'Client handoff package prepared and download started.' });
+          if (data.downloadUrl) {
+            window.open(`${SERVER}${data.downloadUrl}`, '_blank', 'noopener,noreferrer');
+          }
+        })
+        .catch(() => {
+          setActionProgress(action, 'idle');
+          setNotice({ tone: 'warning', message: 'Export preparation failed. Please retry.' });
+        });
+      return;
+    }
+
+    if (action === 'markComplete') {
+      markAdminHandoffComplete('demo')
+        .then((data) => {
+          applyServerState(data.event);
+          setActionProgress(action, 'success');
+          setNotice({ tone: 'success', message: 'Handoff marked complete on the server.' });
+        })
+        .catch(() => {
+          setActionProgress(action, 'idle');
+          setNotice({ tone: 'warning', message: 'Could not mark handoff complete yet.' });
+        });
+      return;
+    }
+
+    if (action === 'clearCache') {
+      window.setTimeout(() => {
+        setStorageUsed((current) => Math.max(1.2, Number((current - 0.6).toFixed(1))));
+        setActionProgress(action, 'success');
+        setNotice({ tone: 'success', message: 'Temporary cache cleared locally. Server cache controls can be added later.' });
+      }, 400);
+      return;
+    }
+
+    if (action === 'deleteMedia') {
+      deleteAdminEventMedia('demo')
+        .then((data) => {
+          applyServerState(data.event);
+          setActionProgress(action, 'success');
+          setNotice({ tone: 'success', message: 'Event media deleted on the server.' });
+        })
+        .catch(() => {
+          setActionProgress(action, 'idle');
+          setNotice({ tone: 'warning', message: 'Media deletion failed. Make sure handoff is complete first.' });
+        });
+      return;
+    }
+
+    deleteAdminEventRecord('demo')
+      .then((data) => {
+        applyServerState(data.event);
+        setActionProgress(action, 'success');
+        setNotice({ tone: 'success', message: 'Event record closed out on the server.' });
+      })
+      .catch(() => {
+        setActionProgress(action, 'idle');
+        setNotice({ tone: 'warning', message: 'Event closeout failed. Delete media first.' });
+      });
   };
 
   const canMarkComplete = workflow.handoffPrepared;
@@ -112,6 +212,12 @@ export function AdminSettings() {
 
   return (
     <div className="flex-1 flex flex-col">
+      {loading ? (
+        <div className="flex-1 grid place-items-center text-sm" style={{ color: 'var(--muted)' }}>
+          Loading settings...
+        </div>
+      ) : (
+      <>
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl space-y-6">
           {notice && (
@@ -330,6 +436,8 @@ export function AdminSettings() {
             {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : 'Save Changes'}
           </button>
         </div>
+      )}
+      </>
       )}
     </div>
   );

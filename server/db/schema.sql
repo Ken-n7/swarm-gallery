@@ -2,7 +2,22 @@ CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active'
+  status TEXT NOT NULL DEFAULT 'active',
+  handoff_prepared_at INTEGER,
+  handoff_completed_at INTEGER,
+  media_deleted_at INTEGER,
+  closed_at INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS event_settings (
+  event_id TEXT PRIMARY KEY,
+  organizer_name TEXT,
+  event_date TEXT,
+  event_type TEXT,
+  expected_guests INTEGER,
+  retention_policy TEXT,
+  storage_warning_pct INTEGER,
+  FOREIGN KEY (event_id) REFERENCES events(id)
 );
 
 CREATE TABLE IF NOT EXISTS users (

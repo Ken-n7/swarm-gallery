@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAllPhotos } from '@/lib/api';
+import { deleteAdminPhotos, exportAdminPhotos, getAllPhotos, setAdminPhotoFlag } from '@/lib/api';
 import { AdminImage, CheckIcon, DestructiveNote, SearchIcon, type AdminPhoto } from '@/components/Admin/shared/AdminShared';
 
 export function AdminGalleries() {
@@ -14,10 +14,11 @@ export function AdminGalleries() {
   const [focusedPhotoId, setFocusedPhotoId] = useState<string | null>(null);
   const [galleryNotice, setGalleryNotice] = useState<{ tone: 'success' | 'warning'; message: string } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'deleteSelected' | 'deleteSingle'; photoId?: string } | null>(null);
-  const [actionState, setActionState] = useState<Record<'export' | 'downloadAll' | 'deleteSelected', 'idle' | 'running' | 'success'>>({
+  const [actionState, setActionState] = useState<Record<'export' | 'downloadAll' | 'deleteSelected' | 'flagToggle', 'idle' | 'running' | 'success'>>({
     export: 'idle',
     downloadAll: 'idle',
     deleteSelected: 'idle',
+    flagToggle: 'idle',
   });
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function AdminGalleries() {
   };
 
   const setBulkActionState = (
-    action: 'export' | 'downloadAll' | 'deleteSelected',
+    action: 'export' | 'downloadAll' | 'deleteSelected' | 'flagToggle',
     next: 'idle' | 'running' | 'success'
   ) => setActionState((current) => ({ ...current, [action]: next }));
 
@@ -74,45 +75,82 @@ export function AdminGalleries() {
     setBulkActionState(action, 'running');
     setConfirmAction(null);
 
-    window.setTimeout(() => {
-      if (action === 'export') {
+    if (action === 'export') {
+      const selectedIds = filteredPhotos.filter((photo) => selectedPhotos.has(photo.id)).map((photo) => photo.id);
+      window.open(exportAdminPhotos({ eventId: 'demo', photoIds: selectedIds }), '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => {
         setGalleryNotice({
           tone: 'success',
-          message: `${selectedVisibleCount || selectedPhotos.size} photo${(selectedVisibleCount || selectedPhotos.size) === 1 ? '' : 's'} prepared for export. Backend ZIP generation can attach here next.`,
+          message: `${selectedIds.length} selected photo${selectedIds.length === 1 ? '' : 's'} exported from the server.`,
         });
-      }
-      if (action === 'downloadAll') {
+        setBulkActionState(action, 'success');
+      }, 300);
+      return;
+    }
+
+    if (action === 'downloadAll') {
+      window.open(exportAdminPhotos({ eventId: 'demo', exportAll: true }), '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => {
         setGalleryNotice({
           tone: 'success',
           message: `Download prepared for ${filteredPhotos.length} visible photo${filteredPhotos.length === 1 ? '' : 's'}.`,
         });
-      }
-      if (action === 'deleteSelected') {
-        const selectedIds = new Set(selectedPhotos);
-        setPhotos((current) => current.filter((photo) => !selectedIds.has(photo.id)));
+        setBulkActionState(action, 'success');
+      }, 300);
+      return;
+    }
+
+    const selectedIds = filteredPhotos.filter((photo) => selectedPhotos.has(photo.id)).map((photo) => photo.id);
+    deleteAdminPhotos({ eventId: 'demo', photoIds: selectedIds })
+      .then((data) => {
+        setPhotos(data.photos);
         setSelectedPhotos(new Set());
-        setFocusedPhotoId((current) => (current && selectedIds.has(current) ? null : current));
+        setFocusedPhotoId((current) => (current && selectedIds.includes(current) ? null : current));
         setGalleryNotice({
           tone: 'warning',
-          message: `${selectedIds.size} selected photo${selectedIds.size === 1 ? '' : 's'} removed from the client-side gallery state.`,
+          message: `${data.deletedCount} selected photo${data.deletedCount === 1 ? '' : 's'} deleted on the server.`,
         });
-      }
-      setBulkActionState(action, 'success');
-    }, 650);
+        setBulkActionState(action, 'success');
+      })
+      .catch(() => {
+        setGalleryNotice({ tone: 'warning', message: 'Delete failed. Please retry.' });
+        setBulkActionState(action, 'idle');
+      });
   };
 
   const handleDeleteSingle = (photoId: string) => {
     setConfirmAction(null);
-    window.setTimeout(() => {
-      setPhotos((current) => current.filter((photo) => photo.id !== photoId));
-      setSelectedPhotos((current) => {
-        const next = new Set(current);
-        next.delete(photoId);
-        return next;
+    deleteAdminPhotos({ eventId: 'demo', photoIds: [photoId] })
+      .then((data) => {
+        setPhotos(data.photos);
+        setSelectedPhotos((current) => {
+          const next = new Set(current);
+          next.delete(photoId);
+          return next;
+        });
+        setFocusedPhotoId((current) => (current === photoId ? null : current));
+        setGalleryNotice({ tone: 'warning', message: 'Photo deleted on the server.' });
+      })
+      .catch(() => setGalleryNotice({ tone: 'warning', message: 'Delete failed. Please retry.' }));
+  };
+
+  const handleFlagToggle = (photoId: string, flagged: boolean) => {
+    setBulkActionState('flagToggle', 'running');
+    setAdminPhotoFlag({ eventId: 'demo', photoId, flagged })
+      .then((data) => {
+        setPhotos((current) => current.map((photo) => (
+          photo.id === data.photo.id ? { ...photo, flagged: data.photo.flagged } : photo
+        )));
+        setGalleryNotice({
+          tone: 'success',
+          message: flagged ? 'Photo sent to moderation queue.' : 'Photo removed from moderation queue.',
+        });
+        setBulkActionState('flagToggle', 'success');
+      })
+      .catch(() => {
+        setGalleryNotice({ tone: 'warning', message: 'Moderation update failed. Please retry.' });
+        setBulkActionState('flagToggle', 'idle');
       });
-      setFocusedPhotoId((current) => (current === photoId ? null : current));
-      setGalleryNotice({ tone: 'warning', message: 'Photo removed from the client-side gallery state.' });
-    }, 300);
   };
 
   if (loading) {
@@ -199,6 +237,13 @@ export function AdminGalleries() {
             </div>
             <div className="flex flex-wrap gap-2">
               {focusedPhoto.flagged ? <DestructiveNote>Flagged for moderation</DestructiveNote> : null}
+              <button
+                onClick={() => handleFlagToggle(focusedPhoto.id, !focusedPhoto.flagged)}
+                className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold"
+                style={{ background: focusedPhoto.flagged ? 'var(--bg-deep)' : 'var(--violet-tint)', color: focusedPhoto.flagged ? 'var(--ink-soft)' : 'var(--violet)' }}
+              >
+                {focusedPhoto.flagged ? 'Mark reviewed' : 'Flag for review'}
+              </button>
               <button onClick={() => setFocusedPhotoId(null)} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold" style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)' }}>Close Review</button>
             </div>
           </div>
@@ -253,6 +298,9 @@ export function AdminGalleries() {
                   <div className="text-[12px]" style={{ color: 'var(--muted)' }}>{new Date(photo.uploadedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
                   <div className="flex gap-1.5">
                     <button onClick={() => setFocusedPhotoId(photo.id)} className="px-2.5 py-1 rounded-[7px] text-[11px]" style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)' }}>View</button>
+                    <button onClick={() => handleFlagToggle(photo.id, !photo.flagged)} className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold" style={{ background: photo.flagged ? 'var(--bg-deep)' : 'var(--violet-tint)', color: photo.flagged ? 'var(--ink-soft)' : 'var(--violet)' }}>
+                      {photo.flagged ? 'Reviewed' : 'Flag'}
+                    </button>
                     <button onClick={() => setConfirmAction({ type: 'deleteSingle', photoId: photo.id })} className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold" style={{ background: 'var(--danger-tint)', color: 'var(--danger)' }}>Delete</button>
                   </div>
                 </div>
@@ -270,6 +318,9 @@ export function AdminGalleries() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setFocusedPhotoId(photo.id)} className="px-2.5 py-1 rounded-[7px] text-[11px]" style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)' }}>View</button>
+                    <button onClick={() => handleFlagToggle(photo.id, !photo.flagged)} className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold" style={{ background: photo.flagged ? 'var(--bg-deep)' : 'var(--violet-tint)', color: photo.flagged ? 'var(--ink-soft)' : 'var(--violet)' }}>
+                      {photo.flagged ? 'Reviewed' : 'Flag'}
+                    </button>
                     <button onClick={() => setConfirmAction({ type: 'deleteSingle', photoId: photo.id })} className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold" style={{ background: 'var(--danger-tint)', color: 'var(--danger)' }}>Delete</button>
                   </div>
                   {confirmAction?.type === 'deleteSingle' && confirmAction.photoId === photo.id && (
