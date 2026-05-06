@@ -1,0 +1,11 @@
+{
+  "name": "swarm-gallery-workspace",
+  "private": true,
+  "scripts": {
+    "swarm:sync-ip": "bash scripts/swarm-sync-ip.sh",
+    "swarm:start": "bash scripts/swarm-start.sh",
+    "swarm:stop": "bash scripts/swarm-stop.sh",
+    "swarm:restart": "bash scripts/swarm-restart.sh",
+    "swarm:reset": "bash scripts/swarm-reset.sh"
+  }
+}
