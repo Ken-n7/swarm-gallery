@@ -245,36 +245,90 @@ function UploadTimelineChart() {
 
   const maxUploads = Math.max(...data.map((d) => d.uploads));
   const peakIndex = data.findIndex((d) => d.uploads === maxUploads);
+  const chartHeight = 120;
+  const chartWidth = 400;
+  const leftPad = 18;
+  const rightPad = 18;
+  const topPad = 14;
+  const bottomPad = 28;
+  const usableWidth = chartWidth - leftPad - rightPad;
+  const usableHeight = chartHeight - topPad - bottomPad;
+
+  const points = data.map((d, i) => {
+    const x = leftPad + (usableWidth * i) / Math.max(data.length - 1, 1);
+    const y = topPad + usableHeight - (d.uploads / maxUploads) * usableHeight;
+    return { ...d, x, y };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ');
+
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${chartHeight - bottomPad} L ${points[0].x} ${chartHeight - bottomPad} Z`;
 
   return (
     <div className="relative">
-      <svg viewBox="0 0 400 120" className="w-full h-24">
-        {data.map((d, i) => {
-          const barHeight = (d.uploads / maxUploads) * 80;
-          const x = i * 40;
-          const y = 100 - barHeight;
-          const isPeak = i === peakIndex;
+      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-28">
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+          const y = topPad + usableHeight - usableHeight * ratio;
+          return (
+            <line
+              key={ratio}
+              x1={leftPad}
+              x2={chartWidth - rightPad}
+              y1={y}
+              y2={y}
+              stroke="rgba(139,148,178,.14)"
+              strokeWidth="1"
+              strokeDasharray={ratio === 0 ? undefined : '3 4'}
+            />
+          );
+        })}
+
+        <path d={areaPath} fill="url(#violetArea)" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="url(#violetGradient)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {points.map((point, index) => {
+          const isPeak = index === peakIndex;
 
           return (
-            <g key={d.hour}>
-              <rect
-                x={x + 8}
-                y={y}
-                width="24"
-                height={barHeight}
-                rx="6"
-                fill={isPeak ? 'url(#violetGradient)' : 'rgba(139,92,255,.18)'}
+            <g key={point.hour}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={isPeak ? 4.5 : 3.5}
+                fill={isPeak ? '#8b5cff' : '#fff'}
+                stroke="#8b5cff"
+                strokeWidth={isPeak ? 2.5 : 2}
               />
-              <text x={x + 20} y="115" textAnchor="middle" fontSize="10" fill="var(--muted)">
-                {d.hour}
+              <text
+                x={point.x}
+                y={chartHeight - 8}
+                textAnchor="middle"
+                fontSize="10"
+                fill="var(--muted)"
+              >
+                {point.hour}
               </text>
             </g>
           );
         })}
+
         <defs>
           <linearGradient id="violetGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#8b5cff" />
             <stop offset="100%" stopColor="#c8b5ff" />
+          </linearGradient>
+          <linearGradient id="violetArea" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(139,92,255,.24)" />
+            <stop offset="100%" stopColor="rgba(139,92,255,0)" />
           </linearGradient>
         </defs>
       </svg>

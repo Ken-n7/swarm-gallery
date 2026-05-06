@@ -209,7 +209,7 @@ export function AdminSettings() {
       ) : (
       <>
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-2xl space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
           {notice && (
             <div
               className="rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
@@ -224,6 +224,7 @@ export function AdminSettings() {
             </div>
           )}
 
+          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,.85fr)] 2xl:items-start">
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-6 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900">Event Info</h3>
@@ -256,70 +257,73 @@ export function AdminSettings() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Access & QR</h3>
-            <p className="text-slate-600 mb-6">Share this QR code with attendees so they can join the gallery on their phones and contribute media for this event only.</p>
-            <div className="flex justify-center mb-6">
-              <div className="relative p-4 bg-white border border-slate-200 rounded-xl shadow-sm w-56 h-56">
-                <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="224px" className="object-contain p-4" />
-              </div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-sm text-slate-500 mb-2">Join link</p>
-              <a href={joinUrl || '#'} target="_blank" rel="noreferrer" className="text-slate-900 font-medium break-all">
-                {joinUrl || 'Loading…'}
-              </a>
-            </div>
-            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">Access status</div>
-                  <div className="text-xs text-slate-500 mt-1">QR and join link are live for the current event session.</div>
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Access & QR</h3>
+              <p className="text-slate-600 mb-6">Share this QR code with attendees so they can join the gallery on their phones and contribute media for this event only.</p>
+              <div className="flex justify-center mb-6">
+                <div className="relative p-4 bg-white border border-slate-200 rounded-xl shadow-sm w-56 h-56">
+                  <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="224px" className="object-contain p-4" />
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>Accepting guests</span>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-sm text-slate-500 mb-2">Join link</p>
+                <a href={joinUrl || '#'} target="_blank" rel="noreferrer" className="text-slate-900 font-medium break-all">
+                  {joinUrl || 'Loading…'}
+                </a>
+              </div>
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Access status</div>
+                    <div className="text-xs text-slate-500 mt-1">QR and join link are live for the current event session.</div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>Accepting guests</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Temporary Storage</h3>
-              <p className="text-sm text-slate-600 mt-1">Media is stored only until handoff to the client is complete, then removed for privacy.</p>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Used</span>
-                  <span className="text-sm font-medium text-slate-900">{storageUsed} GB of {storageTotal} GB</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
-                  <div className="bg-violet-600 h-3 rounded-full transition-all duration-300" style={{ width: `${storagePercent}%` }} />
-                </div>
-                <div className="text-xs text-slate-500">{storagePercent.toFixed(1)}% used • {(storageTotal - storageUsed).toFixed(1)} GB available</div>
-                <div className="pt-2 border-t border-slate-200 space-y-4">
-                  <FormRow label="Retention before handoff" sub="Event media remains on the laptop only until the client handoff is completed.">
-                    <span className="inline-flex px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
-                      {retentionPolicy || 'Until handoff'}
-                    </span>
-                  </FormRow>
-                  <FormRow label="Storage warning" sub="Alert the team when temporary event storage is nearing capacity before export.">
-                    <div className="flex items-center gap-2">
-                      <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} className="w-16 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-                      <span className="text-sm text-slate-600">%</span>
-                    </div>
-                  </FormRow>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
-                    <div className="text-sm font-semibold text-slate-900">Storage cleanup happens through event closeout</div>
-                    <div className="text-sm text-slate-600">
-                      Generated thumbnails and original media are removed together when you complete handoff, delete event media, and close the event.
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      There is no separate cache-clearing step for this workflow.
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900">Temporary Storage</h3>
+                <p className="text-sm text-slate-600 mt-1">Media is stored only until handoff to the client is complete, then removed for privacy.</p>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Used</span>
+                    <span className="text-sm font-medium text-slate-900">{storageUsed} GB of {storageTotal} GB</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-3">
+                    <div className="bg-violet-600 h-3 rounded-full transition-all duration-300" style={{ width: `${storagePercent}%` }} />
+                  </div>
+                  <div className="text-xs text-slate-500">{storagePercent.toFixed(1)}% used • {(storageTotal - storageUsed).toFixed(1)} GB available</div>
+                  <div className="pt-2 border-t border-slate-200 space-y-4">
+                    <FormRow label="Retention before handoff" sub="Event media remains on the laptop only until the client handoff is completed.">
+                      <span className="inline-flex px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
+                        {retentionPolicy || 'Until handoff'}
+                      </span>
+                    </FormRow>
+                    <FormRow label="Storage warning" sub="Alert the team when temporary event storage is nearing capacity before export.">
+                      <div className="flex items-center gap-2">
+                        <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} className="w-16 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                        <span className="text-sm text-slate-600">%</span>
+                      </div>
+                    </FormRow>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+                      <div className="text-sm font-semibold text-slate-900">Storage cleanup happens through event closeout</div>
+                      <div className="text-sm text-slate-600">
+                        Generated thumbnails and original media are removed together when you complete handoff, delete event media, and close the event.
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        There is no separate cache-clearing step for this workflow.
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
           </div>
 
           <div className="space-y-6">

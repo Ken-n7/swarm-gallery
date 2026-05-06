@@ -4,14 +4,23 @@ import { useEffect, useState } from 'react';
 import { deleteAdminPhotos, exportAdminPhotos, getAllPhotos, setAdminPhotoFlag } from '@/lib/api';
 import { AdminImage, CheckIcon, DestructiveNote, SearchIcon, type AdminPhoto } from '@/components/Admin/shared/AdminShared';
 
+type GalleryFilterId = 'all' | 'guest' | 'flagged';
+
+const FILTER_OPTIONS: { id: GalleryFilterId; label: string }[] = [
+  { id: 'all', label: 'All photos' },
+  { id: 'guest', label: 'By guest' },
+  { id: 'flagged', label: 'Flagged' },
+];
+
 export function AdminGalleries() {
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('All photos');
+  const [filter, setFilter] = useState<GalleryFilterId>('all');
   const [focusedPhotoId, setFocusedPhotoId] = useState<string | null>(null);
+  const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [galleryNotice, setGalleryNotice] = useState<{ tone: 'success' | 'warning'; message: string } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'deleteSelected' | 'deleteSingle'; photoId?: string } | null>(null);
   const [actionState, setActionState] = useState<Record<'export' | 'downloadAll' | 'deleteSelected' | 'flagToggle', 'idle' | 'running' | 'success'>>({
@@ -29,6 +38,7 @@ export function AdminGalleries() {
         .then((data) => {
           if (cancelled) return;
           setPhotos(data);
+          setCurrentTimestamp(Date.now());
           setSelectedPhotos((current) => {
             const validIds = new Set(data.map((photo) => photo.id));
             return new Set(Array.from(current).filter((id) => validIds.has(id)));
@@ -58,11 +68,12 @@ export function AdminGalleries() {
   }));
 
   const filteredPhotos = enrichedPhotos.filter((photo) => {
-    const matchesQuery = !query || `${photo.filename} ${photo.uploader}`.toLowerCase().includes(query.toLowerCase());
+    const normalizedQuery = query.trim().toLowerCase();
+    const matchesQuery = !normalizedQuery || `${photo.filename} ${photo.uploader}`.toLowerCase().includes(normalizedQuery);
     const matchesFilter =
-      filter === 'All photos' ? true :
-      filter === 'By guest' ? !!photo.uploader :
-      filter === 'Flagged' ? !!photo.flagged :
+      filter === 'all' ? true :
+      filter === 'guest' ? !!photo.uploader :
+      filter === 'flagged' ? !!photo.flagged :
       true;
     return matchesQuery && matchesFilter;
   });
@@ -70,6 +81,14 @@ export function AdminGalleries() {
   const selectedVisibleCount = filteredPhotos.filter((photo) => selectedPhotos.has(photo.id)).length;
   const focusedPhoto = focusedPhotoId ? enrichedPhotos.find((photo) => photo.id === focusedPhotoId) || null : null;
   const flaggedPhotos = enrichedPhotos.filter((photo) => photo.flagged);
+  const thisHourCount = filteredPhotos.filter((photo) => currentTimestamp - photo.uploadedAt < 60 * 60 * 1000).length;
+  const visibleGuestCount = new Set(filteredPhotos.map((photo) => photo.uploader).filter(Boolean)).size;
+  const totalVisibleSizeGb = filteredPhotos.reduce((sum, photo) => sum + (photo.sizeBytes || 0), 0) / 1024 / 1024 / 1024;
+  const filterCounts = {
+    all: enrichedPhotos.length,
+    guest: enrichedPhotos.filter((photo) => !!photo.uploader).length,
+    flagged: flaggedPhotos.length,
+  } satisfies Record<GalleryFilterId, number>;
 
   const toggleSelection = (photoId: string) => {
     const newSelected = new Set(selectedPhotos);
@@ -198,6 +217,73 @@ export function AdminGalleries() {
       )}
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 w-full">
+          {[
+            ['Visible photos', String(filteredPhotos.length)],
+            ['This hour', String(thisHourCount)],
+            ['Guests in view', String(visibleGuestCount)],
+            ['Avg / guest', filteredPhotos.length ? (filteredPhotos.length / Math.max(visibleGuestCount, 1)).toFixed(1) : '0'],
+            ['Visible size', `${totalVisibleSizeGb.toFixed(1)} GB`],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-white rounded-[14px] px-4 py-3" style={{ border: '1px solid var(--line)' }}>
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1.5" style={{ color: 'var(--muted)' }}>{label}</div>
+              <div className="text-[20px] font-bold" style={{ color: 'var(--ink)' }}>{value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_.9fr] gap-3 w-full">
+          <div className="bg-white rounded-[14px] p-[14px] px-4" style={{ border: '1px solid var(--line)' }}>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Live Moderation</div>
+              <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{flaggedPhotos.length} in queue</div>
+            </div>
+            <div className="flex justify-between mb-2.5">
+              <span className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>Flagged in current view</span>
+              <span className="text-[12px] font-bold" style={{ color: 'var(--ink)' }}>{filteredPhotos.filter((photo) => photo.flagged).length}</span>
+            </div>
+            <div className="flex justify-between mb-2.5">
+              <span className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>Review panel</span>
+              <span className="text-[12px] font-bold" style={{ color: 'var(--ink)' }}>{focusedPhoto ? 'Open' : 'Closed'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>Flag action</span>
+              <span className="text-[12px] font-bold" style={{ color: actionState.flagToggle === 'running' ? 'var(--violet)' : 'var(--ink)' }}>
+                {actionState.flagToggle === 'running' ? 'Updating…' : 'Ready'}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[14px] p-[14px] px-4" style={{ border: '1px solid var(--line)' }}>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Bulk Actions</div>
+              <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{selectedVisibleCount} selected in current view</div>
+            </div>
+            <div className="flex flex-col lg:flex-row gap-2">
+              <button onClick={() => runBulkAction('export')} disabled={selectedVisibleCount === 0 || actionState.export === 'running'} className="flex-1 px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--violet)', background: 'var(--violet-tint)' }}>
+                {actionState.export === 'running' ? 'Preparing selected export...' : 'Export selected (ZIP)'}
+              </button>
+              <button onClick={() => runBulkAction('downloadAll')} disabled={filteredPhotos.length === 0 || actionState.downloadAll === 'running'} className="flex-1 px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--ink)', background: 'var(--bg-deep)' }}>
+                {actionState.downloadAll === 'running' ? 'Preparing download...' : 'Download all visible media'}
+              </button>
+              <button onClick={() => setConfirmAction({ type: 'deleteSelected' })} disabled={selectedVisibleCount === 0 || actionState.deleteSelected === 'running'} className="flex-1 px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--danger)', background: 'var(--danger-tint)' }}>
+                {actionState.deleteSelected === 'running' ? 'Deleting selected...' : 'Delete selected'}
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <DestructiveNote>Applies only to the current filtered view</DestructiveNote>
+              <button onClick={() => setSelectedPhotos(new Set())} className="text-[12px] font-semibold" style={{ color: 'var(--muted)' }}>Clear selection</button>
+            </div>
+            {confirmAction?.type === 'deleteSelected' && (
+              <div className="mt-3 rounded-[10px] border p-3 flex flex-wrap items-center gap-3" style={{ borderColor: 'rgba(224,92,92,.2)', background: 'rgba(253,231,236,.72)' }}>
+                <div className="text-[12px] font-medium" style={{ color: 'var(--danger)' }}>Delete {selectedVisibleCount} visible selected photo{selectedVisibleCount === 1 ? '' : 's'} from the gallery?</div>
+                <button onClick={() => runBulkAction('deleteSelected')} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold text-white" style={{ background: 'var(--danger)' }}>Confirm Delete</button>
+                <button onClick={() => setConfirmAction(null)} className="text-[12px] font-semibold" style={{ color: 'var(--muted)' }}>Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2 px-4 py-2 rounded-full min-w-[220px] flex-1 bg-white" style={{ border: '1px solid var(--line)' }}>
           <span style={{ color: 'var(--muted)' }}><SearchIcon /></span>
           <input
@@ -209,18 +295,18 @@ export function AdminGalleries() {
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
-          {['All photos', 'By guest', 'Flagged'].map((label) => (
+          {FILTER_OPTIONS.map((option) => (
             <button
-              key={label}
-              onClick={() => setFilter(label)}
+              key={option.id}
+              onClick={() => setFilter(option.id)}
               className="px-3 py-1.5 rounded-full text-[12px] font-medium bg-white"
               style={{
-                border: `1px solid ${filter === label ? 'var(--ink)' : 'var(--line)'}`,
-                color: filter === label ? '#fff' : 'var(--ink-soft)',
-                background: filter === label ? 'var(--ink)' : '#fff',
+                border: `1px solid ${filter === option.id ? 'var(--ink)' : 'var(--line)'}`,
+                color: filter === option.id ? '#fff' : 'var(--ink-soft)',
+                background: filter === option.id ? 'var(--ink)' : '#fff',
               }}
             >
-              {label}
+              {option.label} <span className="opacity-70">({filterCounts[option.id]})</span>
             </button>
           ))}
         </div>
@@ -229,27 +315,6 @@ export function AdminGalleries() {
           <button onClick={() => setViewMode('list')} aria-label="List view" className="p-2 rounded-[10px]" style={viewMode === 'list' ? { background: 'var(--violet-tint)', color: 'var(--violet-dark)' } : { color: 'var(--muted)', background: 'transparent' }}>☰</button>
         </div>
       </div>
-
-      {selectedPhotos.size > 0 && (
-        <div className="rounded-[10px] px-4 py-2.5 mb-4 flex flex-wrap items-center gap-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,255,.2)' }}>
-          <span className="text-[13px] font-semibold" style={{ color: 'var(--violet-dark)' }}>{selectedVisibleCount} visible selected</span>
-          <button onClick={() => runBulkAction('export')} disabled={selectedVisibleCount === 0 || actionState.export === 'running'} className="px-3.5 py-1.5 rounded-[8px] text-[12px] font-semibold disabled:opacity-50" style={{ color: 'var(--violet)', background: 'var(--violet-tint)', border: '1px solid rgba(139,92,255,.25)' }}>
-            {actionState.export === 'running' ? 'Preparing...' : actionState.export === 'success' ? 'Export Ready' : 'Export ZIP'}
-          </button>
-          <button onClick={() => setConfirmAction({ type: 'deleteSelected' })} disabled={selectedVisibleCount === 0 || actionState.deleteSelected === 'running'} className="px-3.5 py-1.5 rounded-[8px] text-[12px] font-semibold disabled:opacity-50" style={{ color: 'var(--danger)', background: 'var(--danger-tint)', border: '1px solid rgba(224,92,92,.2)' }}>
-            {actionState.deleteSelected === 'running' ? 'Deleting...' : 'Delete'}
-          </button>
-          {confirmAction?.type === 'deleteSelected' && (
-            <div className="w-full rounded-[10px] border p-3 flex flex-wrap items-center gap-3" style={{ borderColor: 'rgba(224,92,92,.2)', background: 'rgba(253,231,236,.72)' }}>
-              <div className="text-[12px] font-medium" style={{ color: 'var(--danger)' }}>Delete {selectedVisibleCount} visible selected photo{selectedVisibleCount === 1 ? '' : 's'} from the client-side gallery?</div>
-              <button onClick={() => runBulkAction('deleteSelected')} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold text-white" style={{ background: 'var(--danger)' }}>Confirm Delete</button>
-              <button onClick={() => setConfirmAction(null)} className="text-[12px] font-semibold" style={{ color: 'var(--muted)' }}>Cancel</button>
-            </div>
-          )}
-          <DestructiveNote>Deletes only visible selection</DestructiveNote>
-          <button onClick={() => setSelectedPhotos(new Set())} className="text-[12px] lg:ml-auto" style={{ color: 'var(--muted)' }}>Clear</button>
-        </div>
-      )}
 
       {focusedPhoto && (
         <div className="bg-white rounded-[14px] p-4 mb-4" style={{ border: '1px solid var(--line)' }}>
@@ -371,45 +436,10 @@ export function AdminGalleries() {
             </svg>
           </div>
           <div style={{ color: 'var(--muted)' }}>
-            {filter === 'Flagged' ? 'No media is currently flagged for moderation' : 'No photos uploaded yet'}
+            {filter === 'flagged' ? 'No media is currently flagged for moderation' : 'No photos uploaded yet'}
           </div>
         </div>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-[18px]">
-        <div className="bg-white rounded-[14px] p-[14px] px-4" style={{ border: '1px solid var(--line)' }}>
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--muted)' }}>Live Stats</div>
-          {[
-            ['Total photos', String(filteredPhotos.length)],
-            ['This hour', String(Math.min(filteredPhotos.length, 12))],
-            ['Avg / guest', filteredPhotos.length ? (filteredPhotos.length / Math.max(new Set(filteredPhotos.map((p) => p.uploader)).size, 1)).toFixed(1) : '0'],
-            ['Total size', `${(filteredPhotos.reduce((sum, p) => sum + (p.sizeBytes || 0), 0) / 1024 / 1024 / 1024).toFixed(1)} GB`],
-            ['Flagged', String(filteredPhotos.filter((p) => p.flagged).length)],
-          ].map(([label, value]) => (
-            <div key={label} className="flex justify-between mb-2.5 last:mb-0">
-              <span className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>{label}</span>
-              <span className="text-[12px] font-bold" style={{ color: 'var(--ink)' }}>{value}</span>
-            </div>
-          ))}
-        </div>
-        <div className="bg-white rounded-[14px] p-[14px] px-4" style={{ border: '1px solid var(--line)' }}>
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Bulk Actions</div>
-            <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{flaggedPhotos.length} in moderation queue</div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <button onClick={() => runBulkAction('export')} disabled={selectedVisibleCount === 0 || actionState.export === 'running'} className="w-full px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--violet)', background: 'var(--violet-tint)' }}>
-              {actionState.export === 'running' ? 'Preparing selected export...' : 'Export selected (ZIP)'}
-            </button>
-            <button onClick={() => runBulkAction('downloadAll')} disabled={filteredPhotos.length === 0 || actionState.downloadAll === 'running'} className="w-full px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--ink)', background: 'var(--bg-deep)' }}>
-              {actionState.downloadAll === 'running' ? 'Preparing download...' : 'Download all visible media'}
-            </button>
-            <button onClick={() => setConfirmAction({ type: 'deleteSelected' })} disabled={selectedVisibleCount === 0 || actionState.deleteSelected === 'running'} className="w-full px-3 py-2 rounded-[9px] text-[12px] font-semibold text-left disabled:opacity-50" style={{ color: 'var(--danger)', background: 'var(--danger-tint)' }}>
-              {actionState.deleteSelected === 'running' ? 'Deleting selected...' : 'Delete selected'}
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

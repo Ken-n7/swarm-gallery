@@ -186,6 +186,86 @@ function GroupCard({
   );
 }
 
+function SinglePhotoTile({
+  photo,
+  allPhotos,
+  onView,
+}: {
+  photo: Photo;
+  allPhotos: Photo[];
+  onView: (photos: Photo[], index: number) => void;
+}) {
+  const likeCount = photo.likeCount ?? 0;
+  const viewIndex = allPhotos.findIndex((entry) => entry.id === photo.id);
+
+  return (
+    <button
+      onClick={() => onView(allPhotos, Math.max(viewIndex, 0))}
+      className="relative w-full overflow-hidden rounded-[6px] sm:rounded-[8px]"
+      style={{ aspectRatio: '1 / 1' }}
+    >
+      <MediaThumb photo={photo} />
+      {likeCount > 0 && (
+        <div
+          className="absolute right-1.5 bottom-1.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold shrink-0"
+          style={{ background: 'rgba(18,18,41,.58)', color: 'white', backdropFilter: 'blur(10px)' }}
+        >
+          <span aria-hidden="true">♥</span>
+          {likeCount}
+        </div>
+      )}
+    </button>
+  );
+}
+
+function LikedPhotoCard({
+  photo,
+  allPhotos,
+  onView,
+}: {
+  photo: Photo;
+  allPhotos: Photo[];
+  onView: (photos: Photo[], index: number) => void;
+}) {
+  const likeCount = photo.likeCount ?? 0;
+  const viewIndex = allPhotos.findIndex((entry) => entry.id === photo.id);
+
+  return (
+    <div className="flex flex-col">
+      <button
+        onClick={() => onView(allPhotos, Math.max(viewIndex, 0))}
+        className="w-full overflow-hidden rounded-[14px] relative"
+        style={{ aspectRatio: GROUP_CARD_RATIO }}
+      >
+        <MediaThumb photo={photo} />
+      </button>
+
+      <div className="flex items-center justify-between px-1 pt-2 pb-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <UserAvatar username={photo.uploader} size="xs" />
+          <div className="min-w-0 flex items-baseline gap-1 flex-wrap">
+            <span className="text-[12px] font-bold text-[var(--ink)] truncate">
+              {photo.uploader}
+            </span>
+            <span className="text-[10px] text-[var(--muted)]">
+              {timeAgo(photo.uploadedAt)}
+            </span>
+          </div>
+        </div>
+        {likeCount > 0 && (
+          <div
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold shrink-0"
+            style={{ background: 'rgba(244,114,182,.12)', color: '#be185d' }}
+          >
+            <span aria-hidden="true">♥</span>
+            {likeCount}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FooterRow({ group, likeCount }: { group: PhotoGroup; likeCount: number }) {
   return (
     <div className="flex items-center justify-between px-1 pt-2 pb-1">
@@ -252,6 +332,8 @@ export function Gallery({
   }, [photos, filter, currentUser]);
 
   const groups = useMemo(() => groupPhotos(filtered), [filtered]);
+  const minePhotos = filter === 'mine' ? filtered : [];
+  const likedPhotos = filter === 'liked' ? filtered : [];
   const emptyCopy = filter === 'mine'
     ? 'You have not uploaded anything yet. Add the first photo to start your own strip.'
     : filter === 'recent'
@@ -319,7 +401,7 @@ export function Gallery({
       </div>
 
       {/* Groups grid */}
-      {groups.length === 0 ? (
+      {((filter === 'mine' && minePhotos.length === 0) || (filter === 'liked' && likedPhotos.length === 0) || ((filter !== 'mine' && filter !== 'liked') && groups.length === 0)) ? (
         <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
           <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--violet-tint)', color: 'var(--violet)' }}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,21 +417,61 @@ export function Gallery({
         </div>
       ) : (
         <div
-          className={hidePadBottom ? 'px-3.5 pt-1 pb-4' : 'px-3.5 pt-1 pb-24'}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-            gap: '10px',
-            alignItems: 'start',
-          }}
+          className={hidePadBottom ? 'pt-1 pb-4' : 'pt-1 pb-24'}
+          style={
+            filter === 'mine'
+              ? {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(92px, 22vw, 138px), 1fr))',
+                  gap: '3px',
+                  alignItems: 'start',
+                  paddingLeft: '14px',
+                  paddingRight: '14px',
+                }
+              : filter === 'liked'
+                ? {
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+                    gap: '10px',
+                    alignItems: 'start',
+                    paddingLeft: '14px',
+                    paddingRight: '14px',
+                  }
+              : {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+                  gap: '10px',
+                  alignItems: 'start',
+                  paddingLeft: '14px',
+                  paddingRight: '14px',
+                }
+          }
         >
-          {groups.map((group) => (
-            <GroupCard
-              key={group.uploader}
-              group={group}
-              onView={(photos, index) => setViewer({ photos, index })}
-            />
-          ))}
+          {filter === 'mine'
+            ? minePhotos.map((photo) => (
+                <SinglePhotoTile
+                  key={photo.id}
+                  photo={photo}
+                  allPhotos={minePhotos}
+                  onView={(photos, index) => setViewer({ photos, index })}
+                />
+              ))
+            : filter === 'liked'
+              ? likedPhotos.map((photo) => (
+                  <LikedPhotoCard
+                    key={photo.id}
+                    photo={photo}
+                    allPhotos={likedPhotos}
+                    onView={(photos, index) => setViewer({ photos, index })}
+                  />
+                ))
+            : groups.map((group) => (
+                <GroupCard
+                  key={group.uploader}
+                  group={group}
+                  onView={(photos, index) => setViewer({ photos, index })}
+                />
+              ))}
         </div>
       )}
 
