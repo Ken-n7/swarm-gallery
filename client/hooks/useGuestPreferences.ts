@@ -31,11 +31,7 @@ function loadPreferences(): GuestPreferences {
 }
 
 export function useGuestPreferences() {
-  const [preferences, setPreferences] = useState<GuestPreferences>(DEFAULTS);
-
-  useEffect(() => {
-    setPreferences(loadPreferences());
-  }, []);
+  const [preferences, setPreferences] = useState<GuestPreferences>(() => loadPreferences());
 
   useEffect(() => {
     try {

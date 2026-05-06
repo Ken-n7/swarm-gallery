@@ -86,7 +86,7 @@ export function useUser() {
         // Server unreachable — keep whatever localStorage says (don't force logout)
       })
       .finally(() => setChecking(false));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   async function join(username: string, avatar?: File | null) {
     setJoining(true);

@@ -49,11 +49,12 @@ function GalleryView({
         />
 
         {/* Gallery — scrollable center */}
-        <div className="flex-1 overflow-y-auto bg-white">
+        <div className="flex-1 min-w-0 overflow-y-auto bg-white">
           <Gallery
             photos={photos}
             userCount={userCount}
             currentUser={username}
+            currentUserId={userId}
             filter={filter}
             onFilterChange={setFilter}
             hidePadBottom
@@ -78,7 +79,7 @@ function GalleryView({
         filter={filter}
         onFilterChange={setFilter}
         onLeave={handleLeave}
-        open={sidebarOpen}
+        open={orientation === 'portrait' && sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
 
@@ -86,12 +87,13 @@ function GalleryView({
         photos={photos}
         userCount={userCount}
         currentUser={username}
+        currentUserId={userId}
         filter={filter}
         onFilterChange={setFilter}
         onOpenSidebar={() => setSidebarOpen(true)}
       />
 
-      <BottomNav eventId={eventId} username={username} />
+      <BottomNav eventId={eventId} />
     </div>
   );
 }

@@ -4,10 +4,9 @@ import { useRouter, usePathname } from 'next/navigation';
 
 interface Props {
   eventId: string;
-  username: string;
 }
 
-export function BottomNav({ eventId, username }: Props) {
+export function BottomNav({ eventId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
 

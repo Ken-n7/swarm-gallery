@@ -7,6 +7,7 @@ export interface Photo {
   mimetype?: string;
   thumbUrl?: string | null;
   likeCount?: number;
+  likedByMe?: boolean;
 }
 
 export interface User {

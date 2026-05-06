@@ -42,17 +42,33 @@ interface RowProps {
 }
 
 function Row({ title, subtitle, right, onClick }: RowProps) {
-  return (
-    <div
-      className="flex items-center justify-between px-4 py-4"
-      onClick={onClick}
-      style={onClick ? { cursor: 'pointer' } : undefined}
-    >
-      <div className="mr-4">
+  const content = (
+    <>
+      <div className="mr-4 text-left">
         <p className="text-[15px] font-semibold text-[var(--ink)]">{title}</p>
         <p className="text-[13px] text-[var(--muted)] mt-0.5">{subtitle}</p>
       </div>
       {right}
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className="w-full flex items-center justify-between px-4 py-4 text-left"
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center justify-between px-4 py-4"
+    >
+      {content}
     </div>
   );
 }
@@ -194,9 +210,9 @@ export default function SettingsPage() {
       <SectionLabel>Sharing</SectionLabel>
       <Card>
         <Row
-          title="Auto-share photos"
-          subtitle="Upload instantly after capture"
-          right={<Toggle on={true} onChange={() => {}} />}
+          title="Upload behavior"
+          subtitle="Photos and videos upload as soon as you pick or capture them."
+          right={<span className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>Always on</span>}
         />
       </Card>
     </div>
@@ -214,8 +230,8 @@ export default function SettingsPage() {
         <Divider />
         <Row
           title="Auto-delete my photos"
-          subtitle="Remove when event ends"
-          right={<Toggle on={true} onChange={() => {}} />}
+          subtitle="Your uploads are removed when the event is closed out."
+          right={<span className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>Event policy</span>}
         />
       </Card>
     </div>

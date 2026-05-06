@@ -129,6 +129,24 @@ export async function deletePhoto(photoId: string, username: string): Promise<vo
   if (!res.ok) throw new Error('Delete failed');
 }
 
+export async function likePhoto(photoId: string, userId: string): Promise<{ likeCount: number; likedByMe: boolean }> {
+  const res = await fetch(`${SERVER}/photos/${photoId}/like`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+  if (!res.ok) throw new Error('Like failed');
+  return res.json();
+}
+
+export async function unlikePhoto(photoId: string, userId: string): Promise<{ likeCount: number; likedByMe: boolean }> {
+  const res = await fetch(`${SERVER}/photos/${photoId}/like?userId=${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Unlike failed');
+  return res.json();
+}
+
 export function photoUrl(url: string): string {
   return `${SERVER}${url}`;
 }

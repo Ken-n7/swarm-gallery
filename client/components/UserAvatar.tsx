@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 interface Props {
   username: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -27,11 +29,16 @@ export function UserAvatar({ username, size = 'md', neon = true, avatarUrl }: Pr
 
   if (avatarUrl) {
     return (
-      <img
-        src={avatarUrl}
-        alt={username}
-        className={`${cls} rounded-full object-cover shrink-0`}
-      />
+      <div className={`${cls} rounded-full overflow-hidden shrink-0 relative`}>
+        <Image
+          src={avatarUrl}
+          alt={username}
+          fill
+          unoptimized
+          sizes={`${sizes[size].px}px`}
+          className="object-cover"
+        />
+      </div>
     );
   }
 

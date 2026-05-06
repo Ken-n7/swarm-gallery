@@ -1,9 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Photo } from '@/types';
 import { GalleryFilter } from './Gallery';
-import { UserAvatar } from './UserAvatar';
 import { useGuestPreferences } from '@/hooks/useGuestPreferences';
 
 interface Props {
@@ -78,11 +78,17 @@ const NAV: { key: GalleryFilter; label: string; icon: React.ReactNode }[] = [
 function SidebarContent({
   username, eventId, userCount, photos, filter, onFilterChange, onLeave, onClose,
 }: Omit<Props, 'open'>) {
+  const [now, setNow] = useState(() => Date.now());
   const myPhotos = photos.filter((p) => p.uploader === username).length;
-  const newPhotos = photos.filter((p) => Date.now() - p.uploadedAt < 5 * 60 * 1000).length;
+  const newPhotos = photos.filter((p) => now - p.uploadedAt < 5 * 60 * 1000).length;
   const { faceBlurEnabled, setFaceBlurEnabled } = useGuestPreferences();
 
   const router = useRouter();
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   function handleNav(f: GalleryFilter) {
     onFilterChange(f);
@@ -124,7 +130,7 @@ function SidebarContent({
       </div>
 
       {/* Event info */}
-      <div className="px-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      <div className="px-4 lg:px-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         <div className="flex items-center gap-1.5 mb-1">
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--good)' }} />
           <span className="text-[11px] font-semibold" style={{ color: 'var(--good)' }}>Live Now</span>
@@ -137,7 +143,7 @@ function SidebarContent({
       </div>
 
       {/* Stats */}
-      <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      <div className="px-3.5 lg:px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,.35)' }}>
           Gallery Stats
         </p>
@@ -150,7 +156,7 @@ function SidebarContent({
       </div>
 
       {/* Browse nav */}
-      <div className="px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      <div className="px-2.5 lg:px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         {NAV.map((item) => {
           const active = filter === item.key;
           return (
@@ -171,7 +177,7 @@ function SidebarContent({
       </div>
 
       {/* Privacy */}
-      <div className="px-5 py-4 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,.08)' }}>
+      <div className="px-4 lg:px-5 py-4 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,.08)' }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,.35)' }}>
           My Privacy
         </p>
@@ -204,10 +210,7 @@ function SidebarContent({
               </svg>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,.65)' }}>Auto-delete</span>
             </div>
-            {/* Toggle — UI only */}
-            <div className="w-11 h-6 rounded-full relative" style={{ background: 'var(--violet)' }}>
-              <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow" />
-            </div>
+            <span className="text-[11px] font-semibold" style={{ color: 'var(--violet)' }}>Event policy</span>
           </div>
         </div>
 
@@ -269,7 +272,13 @@ export function Sidebar({ open, onClose, ...rest }: Props) {
 
   // Landscape fixed column
   return (
-    <div className="h-full overflow-hidden shrink-0" style={{ background: 'var(--sidebar-bg)', width: 248 }}>
+    <div
+      className="h-full overflow-hidden shrink-0"
+      style={{
+        background: 'var(--sidebar-bg)',
+        width: 'clamp(188px, 24vw, 248px)',
+      }}
+    >
       <SidebarContent {...rest} />
     </div>
   );

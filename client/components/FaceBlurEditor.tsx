@@ -23,7 +23,6 @@ export function FaceBlurEditor({
 }: FaceBlurEditorProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
   const [regions, setRegions] = useState<BlurRegion[]>([]);
   const [brushSize, setBrushSize] = useState(0.22);
   const [saving, setSaving] = useState(false);
@@ -31,27 +30,15 @@ export function FaceBlurEditor({
   const [showHelp, setShowHelp] = useState(false);
   const [canvasFrame, setCanvasFrame] = useState({ left: 0, top: 0, width: 0, height: 0 });
 
-  useEffect(() => {
-    if (!file || !open) {
-      setPreviewUrl('');
-      setRegions([]);
-      setBrushSize(0.22);
-      setSaving(false);
-      setError('');
-      setShowHelp(false);
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setRegions([]);
-    setBrushSize(0.22);
-    setSaving(false);
-    setError('');
-    setShowHelp(false);
-
-    return () => URL.revokeObjectURL(url);
+  const previewUrl = useMemo(() => {
+    if (!file || !open) return '';
+    return URL.createObjectURL(file);
   }, [file, open]);
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const helperText = useMemo(() => {
     if (!regions.length) return 'Tap your face to place one or more blur circles before uploading.';
@@ -230,6 +217,8 @@ export function FaceBlurEditor({
               >
                 {previewUrl && (
                   <>
+                    {/* Preview uses a local blob URL before upload, so native img is intentional here. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       ref={imageRef}
                       src={previewUrl}

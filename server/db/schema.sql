@@ -50,3 +50,12 @@ CREATE TABLE IF NOT EXISTS photos (
   FOREIGN KEY (event_id) REFERENCES events(id),
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS photo_likes (
+  photo_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  liked_at INTEGER NOT NULL,
+  PRIMARY KEY (photo_id, user_id),
+  FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

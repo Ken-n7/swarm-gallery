@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { Photo } from '@/types';
 import { photoUrl } from '@/lib/api';
@@ -13,6 +14,7 @@ interface Props {
   photos: Photo[];
   userCount: number;
   currentUser: string;
+  currentUserId: string;
   filter?: GalleryFilter;
   onFilterChange?: (f: GalleryFilter) => void;
   onOpenSidebar?: () => void;
@@ -45,7 +47,7 @@ function MediaThumb({ photo }: { photo: Photo }) {
     return (
       <>
         {photo.thumbUrl
-          ? <img src={photoUrl(photo.thumbUrl)} alt="" className="w-full h-full object-cover" />
+          ? <Image src={photoUrl(photo.thumbUrl)} alt="" fill unoptimized sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
           : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
         }
         <div className="absolute inset-0 flex items-center justify-center">
@@ -58,24 +60,21 @@ function MediaThumb({ photo }: { photo: Photo }) {
       </>
     );
   }
-  return <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover" />;
+  return <Image src={photoUrl(photo.url)} alt="" fill unoptimized sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />;
 }
 
 function GroupCard({
   group,
-  currentUser,
   onView,
 }: {
   group: PhotoGroup;
-  currentUser: string;
   onView: (photos: Photo[], index: number) => void;
 }) {
-  const [liked, setLiked] = useState(false);
   const all = group.photos;
   const visible = all.slice(0, 5);
   const extra = all.length - 5;
   const [first, ...rest] = visible;
-  const likeCount = (group.photos[0]?.likeCount ?? 0) + (liked ? 1 : 0);
+  const likeCount = group.photos.reduce((sum, photo) => sum + (photo.likeCount ?? 0), 0);
 
   if (!first) return null;
 
@@ -149,28 +148,11 @@ function GroupCard({
         </div>
 
         <div className="flex gap-1.5 shrink-0">
-          <button
-            onClick={() => setLiked(!liked)}
-            className="w-[30px] h-[30px] rounded-full flex items-center justify-center transition-colors"
-            style={{ background: liked ? 'var(--pink-tint)' : '#f5f5f8' }}
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill={liked ? 'var(--pink)' : 'none'}
-              stroke={liked ? 'var(--pink)' : 'var(--muted)'}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          </button>
           <a
             href={photoUrl(first.url)}
-            download
+            download={first.filename}
+            target="_blank"
+            rel="noreferrer"
             className="w-[30px] h-[30px] rounded-full flex items-center justify-center"
             style={{ background: '#f5f5f8' }}
           >
@@ -195,6 +177,7 @@ export function Gallery({
   photos,
   userCount,
   currentUser,
+  currentUserId,
   filter: externalFilter,
   onFilterChange,
   onOpenSidebar,
@@ -213,6 +196,11 @@ export function Gallery({
   const filtered = useMemo(() => {
     if (filter === 'mine') return photos.filter((p) => p.uploader === currentUser);
     if (filter === 'recent') return [...photos].sort((a, b) => b.uploadedAt - a.uploadedAt).slice(0, 20);
+    if (filter === 'liked') {
+      return [...photos]
+        .filter((p) => (p.likeCount ?? 0) > 0)
+        .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0));
+    }
     return photos;
   }, [photos, filter, currentUser]);
 
@@ -223,7 +211,7 @@ export function Gallery({
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-3 border-b bg-white sticky top-0 z-10" style={{ borderColor: 'var(--line)' }}>
         {onOpenSidebar && (
-          <button onClick={onOpenSidebar} className="w-8 h-8 flex items-center justify-center shrink-0">
+          <button onClick={onOpenSidebar} aria-label="Open event sidebar" className="w-8 h-8 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5 text-[var(--ink-soft)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -295,7 +283,6 @@ export function Gallery({
             <GroupCard
               key={group.uploader}
               group={group}
-              currentUser={currentUser}
               onView={(photos, index) => setViewer({ photos, index })}
             />
           ))}
@@ -307,6 +294,7 @@ export function Gallery({
           photos={viewer.photos}
           startIndex={viewer.index}
           currentUser={currentUser}
+          currentUserId={currentUserId}
           onClose={() => setViewer(null)}
         />
       )}

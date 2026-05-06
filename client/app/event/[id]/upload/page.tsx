@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { uploadPhotoWithProgress, photoUrl, SERVER } from '@/lib/api';
@@ -242,6 +243,8 @@ export default function UploadPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
                       </svg>
                     ) : (
+                      // Preview uses a local blob URL before the file is uploaded.
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.previewUrl} alt="" className="w-full h-full object-cover" />
                     )}
                   </div>
@@ -326,7 +329,7 @@ export default function UploadPage() {
                   {p.mimetype?.startsWith('video/') ? (
                     <>
                       {p.thumbUrl
-                        ? <img src={photoUrl(p.thumbUrl)} alt="" className="w-full h-full object-cover" />
+                        ? <Image src={photoUrl(p.thumbUrl)} alt="" fill unoptimized sizes="25vw" className="object-cover" />
                         : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
                       }
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -338,7 +341,7 @@ export default function UploadPage() {
                       </div>
                     </>
                   ) : p.url ? (
-                    <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
+                    <Image src={photoUrl(p.url)} alt="" fill unoptimized sizes="25vw" className="object-cover" />
                   ) : null}
                 </div>
               ))}
@@ -369,6 +372,7 @@ export default function UploadPage() {
       <input ref={filesRef} type="file" accept="image/*,video/*" multiple className="hidden"
         onChange={(e) => e.target.files && enqueue(e.target.files)} />
       <FaceBlurEditor
+        key={blurFile ? `${blurFile.name}-${blurFile.size}-${blurFile.lastModified}` : 'face-blur-closed'}
         open={!!blurFile}
         file={blurFile}
         indexLabel={blurTotal > 1 ? `${blurIndex} of ${blurTotal}` : undefined}

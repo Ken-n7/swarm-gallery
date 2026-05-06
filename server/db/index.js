@@ -36,5 +36,17 @@ try {
     )
   `);
 } catch { /* table exists */ }
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS photo_likes (
+      photo_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      liked_at INTEGER NOT NULL,
+      PRIMARY KEY (photo_id, user_id),
+      FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+} catch { /* table exists */ }
 
 module.exports = db;

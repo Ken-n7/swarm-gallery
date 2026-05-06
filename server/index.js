@@ -74,6 +74,10 @@ const getPhotos = db.prepare(`SELECT * FROM photos WHERE event_id = ? ORDER BY u
 const getPhoto  = db.prepare(`SELECT * FROM photos WHERE id = ?`);
 const getUserById   = db.prepare(`SELECT * FROM users WHERE id = ?`);
 const getUserByName = db.prepare(`SELECT id FROM users WHERE event_id = ? AND username = ?`);
+const getLikeCount = db.prepare(`SELECT COUNT(*) AS count FROM photo_likes WHERE photo_id = ?`);
+const hasUserLikedPhoto = db.prepare(`SELECT 1 FROM photo_likes WHERE photo_id = ? AND user_id = ?`);
+const insertPhotoLike = db.prepare(`INSERT OR IGNORE INTO photo_likes (photo_id, user_id, liked_at) VALUES (?, ?, ?)`);
+const deletePhotoLike = db.prepare(`DELETE FROM photo_likes WHERE photo_id = ? AND user_id = ?`);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -103,7 +107,7 @@ app.use('/photos', express.static(config.STORAGE.EVENTS, { acceptRanges: true })
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-function toPhotoObj(r, eventId) {
+function toPhotoObj(r, eventId, userId = null) {
   return {
     id: r.id,
     filename: r.filename,
@@ -112,7 +116,21 @@ function toPhotoObj(r, eventId) {
     uploadedAt: r.uploaded_at,
     uploader: r.uploader_name,
     mimetype: r.mimetype,
+    likeCount: getLikeCount.get(r.id).count,
+    likedByMe: userId ? !!hasUserLikedPhoto.get(r.id, userId) : false,
   };
+}
+
+function emitPhotoLikeUpdate(photoId, userId, liked) {
+  const row = getPhoto.get(photoId);
+  if (!row) return;
+  io.emit('photo-liked', {
+    photoId,
+    likeCount: getLikeCount.get(photoId).count,
+    userId,
+    liked,
+    eventId: row.event_id,
+  });
 }
 
 async function handleUpload(req, res) {
@@ -139,7 +157,8 @@ async function handleUpload(req, res) {
 
   const photo = toPhotoObj(
     { id, filename: req.file.filename, thumb_filename: thumbFilename, uploaded_at: Date.now(), uploader_name: uploaderName, mimetype: req.file.mimetype },
-    eventId
+    eventId,
+    userRow ? userRow.id : null
   );
 
   io.emit('new-photo', photo);
@@ -151,11 +170,56 @@ app.post('/upload/:eventId', upload.single('photo'), handleUpload);
 
 function listPhotos(req, res) {
   const eventId = req.params.eventId || config.DEMO_EVENT_ID;
-  res.json(getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId)));
+  const userId = typeof req.query.userId === 'string' ? req.query.userId : null;
+  res.json(getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId, userId)));
 }
 
 app.get('/photos-list',          listPhotos);
 app.get('/photos-list/:eventId', listPhotos);
+
+app.post('/photos/:id/like', (req, res) => {
+  const photo = getPhoto.get(req.params.id);
+  if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+  const userId = req.body.userId;
+  if (!userId) return res.status(400).json({ error: 'User is required' });
+
+  const user = getUserById.get(userId);
+  if (!user || user.event_id !== photo.event_id) {
+    return res.status(403).json({ error: 'User cannot like this photo' });
+  }
+
+  insertPhotoLike.run(photo.id, user.id, Date.now());
+  emitPhotoLikeUpdate(photo.id, user.id, true);
+
+  res.json({
+    ok: true,
+    likeCount: getLikeCount.get(photo.id).count,
+    likedByMe: true,
+  });
+});
+
+app.delete('/photos/:id/like', (req, res) => {
+  const photo = getPhoto.get(req.params.id);
+  if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: 'User is required' });
+
+  const user = getUserById.get(userId);
+  if (!user || user.event_id !== photo.event_id) {
+    return res.status(403).json({ error: 'User cannot unlike this photo' });
+  }
+
+  deletePhotoLike.run(photo.id, user.id);
+  emitPhotoLikeUpdate(photo.id, user.id, false);
+
+  res.json({
+    ok: true,
+    likeCount: getLikeCount.get(photo.id).count,
+    likedByMe: false,
+  });
+});
 
 // Delete photo (owner only)
 app.delete('/photos/:id', (req, res) => {
@@ -206,7 +270,8 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   const eventId = config.DEMO_EVENT_ID;
-  socket.emit('photo-history', getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId)));
+  const userId = typeof socket.handshake.auth?.userId === 'string' ? socket.handshake.auth.userId : null;
+  socket.emit('photo-history', getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId, userId)));
   io.emit('user-count', { count: io.engine.clientsCount });
 
   socket.on('ping', () => socket.emit('pong'));

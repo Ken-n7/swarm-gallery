@@ -130,7 +130,7 @@ export function AdminDashboard() {
         <div className="bg-white rounded-[14px] p-6" style={{ border: '1px solid var(--line)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Recent Photos</h3>
-            <button className="text-sm" style={{ color: 'var(--violet)' }}>View all →</button>
+            <span className="text-sm font-medium" style={{ color: 'var(--muted)' }}>Latest uploads</span>
           </div>
           {recentPhotos.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
@@ -150,7 +150,7 @@ export function AdminDashboard() {
         <div className="bg-white rounded-[14px] overflow-hidden" style={{ border: '1px solid var(--line)' }}>
           <div className="px-[18px] py-[14px] flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)' }}>
             <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Recent Guests</h3>
-            <button className="text-sm" style={{ color: 'var(--violet)' }}>View all →</button>
+            <span className="text-sm font-medium" style={{ color: 'var(--muted)' }}>Latest joins</span>
           </div>
           {recentGuests.length > 0 ? (
             <>
@@ -178,7 +178,7 @@ export function AdminDashboard() {
                       <div className="text-[12px]" style={{ color: 'var(--muted)' }}>{new Date(guest.joinedAt).toLocaleDateString()}</div>
                       <div className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>{guest.photoCount}</div>
                       <div><StatusBadge status={status} /></div>
-                      <div><button className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>View →</button></div>
+                      <div className="text-[11px] font-semibold" style={{ color: 'var(--muted)' }}>Summary</div>
                     </div>
 
                     <div className="xl:hidden px-[18px] py-4 space-y-3">
@@ -204,7 +204,7 @@ export function AdminDashboard() {
                           <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>{guest.photoCount}</div>
                         </div>
                       </div>
-                      <button className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>View →</button>
+                      <div className="text-[12px] font-semibold" style={{ color: 'var(--muted)' }}>Summary</div>
                     </div>
                   </div>
                 );

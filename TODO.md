@@ -65,7 +65,7 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] Photo viewer UI exists
 - [x] Orientation-aware guest layout exists
 - [x] Face blur preference and manual pre-upload blur editor now exist on the guest side
-- [~] Likes are out of the current launch scope and have been removed from the guest viewer
+- [x] Likes are back in launch scope with real backend-backed like state in the guest gallery/viewer
 - [ ] Guest bottom sheets version of upload/settings is not implemented
 - [ ] Responsive mini/collapsed variants for sidebar/upload panel are not finished
 
@@ -287,21 +287,22 @@ Goal: finish the remaining guest features that matter for the real system.
   - assisted detection + manual adjustment
 - [x] Ensure blur is applied before upload leaves the device
 - [x] Add clear guest explanation that blur is optional and guest-controlled
-- [ ] Verify blurred output quality and export behavior
+- [x] Verify blurred output quality and export behavior
 
 ### C2. Likes
 
 - [x] Decide whether likes matter for launch
-  Current decision: no. Likes are out of scope for the current launch.
-- [~] If yes, add server sync for likes
-- [~] Add persistence across reloads/devices if likes remain a feature
+  Current decision: yes. Likes are in scope for the current launch.
+- [x] Add server sync for likes
+- [x] Add persistence across reloads/devices if likes remain a feature
+  Current behavior: likes persist across reloads for the same guest identity and update live across connected clients.
 
 ### C3. Guest Responsive Refinements
 
-- [ ] Implement portrait bottom sheets if still desired for upload/settings
-- [ ] Add responsive sidebar width variants if still desired
-- [ ] Add responsive upload panel width variants if still desired
-- [ ] Re-test orientation behavior across phone and tablet sizes
+- [~] Defer portrait bottom sheets for upload/settings to final polishing
+- [~] Defer sidebar width variants to final polishing
+- [~] Defer upload panel width variants to final polishing
+- [~] Defer broad orientation re-test to final polishing
 
 ### C4. Guest Polish
 
@@ -316,13 +317,19 @@ Goal: finish the remaining guest features that matter for the real system.
 
 Goal: make the system’s data model reflect the actual product rules.
 
-- [ ] Review database schema against the current admin/guest product
-- [ ] Add explicit event lifecycle state if missing
-- [ ] Add explicit handoff state if missing
-- [ ] Add explicit moderation state if missing
-- [ ] Review whether retention settings belong in the schema
-- [ ] Review whether guest/device/session data collected is actually needed
-- [ ] Remove or de-emphasize fields that do not serve the real workflow
+- [x] Review database schema against the current admin/guest product
+- [x] Add explicit event lifecycle state if missing
+  Current state: `events.status` plus `closed_at` / `media_deleted_at` already covers the lifecycle.
+- [x] Add explicit handoff state if missing
+  Current state: `handoff_prepared_at`, `handoff_completed_at`, and `events.status` already cover handoff state.
+- [x] Add explicit moderation state if missing
+  Current state: `photos.flagged` is the lightweight moderation state for launch.
+- [x] Review whether retention settings belong in the schema
+  Current decision: keep a minimal stored retention value, but de-emphasize it in the UI as fixed `Until handoff`.
+- [x] Review whether guest/device/session data collected is actually needed
+  Current decision: `device_id` and `last_seen` are still needed for rejoin and presence; there is no separate session model to keep.
+- [x] Remove or de-emphasize fields that do not serve the real workflow
+  Current result: fake cache clearing, extra retention controls, and guest removal are already removed/de-emphasized in product flow.
 
 ---
 
@@ -350,13 +357,13 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 ### E2. Guest Verification
 
-- [ ] Test first-time join flow
-- [ ] Test returning-device flow
-- [ ] Test upload from camera/photo library
-- [ ] Test upload progress and failure handling
-- [ ] Test photo viewing and download
-- [ ] Test settings toggles/labels
-- [ ] Test orientation changes while using the app
+- [x] Test first-time join flow
+- [x] Test returning-device flow
+- [x] Test upload from camera/photo library
+- [x] Test upload progress and failure handling
+- [x] Test photo viewing and download
+- [x] Test settings toggles/labels
+- [x] Test orientation changes while using the app
 
 ### E3. End-to-End Verification
 
@@ -371,7 +378,7 @@ Goal: move from “looks complete” to “safe to ship/demo”.
 
 ### E4. Code Quality
 
-- [ ] Clear admin lint debt
+- [x] Clear admin lint debt
 - [x] Run client build cleanly
 - [x] Run server sanity tests / smoke checks
 - [ ] Add targeted tests where valuable
@@ -404,8 +411,8 @@ Goal: keep context accurate as the system evolves.
 
 ### Phase 2: Finish Launch-Critical Guest Features
 
-- [ ] Decide whether face blur is launch-critical
-- [ ] Finish the guest-side features that are actually required for the intended event flow
+- [x] Decide whether face blur is launch-critical
+- [x] Finish the guest-side features that are actually required for the intended event flow
 
 ### Phase 3: Build Admin Operations Backend
 
@@ -417,13 +424,18 @@ Goal: keep context accurate as the system evolves.
 
 ### Phase 4: Wire Client to Backend
 
-- [ ] Connect admin actions to real endpoints
-- [ ] Add optimistic/loading/error handling
-- [ ] Validate end-to-end state transitions
+- [x] Connect admin actions to real endpoints
+- [x] Add optimistic/loading/error handling
+- [-] Validate end-to-end state transitions
 
 ### Phase 5: Hardening
 
-- [ ] Full responsive verification
+- [-] Full responsive verification
+- [~] Final guest responsive polish deferred until a real launch need appears:
+  - portrait bottom sheets for upload/settings if still desired
+  - any additional sidebar width variants beyond the current responsive pass
+  - any additional upload panel width variants beyond the current responsive pass
+  - broader orientation re-test sweep if device QA later exposes gaps
 - [ ] Full HCI/accessibility verification
 - [ ] Build/lint cleanup
 - [ ] Documentation cleanup
@@ -434,20 +446,9 @@ Goal: keep context accurate as the system evolves.
 
 These are the best next steps from the current state:
 
-- [-] Finish admin client-side operational behavior for all visible actions
-- [-] Add confirmation and status flows to admin destructive actions
-- [x] Remove admin `any` types and clean the biggest maintainability issues in `client/app/admin/page.tsx`
-- [x] Split the admin page into maintainable components before backend wiring
-- [ ] Decide whether guest face blur is required before backend admin operations
-- [x] Design the backend handoff/export/delete contract before wiring admin actions
-- [-] Decide which remaining admin actions are real enough to wire first
-- [x] Start backend operational APIs for export, handoff complete, delete media, and delete event
-- [x] Decide the next backend wiring target after Settings
-- [x] Wire gallery export/delete operations to real backend routes
-- [-] Start backend wiring for gallery moderation actions
-- [x] Refresh admin guest count and upload listings without requiring a manual page reload
-- [x] Start backend wiring for guest-level export/remove actions
-- [x] Decide that backend guest removal should not exist
+- [ ] Add targeted tests where valuable
+- [ ] Decide whether the remaining admin dashboard empty/loading-state check is worth doing before launch
+- [ ] Decide whether to do one final HCI/accessibility cleanup sweep before launch
 
 ---
 

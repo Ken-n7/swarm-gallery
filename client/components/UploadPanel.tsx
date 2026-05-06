@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Photo } from '@/types';
 import { photoUrl, uploadPhotoWithProgress, SERVER } from '@/lib/api';
@@ -107,8 +108,12 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
 
   return (
     <div
-      className="h-full overflow-y-auto flex flex-col gap-5 p-5 shrink-0"
-      style={{ width: 290, background: 'var(--bg-soft)', borderLeft: '1px solid var(--line)' }}
+      className="h-full overflow-y-auto flex flex-col gap-4 lg:gap-5 p-4 lg:p-5 shrink-0"
+      style={{
+        width: 'clamp(220px, 28vw, 290px)',
+        background: 'var(--bg-soft)',
+        borderLeft: '1px solid var(--line)',
+      }}
     >
       {/* Section title */}
       <h2 className="text-[15px] font-bold text-[var(--ink)]">Upload Photos</h2>
@@ -221,15 +226,15 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
               My Photos ({myPhotos.length})
             </p>
-            <button className="text-[11px] font-semibold text-[var(--violet)]">View all</button>
+            <span className="text-[11px] font-semibold text-[var(--violet)]">Latest uploads</span>
           </div>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-3 min-[900px]:grid-cols-4 gap-1">
             {myPhotos.slice(0, 8).map((p) => (
               <div key={p.id} className="aspect-square rounded-lg overflow-hidden relative" style={{ background: 'var(--bg-deep)' }}>
                 {p.mimetype?.startsWith('video/') ? (
                   <>
                     {p.thumbUrl
-                      ? <img src={photoUrl(p.thumbUrl)} alt="" className="w-full h-full object-cover" />
+                      ? <Image src={photoUrl(p.thumbUrl)} alt="" fill unoptimized sizes="56px" className="object-cover" />
                       : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
                     }
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -241,7 +246,7 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
                     </div>
                   </>
                 ) : (
-                  <img src={photoUrl(p.url)} alt="" className="w-full h-full object-cover" />
+                  <Image src={photoUrl(p.url)} alt="" fill unoptimized sizes="56px" className="object-cover" />
                 )}
               </div>
             ))}
@@ -269,6 +274,7 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
       )}
 
       <FaceBlurEditor
+        key={blurFile ? `${blurFile.name}-${blurFile.size}-${blurFile.lastModified}` : 'face-blur-closed'}
         open={!!blurFile}
         file={blurFile}
         indexLabel={blurTotal > 1 ? `${blurIndex} of ${blurTotal}` : undefined}

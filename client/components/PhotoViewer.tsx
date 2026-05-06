@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Photo } from '@/types';
-import { deletePhoto, photoUrl } from '@/lib/api';
+import { deletePhoto, likePhoto, photoUrl, unlikePhoto } from '@/lib/api';
 import { UserAvatar } from './UserAvatar';
 import { timeAgo } from '@/lib/time';
 
@@ -10,12 +11,14 @@ interface Props {
   photos: Photo[];
   startIndex: number;
   currentUser: string;
+  currentUserId: string;
   onClose: () => void;
 }
 
-export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, onClose }: Props) {
+export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, currentUserId, onClose }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [index, setIndex] = useState(startIndex);
+  const [liking, setLiking] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -24,19 +27,25 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
   const photo = photos[index];
   const isOwn = photo?.uploader === currentUser;
 
-  useEffect(() => {
+  const goNext = useCallback(() => {
     setConfirmDelete(false);
-  }, [index]);
+    setIndex((i) => Math.min(i + 1, photos.length - 1));
+  }, [photos.length]);
+
+  const goPrev = useCallback(() => {
+    setConfirmDelete(false);
+    setIndex((i) => Math.max(i - 1, 0));
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') setIndex((i) => Math.min(i + 1, photos.length - 1));
-      if (e.key === 'ArrowLeft')  setIndex((i) => Math.max(i - 1, 0));
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, photos.length]);
+  }, [goNext, goPrev, onClose]);
 
   function onTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
@@ -47,8 +56,8 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     touchStartX.current = null;
     if (Math.abs(dx) < 50) return;
-    if (dx < 0) setIndex((i) => Math.min(i + 1, photos.length - 1));
-    else         setIndex((i) => Math.max(i - 1, 0));
+    if (dx < 0) goNext();
+    else         goPrev();
   }
 
   async function handleDelete() {
@@ -70,6 +79,26 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
       setConfirmDelete(false);
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleLikeToggle() {
+    if (!photo || liking) return;
+
+    const currentlyLiked = !!photo.likedByMe;
+    setLiking(true);
+    try {
+      const result = currentlyLiked
+        ? await unlikePhoto(photo.id, currentUserId)
+        : await likePhoto(photo.id, currentUserId);
+
+      setPhotos((prev) => prev.map((entry) => (
+        entry.id === photo.id
+          ? { ...entry, likeCount: result.likeCount, likedByMe: result.likedByMe }
+          : entry
+      )));
+    } finally {
+      setLiking(false);
     }
   }
 
@@ -136,7 +165,9 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
           playsInline
         />
       ) : (
-        <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-contain" />
+        <div className="relative w-full h-full">
+          <Image src={photoUrl(photo.url)} alt="" fill unoptimized sizes="100vw" className="object-contain" />
+        </div>
       )}
 
       {/* Bottom chrome */}
@@ -153,6 +184,21 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleLikeToggle}
+            disabled={liking}
+            className="w-11 h-11 rounded-full flex items-center justify-center"
+            style={{ background: photo.likedByMe ? 'var(--pink)' : 'rgba(255,255,255,.2)', backdropFilter: 'blur(12px)' }}
+          >
+            <svg
+              className="w-5 h-5"
+              fill={photo.likedByMe ? 'white' : 'none'}
+              stroke="white"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
           <a
             href={photoUrl(photo.url)}
             download={photo.filename}
@@ -172,13 +218,13 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, on
       {/* Side tap nav */}
       {index > 0 && (
         <button
-          onClick={() => setIndex((i) => i - 1)}
+          onClick={goPrev}
           className="absolute left-0 top-1/4 bottom-1/4 w-16 z-10"
         />
       )}
       {index < photos.length - 1 && (
         <button
-          onClick={() => setIndex((i) => i + 1)}
+          onClick={goNext}
           className="absolute right-0 top-1/4 bottom-1/4 w-16 z-10"
         />
       )}
