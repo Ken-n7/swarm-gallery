@@ -12,10 +12,11 @@ interface Props {
   startIndex: number;
   currentUser: string;
   currentUserId: string;
+  title?: string;
   onClose: () => void;
 }
 
-export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, currentUserId, onClose }: Props) {
+export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, currentUserId, title = 'Gallery', onClose }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [index, setIndex] = useState(startIndex);
   const [liking, setLiking] = useState(false);
@@ -118,6 +119,7 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, cu
       >
         <button
           onClick={onClose}
+          aria-label="Close photo viewer"
           className="w-9 h-9 rounded-full flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,.2)', backdropFilter: 'blur(12px)' }}
         >
@@ -126,13 +128,17 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, cu
           </svg>
         </button>
 
-        <span className="text-white/85 text-xs font-medium">{index + 1} of {photos.length}</span>
+        <div className="text-center">
+          <div className="text-white text-[11px] font-semibold">{title}</div>
+          <span className="text-white/70 text-[11px] font-medium">{index + 1} of {photos.length}</span>
+        </div>
 
         {/* Delete button — own photos only */}
         {isOwn ? (
           <button
             onClick={handleDelete}
             disabled={deleting}
+            aria-label={confirmDelete ? 'Confirm delete photo' : 'Delete photo'}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
             style={{
               background: confirmDelete ? 'var(--danger)' : 'rgba(255,255,255,.2)',
@@ -184,9 +190,13 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, cu
         </div>
 
         <div className="flex items-center gap-3">
+          <span className="min-w-[1.5rem] text-center text-white/85 text-xs font-semibold">
+            {photo.likeCount ?? 0}
+          </span>
           <button
             onClick={handleLikeToggle}
             disabled={liking}
+            aria-label={photo.likedByMe ? 'Unlike photo' : 'Like photo'}
             className="w-11 h-11 rounded-full flex items-center justify-center"
             style={{ background: photo.likedByMe ? 'var(--pink)' : 'rgba(255,255,255,.2)', backdropFilter: 'blur(12px)' }}
           >
@@ -219,12 +229,14 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, cu
       {index > 0 && (
         <button
           onClick={goPrev}
+          aria-label="Previous photo"
           className="absolute left-0 top-1/4 bottom-1/4 w-16 z-10"
         />
       )}
       {index < photos.length - 1 && (
         <button
           onClick={goNext}
+          aria-label="Next photo"
           className="absolute right-0 top-1/4 bottom-1/4 w-16 z-10"
         />
       )}

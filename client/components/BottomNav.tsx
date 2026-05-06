@@ -4,15 +4,18 @@ import { useRouter, usePathname } from 'next/navigation';
 
 interface Props {
   eventId: string;
+  onUploadTap?: () => void;
+  onSettingsTap?: () => void;
+  activeOverride?: 'gallery' | 'upload' | 'settings';
 }
 
-export function BottomNav({ eventId }: Props) {
+export function BottomNav({ eventId, onUploadTap, onSettingsTap, activeOverride }: Props) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isGallery  = pathname === `/event/${eventId}`;
-  const isUpload   = pathname === `/event/${eventId}/upload`;
-  const isSettings = pathname === `/event/${eventId}/settings`;
+  const isGallery  = activeOverride ? activeOverride === 'gallery' : pathname === `/event/${eventId}`;
+  const isUpload   = activeOverride ? activeOverride === 'upload' : pathname === `/event/${eventId}/upload`;
+  const isSettings = activeOverride ? activeOverride === 'settings' : pathname === `/event/${eventId}/settings`;
 
   const active   = 'text-[var(--violet)]';
   const inactive = 'text-[var(--muted)]';
@@ -35,7 +38,7 @@ export function BottomNav({ eventId }: Props) {
 
       {/* Upload */}
       <button
-        onClick={() => router.push(`/event/${eventId}/upload`)}
+        onClick={() => onUploadTap ? onUploadTap() : router.push(`/event/${eventId}/upload`)}
         className={`flex flex-col items-center justify-center gap-1 flex-1 ${isUpload ? active : inactive}`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={isUpload ? 2 : 1.5}>
@@ -46,7 +49,7 @@ export function BottomNav({ eventId }: Props) {
 
       {/* Settings */}
       <button
-        onClick={() => router.push(`/event/${eventId}/settings`)}
+        onClick={() => onSettingsTap ? onSettingsTap() : router.push(`/event/${eventId}/settings`)}
         className={`flex flex-col items-center justify-center gap-1 flex-1 ${isSettings ? active : inactive}`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={isSettings ? 2 : 1.5}>

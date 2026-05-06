@@ -28,6 +28,8 @@ interface PhotoGroup {
   latestAt: number;
 }
 
+const GROUP_CARD_RATIO = '2/1';
+
 function groupPhotos(photos: Photo[]): PhotoGroup[] {
   const map: Record<string, PhotoGroup> = {};
   for (const p of photos) {
@@ -78,6 +80,57 @@ function GroupCard({
 
   if (!first) return null;
 
+  if (all.length === 2) {
+    return (
+      <div className="flex flex-col">
+        <div className="grid grid-cols-2 gap-[2px] overflow-hidden rounded-[14px]" style={{ aspectRatio: GROUP_CARD_RATIO }}>
+          {all.map((photo, index) => (
+            <button key={photo.id} onClick={() => onView(all, index)} className="relative overflow-hidden">
+              <MediaThumb photo={photo} />
+            </button>
+          ))}
+        </div>
+        <FooterRow group={group} likeCount={likeCount} />
+      </div>
+    );
+  }
+
+  if (all.length === 3) {
+    return (
+      <div className="flex flex-col">
+        <div
+          className="grid overflow-hidden rounded-[14px]"
+          style={{ gridTemplateColumns: '1.45fr 1fr', gridTemplateRows: '1fr 1fr', aspectRatio: GROUP_CARD_RATIO, gap: '2px' }}
+        >
+          <button onClick={() => onView(all, 0)} className="row-span-2 relative overflow-hidden">
+            <MediaThumb photo={all[0]} />
+          </button>
+          {all.slice(1).map((photo, index) => (
+            <button key={photo.id} onClick={() => onView(all, index + 1)} className="relative overflow-hidden">
+              <MediaThumb photo={photo} />
+            </button>
+          ))}
+        </div>
+        <FooterRow group={group} likeCount={likeCount} />
+      </div>
+    );
+  }
+
+  if (all.length === 4) {
+    return (
+      <div className="flex flex-col">
+        <div className="grid grid-cols-2 grid-rows-2 gap-[2px] overflow-hidden rounded-[14px]" style={{ aspectRatio: GROUP_CARD_RATIO }}>
+          {all.map((photo, index) => (
+            <button key={photo.id} onClick={() => onView(all, index)} className="relative overflow-hidden">
+              <MediaThumb photo={photo} />
+            </button>
+          ))}
+        </div>
+        <FooterRow group={group} likeCount={likeCount} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col">
       {/* Mosaic grid */}
@@ -85,7 +138,7 @@ function GroupCard({
         <button
           onClick={() => onView(all, 0)}
           className="w-full overflow-hidden rounded-[14px] relative"
-          style={{ aspectRatio: '1.4/1' }}
+          style={{ aspectRatio: GROUP_CARD_RATIO }}
         >
           <MediaThumb photo={first} />
         </button>
@@ -95,11 +148,11 @@ function GroupCard({
           style={{
             gridTemplateColumns: '1.55fr 1fr 1fr',
             gridTemplateRows: '1fr 1fr',
-            aspectRatio: '2.2/1',
+            aspectRatio: GROUP_CARD_RATIO,
             gap: '2px',
           }}
-        >
-          {/* Hero — spans 2 rows */}
+          >
+            {/* Hero — spans 2 rows */}
           <button onClick={() => onView(all, 0)} className="row-span-2 overflow-hidden relative">
             <MediaThumb photo={first} />
           </button>
@@ -123,45 +176,39 @@ function GroupCard({
                   </div>
                 )}
               </button>
-            ) : (
-              <div key={`empty-${i}`} style={{ background: 'var(--line)' }} />
-            );
+            ) : null;
           })}
         </div>
       )}
 
-      {/* Footer row */}
-      <div className="flex items-center justify-between px-1 pt-2 pb-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <UserAvatar username={group.uploader} size="xs" />
-          <div className="min-w-0 flex items-baseline gap-1 flex-wrap">
-            <span className="text-[12px] font-bold text-[var(--ink)] truncate">
-              {group.uploader}
-            </span>
-            <span className="text-[10px] text-[var(--muted)]">
-              {timeAgo(group.latestAt)}
-            </span>
-            {likeCount > 0 && (
-              <span className="text-[10px] text-[var(--muted)]">· {likeCount}♥</span>
-            )}
-          </div>
-        </div>
+      <FooterRow group={group} likeCount={likeCount} />
+    </div>
+  );
+}
 
-        <div className="flex gap-1.5 shrink-0">
-          <a
-            href={photoUrl(first.url)}
-            download={first.filename}
-            target="_blank"
-            rel="noreferrer"
-            className="w-[30px] h-[30px] rounded-full flex items-center justify-center"
-            style={{ background: '#f5f5f8' }}
-          >
-            <svg className="w-3.5 h-3.5 text-[var(--muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-          </a>
+function FooterRow({ group, likeCount }: { group: PhotoGroup; likeCount: number }) {
+  return (
+    <div className="flex items-center justify-between px-1 pt-2 pb-1">
+      <div className="flex items-center gap-2 min-w-0">
+        <UserAvatar username={group.uploader} size="xs" />
+        <div className="min-w-0 flex items-baseline gap-1 flex-wrap">
+          <span className="text-[12px] font-bold text-[var(--ink)] truncate">
+            {group.uploader}
+          </span>
+          <span className="text-[10px] text-[var(--muted)]">
+            {timeAgo(group.latestAt)}
+          </span>
         </div>
       </div>
+      {likeCount > 0 && (
+        <div
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold shrink-0"
+          style={{ background: 'rgba(244,114,182,.12)', color: '#be185d' }}
+        >
+          <span aria-hidden="true">♥</span>
+          {likeCount}
+        </div>
+      )}
     </div>
   );
 }
@@ -205,6 +252,13 @@ export function Gallery({
   }, [photos, filter, currentUser]);
 
   const groups = useMemo(() => groupPhotos(filtered), [filtered]);
+  const emptyCopy = filter === 'mine'
+    ? 'You have not uploaded anything yet. Add the first photo to start your own strip.'
+    : filter === 'recent'
+      ? 'No fresh uploads yet. New arrivals will show up here as guests share media.'
+      : filter === 'liked'
+        ? 'No liked photos yet. Hearts from guests will surface the favorites here.'
+        : 'No photos yet. Be the first to share!';
 
   return (
     <>
@@ -266,8 +320,18 @@ export function Gallery({
 
       {/* Groups grid */}
       {groups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-[var(--muted)]">
-          <p className="text-sm">No photos yet. Be the first to share!</p>
+        <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--violet-tint)', color: 'var(--violet)' }}>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-[var(--ink)]">
+            Nothing to show in {FILTERS.find((entry) => entry.key === filter)?.label.toLowerCase() || 'this view'}
+          </p>
+          <p className="text-sm mt-2 text-[var(--muted)] max-w-sm">
+            {emptyCopy}
+          </p>
         </div>
       ) : (
         <div
@@ -295,6 +359,7 @@ export function Gallery({
           startIndex={viewer.index}
           currentUser={currentUser}
           currentUserId={currentUserId}
+          title={eventName}
           onClose={() => setViewer(null)}
         />
       )}

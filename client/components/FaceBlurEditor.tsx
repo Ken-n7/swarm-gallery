@@ -157,16 +157,16 @@ export function FaceBlurEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'rgba(15,23,42,.74)' }}>
+    <div className="fixed inset-0 z-[80] overflow-y-auto" style={{ background: 'rgba(15,23,42,.74)' }}>
       <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
         <div className="w-full max-w-3xl rounded-[24px] overflow-hidden my-4" style={{ background: 'white', boxShadow: '0 24px 80px rgba(15,23,42,.28)' }}>
-          <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 sticky top-0 z-10" style={{ borderBottom: '1px solid var(--line)', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(12px)' }}>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--violet)' }}>
                 Privacy tool {indexLabel ? `· ${indexLabel}` : ''}
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <h2 className="text-[22px] font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>
+                <h2 className="text-[18px] sm:text-[22px] font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>
                   Blur before upload
                 </h2>
                 <div className="relative">
@@ -191,7 +191,7 @@ export function FaceBlurEditor({
                   )}
                 </div>
               </div>
-              <p className="text-[13px] mt-1 max-w-xl" style={{ color: 'var(--muted)' }}>
+              <p className="text-[12px] sm:text-[13px] mt-1 max-w-xl" style={{ color: 'var(--muted)' }}>
                 {helperText}
               </p>
             </div>
@@ -223,7 +223,7 @@ export function FaceBlurEditor({
                       ref={imageRef}
                       src={previewUrl}
                       alt="Preview for optional face blur"
-                      className="w-full h-auto max-h-[65vh] object-contain mx-auto"
+                      className="w-full h-auto max-h-[48vh] sm:max-h-[65vh] object-contain mx-auto"
                     />
                     <canvas
                       ref={canvasRef}

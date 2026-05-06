@@ -35,8 +35,17 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white items-center justify-center px-6">
-      <div className="w-full max-w-sm flex flex-col items-center gap-5">
+    <div
+      className="flex flex-col min-h-screen items-center justify-center px-6 py-10"
+      style={{
+        background:
+          'radial-gradient(circle at top, rgba(139,92,246,.14), transparent 36%), linear-gradient(180deg, #ffffff 0%, #f8f7ff 100%)',
+      }}
+    >
+      <div
+        className="w-full max-w-sm flex flex-col items-center gap-5 rounded-[28px] px-6 py-7 border shadow-[0_24px_80px_rgba(15,23,42,.08)]"
+        style={{ background: 'rgba(255,255,255,.94)', borderColor: 'rgba(139,92,246,.12)', backdropFilter: 'blur(14px)' }}
+      >
 
         {/* Event avatar */}
         <UserAvatar username={eventName} size="xl" neon />
@@ -46,6 +55,15 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
           <p className="text-sm text-zinc-400 mb-1">Welcome to</p>
           <h1 className="text-3xl font-black text-zinc-900 leading-tight">{eventName}</h1>
           <p className="text-sm text-zinc-400 mt-1">Swarm Gallery · Offline event</p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
+            Fast local sharing
+          </div>
+          <div className="rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: '#ecfeff', color: '#0f766e' }}>
+            Privacy-first handoff
+          </div>
         </div>
 
         {/* Guest count badge */}
@@ -84,6 +102,9 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
             {joining ? 'Joining...' : 'Join the celebration'}
           </button>
         </form>
+        <p className="text-[12px] text-center leading-5 text-zinc-400">
+          Pick a nickname and you&apos;re in. Photos stay local to this event until handoff.
+        </p>
       </div>
     </div>
   );

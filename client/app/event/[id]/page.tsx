@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { JoinScreen } from '@/components/JoinScreen';
 import { Gallery, GalleryFilter } from '@/components/Gallery';
 import { BottomNav } from '@/components/BottomNav';
 import { Sidebar } from '@/components/Sidebar';
 import { UploadPanel } from '@/components/UploadPanel';
+import { GuestBottomSheet } from '@/components/GuestBottomSheet';
+import { GuestSettingsContent } from '@/components/GuestSettingsContent';
 import { useUser } from '@/hooks/useUser';
 import { useGallery } from '@/hooks/useGallery';
 import { useOrientation } from '@/hooks/useOrientation';
@@ -26,13 +28,32 @@ function GalleryView({
 
   const [filter, setFilter] = useState<GalleryFilter>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sheet, setSheet] = useState<'upload' | 'settings' | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 0 : window.innerWidth));
 
   const { leave } = useUser();
+
+  useEffect(() => {
+    function updateWidth() {
+      setViewportWidth(window.innerWidth);
+    }
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   function handleLeave() {
     leave();
     router.replace('/');
   }
+
+  function openSheet(nextSheet: 'upload' | 'settings') {
+    setSidebarOpen(false);
+    setSheet(nextSheet);
+  }
+
+  const compactLandscape = orientation === 'landscape' && viewportWidth > 0 && viewportWidth < 1180;
+  const activeSheet = orientation === 'portrait' ? sheet : null;
 
   if (orientation === 'landscape') {
     return (
@@ -46,6 +67,7 @@ function GalleryView({
           filter={filter}
           onFilterChange={setFilter}
           onLeave={handleLeave}
+          compact={compactLandscape}
         />
 
         {/* Gallery — scrollable center */}
@@ -62,7 +84,7 @@ function GalleryView({
         </div>
 
         {/* Upload panel — fixed right */}
-        <UploadPanel username={username} userId={userId} photos={photos} eventId={eventId} />
+        <UploadPanel username={username} userId={userId} photos={photos} eventId={eventId} compact={compactLandscape} />
       </div>
     );
   }
@@ -93,7 +115,36 @@ function GalleryView({
         onOpenSidebar={() => setSidebarOpen(true)}
       />
 
-      <BottomNav eventId={eventId} />
+      <BottomNav
+        eventId={eventId}
+        onUploadTap={() => openSheet('upload')}
+        onSettingsTap={() => openSheet('settings')}
+        activeOverride={activeSheet === 'upload' ? 'upload' : activeSheet === 'settings' ? 'settings' : 'gallery'}
+      />
+
+      <GuestBottomSheet
+        open={activeSheet === 'upload'}
+        title="Add Media"
+        subtitle="Capture or choose files without leaving the gallery."
+        onClose={() => setSheet(null)}
+      >
+        <UploadPanel
+          username={username}
+          userId={userId}
+          photos={photos}
+          eventId={eventId}
+          sheetMode
+        />
+      </GuestBottomSheet>
+
+      <GuestBottomSheet
+        open={activeSheet === 'settings'}
+        title="Settings"
+        subtitle="Adjust privacy tools and event-level guest preferences."
+        onClose={() => setSheet(null)}
+      >
+        <GuestSettingsContent eventId={eventId} layout="single" />
+      </GuestBottomSheet>
     </div>
   );
 }

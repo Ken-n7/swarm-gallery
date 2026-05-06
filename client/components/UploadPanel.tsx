@@ -1,9 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Photo } from '@/types';
-import { photoUrl, uploadPhotoWithProgress, SERVER } from '@/lib/api';
+import { uploadPhotoWithProgress, SERVER } from '@/lib/api';
 import { useGuestPreferences } from '@/hooks/useGuestPreferences';
 import { useFaceBlurWorkflow } from '@/hooks/useFaceBlurWorkflow';
 import { FaceBlurEditor } from './FaceBlurEditor';
@@ -23,13 +22,15 @@ interface Props {
   userId: string;
   photos: Photo[];
   eventId?: string;
+  compact?: boolean;
+  sheetMode?: boolean;
 }
 
 function fmtSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Props) {
+export function UploadPanel({ username, userId, photos, eventId = 'demo', compact = false, sheetMode = false }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -45,6 +46,13 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
   } = useFaceBlurWorkflow(faceBlurEnabled);
 
   const myPhotos = photos.filter((p) => p.uploader === username);
+  const queueSummary = uploads.length
+    ? uploads.some((item) => item.status === 'uploading')
+      ? 'Uploads are moving. You can keep browsing while this panel updates.'
+      : uploads.some((item) => item.status === 'error')
+        ? 'Some items need attention before they finish.'
+        : 'Everything in the queue finished successfully.'
+    : 'Drop files, browse the device, or keep capturing moments while the gallery stays live.';
 
   function updateItem(id: string, patch: Partial<UploadItem>) {
     setUploads((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
@@ -108,15 +116,18 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
 
   return (
     <div
-      className="h-full overflow-y-auto flex flex-col gap-4 lg:gap-5 p-4 lg:p-5 shrink-0"
+      className={`overflow-y-auto flex flex-col shrink-0 ${compact ? 'gap-3 p-3.5' : 'gap-4 lg:gap-5 p-4 lg:p-5'} ${sheetMode ? 'h-auto min-h-0' : 'h-full'}`}
       style={{
-        width: 'clamp(220px, 28vw, 290px)',
-        background: 'var(--bg-soft)',
-        borderLeft: '1px solid var(--line)',
+        width: sheetMode ? '100%' : compact ? 'clamp(188px, 24vw, 240px)' : 'clamp(220px, 28vw, 290px)',
+        background: sheetMode ? 'transparent' : 'var(--bg-soft)',
+        borderLeft: sheetMode ? 'none' : '1px solid var(--line)',
       }}
     >
       {/* Section title */}
-      <h2 className="text-[15px] font-bold text-[var(--ink)]">Upload Photos</h2>
+      <div>
+        <h2 className="text-[15px] font-bold text-[var(--ink)]">Upload Photos</h2>
+        <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--muted)' }}>{queueSummary}</p>
+      </div>
 
       {/* Drop zone */}
       <div
@@ -148,9 +159,11 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
       {faceBlurEnabled && (
         <div className="rounded-2xl px-4 py-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,246,.18)' }}>
           <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>Face blur is on</div>
-          <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--ink-soft)' }}>
-            Selected photos open a quick blur step before upload. Videos keep uploading normally.
-          </p>
+          {!compact && (
+            <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--ink-soft)' }}>
+              Selected photos open a quick blur step before upload. Videos keep uploading normally.
+            </p>
+          )}
         </div>
       )}
 
@@ -219,41 +232,6 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
         </div>
       )}
 
-      {/* My photos */}
-      {myPhotos.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
-              My Photos ({myPhotos.length})
-            </p>
-            <span className="text-[11px] font-semibold text-[var(--violet)]">Latest uploads</span>
-          </div>
-          <div className="grid grid-cols-3 min-[900px]:grid-cols-4 gap-1">
-            {myPhotos.slice(0, 8).map((p) => (
-              <div key={p.id} className="aspect-square rounded-lg overflow-hidden relative" style={{ background: 'var(--bg-deep)' }}>
-                {p.mimetype?.startsWith('video/') ? (
-                  <>
-                    {p.thumbUrl
-                      ? <Image src={photoUrl(p.thumbUrl)} alt="" fill unoptimized sizes="56px" className="object-cover" />
-                      : <div className="w-full h-full" style={{ background: 'var(--ink)' }} />
-                    }
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,.45)' }}>
-                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <Image src={photoUrl(p.url)} alt="" fill unoptimized sizes="56px" className="object-cover" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Download my album */}
       {myPhotos.length > 0 && (
         <div className="mt-auto pt-2">
@@ -270,6 +248,15 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo' }: Prop
             </svg>
             Download / open my album
           </a>
+        </div>
+      )}
+
+      {myPhotos.length === 0 && uploads.length === 0 && (
+        <div className="mt-auto rounded-2xl px-4 py-4" style={{ background: 'white', border: '1px solid var(--line)' }}>
+          <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>No uploads from you yet</div>
+          <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--muted)' }}>
+            Start with a photo or video and use the Mine tab in the gallery to review your uploads.
+          </p>
         </div>
       )}
 
