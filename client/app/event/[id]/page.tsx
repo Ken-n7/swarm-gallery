@@ -66,6 +66,7 @@ function GalleryView({
           photos={photos}
           filter={filter}
           onFilterChange={setFilter}
+          onOpenSettings={() => router.push(`/event/${eventId}/settings`)}
           onLeave={handleLeave}
           compact={compactLandscape}
         />
@@ -100,6 +101,7 @@ function GalleryView({
         photos={photos}
         filter={filter}
         onFilterChange={setFilter}
+        onOpenSettings={() => setSheet('settings')}
         onLeave={handleLeave}
         open={orientation === 'portrait' && sidebarOpen}
         onClose={() => setSidebarOpen(false)}

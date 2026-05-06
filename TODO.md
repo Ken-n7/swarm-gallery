@@ -66,8 +66,8 @@ Swarm Gallery is an event photo-sharing system with:
 - [x] Orientation-aware guest layout exists
 - [x] Face blur preference and manual pre-upload blur editor now exist on the guest side
 - [x] Likes are back in launch scope with real backend-backed like state in the guest gallery/viewer
-- [ ] Guest bottom sheets version of upload/settings is not implemented
-- [ ] Responsive mini/collapsed variants for sidebar/upload panel are not finished
+- [x] Guest bottom sheets version of upload/settings now exists in portrait mode
+- [x] Responsive mini/collapsed variants for sidebar/upload panel now exist for narrower landscape screens
 
 ### Admin UI
 
@@ -299,10 +299,10 @@ Goal: finish the remaining guest features that matter for the real system.
 
 ### C3. Guest Responsive Refinements
 
-- [~] Defer portrait bottom sheets for upload/settings to final polishing
-- [~] Defer sidebar width variants to final polishing
-- [~] Defer upload panel width variants to final polishing
-- [~] Defer broad orientation re-test to final polishing
+- [x] Implement portrait bottom sheets for upload/settings
+- [x] Add responsive sidebar width variants
+- [x] Add responsive upload panel width variants
+- [x] Re-test orientation behavior across phone and tablet sizes
 
 ### C4. Guest Polish
 
@@ -430,14 +430,9 @@ Goal: keep context accurate as the system evolves.
 
 ### Phase 5: Hardening
 
-- [-] Full responsive verification
-- [~] Final guest responsive polish deferred until a real launch need appears:
-  - portrait bottom sheets for upload/settings if still desired
-  - any additional sidebar width variants beyond the current responsive pass
-  - any additional upload panel width variants beyond the current responsive pass
-  - broader orientation re-test sweep if device QA later exposes gaps
-- [ ] Full HCI/accessibility verification
-- [ ] Build/lint cleanup
+- [x] Full responsive verification
+- [-] Full HCI/accessibility verification
+- [x] Build/lint cleanup
 - [ ] Documentation cleanup
 
 ---
@@ -448,7 +443,7 @@ These are the best next steps from the current state:
 
 - [ ] Add targeted tests where valuable
 - [ ] Decide whether the remaining admin dashboard empty/loading-state check is worth doing before launch
-- [ ] Decide whether to do one final HCI/accessibility cleanup sweep before launch
+- [ ] Decide whether to do one final documentation cleanup pass before launch
 
 ---
 
