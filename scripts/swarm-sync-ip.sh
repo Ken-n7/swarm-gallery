@@ -39,6 +39,10 @@ upsert_line() {
   fi
 }
 
+upsert_line "$SERVER_ENV" "PORT" "4000"
+upsert_line "$SERVER_ENV" "ADMIN_PASSWORD" "admin123"
+upsert_line "$SERVER_ENV" "COOKIE_SECRET" "change-this-secret-before-event"
+
 CURRENT_IP="$(detect_ip)"
 CLIENT_URL="http://${CURRENT_IP}:3000"
 SERVER_URL="http://${CURRENT_IP}:4000"

@@ -2,6 +2,8 @@
   "name": "swarm-gallery-workspace",
   "private": true,
   "scripts": {
+    "swarm:init-local": "bash scripts/swarm-init.sh local",
+    "swarm:init-network": "bash scripts/swarm-init.sh network",
     "swarm:sync-ip": "bash scripts/swarm-sync-ip.sh",
     "swarm:start": "bash scripts/swarm-start.sh",
     "swarm:stop": "bash scripts/swarm-stop.sh",

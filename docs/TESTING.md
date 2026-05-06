@@ -29,7 +29,12 @@ These backend and integration checks have already been confirmed recently:
 
 ## Browser Verification
 
-Use Brave on the laptop after starting the system in laptop-only mode.
+Use Brave on the laptop after starting the system with:
+
+```bash
+npm run swarm:init-local
+npm run swarm:start
+```
 
 ### Admin
 
@@ -71,13 +76,19 @@ Verify:
 ## Suggested Reset-Then-Test Flow
 
 1. Reset demo data
-2. Restart server
-3. Rebuild and restart client
-4. Join with at least two guest identities
-5. Upload at least two photos
-6. Log into admin
-7. Verify Dashboard, Galleries, Guests, Settings
-8. Optionally run closeout flow on a separate pass
+   ```bash
+   npm run swarm:reset
+   ```
+2. Start fresh local services
+   ```bash
+   npm run swarm:init-local
+   npm run swarm:start
+   ```
+3. Join with at least two guest identities
+4. Upload at least two photos
+5. Log into admin
+6. Verify Dashboard, Galleries, Guests, Settings
+7. Optionally run closeout flow on a separate pass
 
 ---
 
@@ -116,11 +127,11 @@ curl -s http://localhost:4000/photos-list/demo
 ## Known Setup Gotchas
 
 - If admin appears blank in the browser, check `client/.env.local`
-- For laptop-only testing, `NEXT_PUBLIC_SERVER_URL` must be `http://localhost:4000`
-- For other devices, `NEXT_PUBLIC_SERVER_URL` must be the laptop’s current LAN/hotspot IP
-- After changing `client/.env.local`, rebuild the client
-- After server auth/CORS changes, restart the server
-- After frontend admin API/auth changes, rebuild the client and log into admin again
+- For laptop-only testing, prefer `npm run swarm:init-local`
+- For other devices, prefer `npm run swarm:init-network`
+- After changing networks, run `npm run swarm:sync-ip` and then `npm run swarm:restart`
+- After server auth/CORS changes, restart the server/app stack
+- After frontend admin API/auth changes, restart the app stack and log into admin again
 
 ---
 
