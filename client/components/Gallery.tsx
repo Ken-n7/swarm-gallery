@@ -15,6 +15,7 @@ interface Props {
   userCount: number;
   currentUser: string;
   currentUserId: string;
+  currentUserAvatarUrl?: string | null;
   filter?: GalleryFilter;
   onFilterChange?: (f: GalleryFilter) => void;
   onOpenSidebar?: () => void;
@@ -24,6 +25,7 @@ interface Props {
 
 interface PhotoGroup {
   uploader: string;
+  avatarUrl: string | null;
   photos: Photo[];
   latestAt: number;
 }
@@ -34,11 +36,13 @@ function groupPhotos(photos: Photo[]): PhotoGroup[] {
   const map: Record<string, PhotoGroup> = {};
   for (const p of photos) {
     if (!map[p.uploader]) {
-      map[p.uploader] = { uploader: p.uploader, photos: [], latestAt: 0 };
+      map[p.uploader] = { uploader: p.uploader, avatarUrl: p.uploaderAvatarUrl ?? null, photos: [], latestAt: 0 };
     }
     map[p.uploader].photos.push(p);
     if (p.uploadedAt > map[p.uploader].latestAt) {
       map[p.uploader].latestAt = p.uploadedAt;
+      // Keep the most recent photo's avatar (handles avatar updates mid-event)
+      if (p.uploaderAvatarUrl) map[p.uploader].avatarUrl = p.uploaderAvatarUrl;
     }
   }
   return Object.values(map).sort((a, b) => b.latestAt - a.latestAt);
@@ -242,7 +246,7 @@ function LikedPhotoCard({
 
       <div className="flex items-center justify-between px-1 pt-2 pb-1">
         <div className="flex items-center gap-2 min-w-0">
-          <UserAvatar username={photo.uploader} size="xs" />
+          <UserAvatar username={photo.uploader} avatarUrl={photo.uploaderAvatarUrl} size="xs" />
           <div className="min-w-0 flex items-baseline gap-1 flex-wrap">
             <span className="text-[12px] font-bold text-[var(--ink)] truncate">
               {photo.uploader}
@@ -270,7 +274,7 @@ function FooterRow({ group, likeCount }: { group: PhotoGroup; likeCount: number 
   return (
     <div className="flex items-center justify-between px-1 pt-2 pb-1">
       <div className="flex items-center gap-2 min-w-0">
-        <UserAvatar username={group.uploader} size="xs" />
+        <UserAvatar username={group.uploader} avatarUrl={group.avatarUrl} size="xs" />
         <div className="min-w-0 flex items-baseline gap-1 flex-wrap">
           <span className="text-[12px] font-bold text-[var(--ink)] truncate">
             {group.uploader}
@@ -305,6 +309,7 @@ export function Gallery({
   userCount,
   currentUser,
   currentUserId,
+  currentUserAvatarUrl,
   filter: externalFilter,
   onFilterChange,
   onOpenSidebar,
@@ -379,7 +384,7 @@ export function Gallery({
           </div>
         )}
 
-        <UserAvatar username={currentUser} size="sm" />
+        <UserAvatar username={currentUser} avatarUrl={currentUserAvatarUrl} size="sm" />
       </div>
 
       {/* Filter tabs */}

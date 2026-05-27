@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { SERVER } from '@/lib/api';
 
 interface Props {
   username: string;
@@ -28,10 +29,11 @@ export function UserAvatar({ username, size = 'md', neon = true, avatarUrl }: Pr
   const { cls } = sizes[size];
 
   if (avatarUrl) {
+    const resolved = avatarUrl.startsWith('http') ? avatarUrl : `${SERVER}${avatarUrl}`;
     return (
       <div className={`${cls} rounded-full overflow-hidden shrink-0 relative`}>
         <Image
-          src={avatarUrl}
+          src={resolved}
           alt={username}
           fill
           unoptimized

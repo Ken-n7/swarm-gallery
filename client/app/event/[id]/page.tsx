@@ -16,10 +16,12 @@ import { useOrientation } from '@/hooks/useOrientation';
 function GalleryView({
   username,
   userId,
+  avatarUrl,
   eventId,
 }: {
   username: string;
   userId: string;
+  avatarUrl: string | null;
   eventId: string;
 }) {
   const { photos, userCount } = useGallery(userId);
@@ -78,6 +80,7 @@ function GalleryView({
             userCount={userCount}
             currentUser={username}
             currentUserId={userId}
+            currentUserAvatarUrl={avatarUrl}
             filter={filter}
             onFilterChange={setFilter}
             hidePadBottom
@@ -112,6 +115,7 @@ function GalleryView({
         userCount={userCount}
         currentUser={username}
         currentUserId={userId}
+        currentUserAvatarUrl={avatarUrl}
         filter={filter}
         onFilterChange={setFilter}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -163,5 +167,5 @@ export default function EventPage() {
     return <JoinScreen onJoin={join} joining={joining} error={error} />;
   }
 
-  return <GalleryView username={user.username} userId={user.userId} eventId={eventId} />;
+  return <GalleryView username={user.username} userId={user.userId} avatarUrl={user.avatarUrl} eventId={eventId} />;
 }

@@ -5,6 +5,22 @@ import Image from 'next/image';
 import { getAdminStats, getRecentGuests, getRecentPhotos, SERVER } from '@/lib/api';
 import { AdminImage, type AdminGuest, type AdminPhoto, type AdminStats, type GuestStatus, StatCard, StatusBadge } from '@/components/Admin/shared/AdminShared';
 
+function GuestAvatar({ guest, size }: { guest: AdminGuest; size: 'sm' | 'md' }) {
+  const cls = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-xs';
+  if (guest.avatarUrl) {
+    return (
+      <div className={`${cls} rounded-full overflow-hidden relative shrink-0`}>
+        <AdminImage src={guest.avatarUrl} alt={guest.username} sizes={size === 'sm' ? '28px' : '32px'} />
+      </div>
+    );
+  }
+  return (
+    <div className={`${cls} rounded-full flex items-center justify-center text-white font-bold shrink-0`} style={{ background: 'var(--neon-gradient)' }}>
+      {guest.username.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 function QRCard() {
   const qrUrl = `${SERVER}/events/demo/qr`;
   const [joinUrl, setJoinUrl] = useState('');
@@ -216,9 +232,7 @@ export function AdminDashboard() {
                 <div key={guest.id} style={{ borderTop: '1px solid var(--line)' }}>
                   <div className="hidden xl:grid grid-cols-[1.9fr_1fr_.8fr_.9fr_.6fr] px-[18px] py-[11px] items-center">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'var(--neon-gradient)' }}>
-                        {guest.username.charAt(0).toUpperCase()}
-                      </div>
+                      <GuestAvatar guest={guest} size="sm" />
                       <div className="min-w-0">
                         <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</div>
                         <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{index + 2}m ago</div>
@@ -233,9 +247,7 @@ export function AdminDashboard() {
                   <div className="xl:hidden px-[18px] py-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'var(--neon-gradient)' }}>
-                          {guest.username.charAt(0).toUpperCase()}
-                        </div>
+                        <GuestAvatar guest={guest} size="md" />
                         <div className="min-w-0">
                           <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</div>
                           <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{index + 2}m ago</div>

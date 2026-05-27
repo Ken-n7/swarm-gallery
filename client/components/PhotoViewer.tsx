@@ -182,7 +182,7 @@ export function PhotoViewer({ photos: initialPhotos, startIndex, currentUser, cu
         style={{ background: 'linear-gradient(to top, rgba(18,18,41,.8), transparent)' }}
       >
         <div className="flex items-center gap-3">
-          <UserAvatar username={photo.uploader} size="md" />
+          <UserAvatar username={photo.uploader} avatarUrl={photo.uploaderAvatarUrl} size="md" />
           <div>
             <p className="text-white text-[15px] font-semibold">{photo.uploader}</p>
             <p className="text-white/60 text-xs">{timeAgo(photo.uploadedAt)}</p>

@@ -4,6 +4,7 @@ export interface Photo {
   url: string;
   uploadedAt: number;
   uploader: string;
+  uploaderAvatarUrl?: string | null;
   mimetype?: string;
   thumbUrl?: string | null;
   likeCount?: number;

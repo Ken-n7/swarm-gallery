@@ -70,10 +70,15 @@ const insertPhoto = db.prepare(`
   INSERT INTO photos (id, event_id, filename, original_name, mimetype, size_bytes, uploaded_at, uploader_ip, uploader_name, user_id, thumb_filename)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-const getPhotos = db.prepare(`SELECT * FROM photos WHERE event_id = ? ORDER BY uploaded_at DESC`);
+const getPhotos = db.prepare(`
+  SELECT p.*, u.avatar_filename AS uploader_avatar_filename
+  FROM photos p
+  LEFT JOIN users u ON p.user_id = u.id
+  WHERE p.event_id = ? ORDER BY p.uploaded_at DESC
+`);
 const getPhoto  = db.prepare(`SELECT * FROM photos WHERE id = ?`);
 const getUserById   = db.prepare(`SELECT * FROM users WHERE id = ?`);
-const getUserByName = db.prepare(`SELECT id FROM users WHERE event_id = ? AND username = ?`);
+const getUserByName = db.prepare(`SELECT * FROM users WHERE event_id = ? AND username = ?`);
 const getLikeCount = db.prepare(`SELECT COUNT(*) AS count FROM photo_likes WHERE photo_id = ?`);
 const hasUserLikedPhoto = db.prepare(`SELECT 1 FROM photo_likes WHERE photo_id = ? AND user_id = ?`);
 const insertPhotoLike = db.prepare(`INSERT OR IGNORE INTO photo_likes (photo_id, user_id, liked_at) VALUES (?, ?, ?)`);
@@ -115,6 +120,9 @@ function toPhotoObj(r, eventId, userId = null) {
     thumbUrl: r.thumb_filename ? `/photos/${eventId}/${r.thumb_filename}` : null,
     uploadedAt: r.uploaded_at,
     uploader: r.uploader_name,
+    uploaderAvatarUrl: r.uploader_avatar_filename
+      ? `/avatars/${eventId}/${r.uploader_avatar_filename}`
+      : null,
     mimetype: r.mimetype,
     likeCount: getLikeCount.get(r.id).count,
     likedByMe: userId ? !!hasUserLikedPhoto.get(r.id, userId) : false,
@@ -156,7 +164,15 @@ async function handleUpload(req, res) {
   );
 
   const photo = toPhotoObj(
-    { id, filename: req.file.filename, thumb_filename: thumbFilename, uploaded_at: Date.now(), uploader_name: uploaderName, mimetype: req.file.mimetype },
+    {
+      id,
+      filename: req.file.filename,
+      thumb_filename: thumbFilename,
+      uploaded_at: Date.now(),
+      uploader_name: uploaderName,
+      uploader_avatar_filename: userRow?.avatar_filename ?? null,
+      mimetype: req.file.mimetype,
+    },
     eventId,
     userRow ? userRow.id : null
   );
