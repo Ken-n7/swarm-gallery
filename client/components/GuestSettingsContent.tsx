@@ -43,7 +43,7 @@ interface RowProps {
 function Row({ title, subtitle, right, onClick }: RowProps) {
   const content = (
     <>
-      <div className="mr-4 text-left">
+      <div className="flex-1 min-w-0 mr-4 text-left">
         <p className="text-[15px] font-semibold text-[var(--ink)]">{title}</p>
         <p className="text-[13px] text-[var(--muted)] mt-0.5">{subtitle}</p>
       </div>
@@ -194,7 +194,7 @@ export function GuestSettingsContent({
         <Row
           title="Upload behavior"
           subtitle="Photos and videos upload as soon as you pick or capture them."
-          right={<span className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>Always on</span>}
+          right={<span className="text-[12px] font-semibold shrink-0" style={{ color: 'var(--violet)' }}>Always on</span>}
         />
       </Card>
     </div>
@@ -259,15 +259,13 @@ export function GuestSettingsContent({
 
   if (layout === 'double') {
     return (
-      <div className="grid gap-x-4 px-4 pb-6" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div className="flex flex-col gap-4">
+      <div className="flex justify-center px-4 pb-8 pt-2">
+        <div className="flex flex-col gap-5 w-full" style={{ maxWidth: 520 }}>
           {identitySection}
           {sharingSection}
-        </div>
-        <div className="flex flex-col gap-4">
           {privacySection}
           {photosSection}
-          {leaveButton}
+          <div>{leaveButton}</div>
         </div>
       </div>
     );

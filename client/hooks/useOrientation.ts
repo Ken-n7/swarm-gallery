@@ -9,13 +9,12 @@ export function useOrientation(): 'portrait' | 'landscape' {
     const mediaQuery = window.matchMedia('(orientation: landscape)');
 
     function computeOrientation() {
-      if (window.screen?.orientation?.type) {
-        return window.screen.orientation.type.startsWith('landscape') ? 'landscape' : 'portrait';
+      // innerWidth/innerHeight is most reliable across real devices and headless browsers.
+      // screen.orientation.type can mis-report in headless Chromium when viewport != screen.
+      if (window.innerWidth > 0 && window.innerHeight > 0) {
+        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
       }
-      if (typeof window.orientation === 'number') {
-        return Math.abs(window.orientation) === 90 ? 'landscape' : 'portrait';
-      }
-      return mediaQuery.matches || window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+      return mediaQuery.matches ? 'landscape' : 'portrait';
     }
 
     function update() {

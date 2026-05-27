@@ -43,7 +43,7 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
       }}
     >
       <div
-        className="w-full max-w-sm flex flex-col items-center gap-5 rounded-[28px] px-6 py-7 border shadow-[0_24px_80px_rgba(15,23,42,.08)]"
+        className="w-full max-w-sm sm:max-w-md flex flex-col items-center gap-5 rounded-[28px] px-6 py-7 border shadow-[0_24px_80px_rgba(15,23,42,.08)]"
         style={{ background: 'rgba(255,255,255,.94)', borderColor: 'rgba(139,92,246,.12)', backdropFilter: 'blur(14px)' }}
       >
 

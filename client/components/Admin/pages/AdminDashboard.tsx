@@ -116,7 +116,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Photo uploads over time</h3>
-              <div className="text-sm" style={{ color: 'var(--muted)' }}>Today · May 5, 2026</div>
+              <div className="text-sm" style={{ color: 'var(--muted)' }}>Today · {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
             </div>
             <div className="px-3 py-1 text-xs font-medium rounded-full" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
               Peak: 2–3 PM

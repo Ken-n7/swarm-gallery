@@ -8,7 +8,7 @@ LOG_DIR="$RUN_DIR/logs"
 BUILD_LOG="$LOG_DIR/client-build.log"
 SERVER_LOG="$LOG_DIR/server.log"
 CLIENT_LOG="$LOG_DIR/client.log"
-ADMIN_URL="http://localhost:3000/admin"
+ADMIN_URL="http://localhost:3000/admin"  # updated after swarm-init
 
 mkdir -p "$RUN_DIR" "$LOG_DIR"
 
@@ -39,6 +39,11 @@ fi
 echo "Configuring environment ($MODE)..."
 bash "$ROOT_DIR/scripts/swarm-init.sh" "$MODE"
 
+# Derive admin URL from the IP that was just written to .env.local
+_SERVER_URL=$(grep "^NEXT_PUBLIC_SERVER_URL=" "$ROOT_DIR/client/.env.local" 2>/dev/null | cut -d= -f2- || true)
+_HOST=$(echo "$_SERVER_URL" | sed 's|http://||;s|:[0-9]*$||')
+ADMIN_URL="http://${_HOST:-localhost}:3000/admin"
+
 echo "Building client..."
 (
   cd "$ROOT_DIR/client"
@@ -60,8 +65,9 @@ echo "Starting client..."
 )
 
 echo "Swarm Gallery is starting."
-echo "Client: http://localhost:3000"
-echo "Server: http://localhost:4000"
+echo "Admin:   $ADMIN_URL"
+echo "Guests:  http://${_HOST:-localhost}:3000/event/demo"
+echo "Server:  http://${_HOST:-localhost}:4000"
 echo "Logs:"
 echo "- $SERVER_LOG"
 echo "- $CLIENT_LOG"

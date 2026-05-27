@@ -153,7 +153,8 @@ export default function UploadPage() {
         </h1>
       </header>
 
-      <div className="flex-1 flex flex-col px-5 gap-5 pb-28">
+      <div className="flex-1 flex flex-col items-center px-5 pb-28">
+      <div className="w-full max-w-lg flex flex-col gap-5">
         {faceBlurEnabled && (
           <div className="rounded-[16px] px-4 py-3 flex items-start gap-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,246,.18)' }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'white', color: 'var(--violet)' }}>
@@ -363,6 +364,7 @@ export default function UploadPage() {
             <p className="text-[13px] text-[var(--muted)] text-center">No media yet — tap above to share</p>
           </div>
         )}
+      </div>
       </div>
 
       <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden"
