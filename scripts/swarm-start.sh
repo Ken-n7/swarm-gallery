@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MODE="${1:-network}"
 RUN_DIR="$ROOT_DIR/.run"
 LOG_DIR="$RUN_DIR/logs"
 BUILD_LOG="$LOG_DIR/client-build.log"
@@ -34,6 +35,9 @@ if ss -tln | grep -q ':4000 '; then
   echo "Port 4000 is already in use. Run restart or stop first."
   exit 1
 fi
+
+echo "Configuring environment ($MODE)..."
+bash "$ROOT_DIR/scripts/swarm-init.sh" "$MODE"
 
 echo "Building client..."
 (
