@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { UserAvatar } from './UserAvatar';
+import { AvatarCropModal } from './AvatarCropModal';
 
 interface Props {
   eventName?: string;
@@ -16,6 +17,7 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
   const [localError, setLocalError] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
 
   function validateName(value: string) {
@@ -28,11 +30,25 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-    // Reset so the same file can be re-picked after clearing
+    // Open the crop modal instead of using the file directly
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(URL.createObjectURL(file));
     e.target.value = '';
+  }
+
+  function handleCropConfirm(blob: Blob) {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    const preview = URL.createObjectURL(blob);
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+    setAvatarFile(file);
+    setAvatarPreview(preview);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }
+
+  function handleCropCancel() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -164,6 +180,15 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
         className="hidden"
         onChange={handleAvatarChange}
       />
+
+      {/* Crop modal — rendered outside the card so it covers the full screen */}
+      {cropSrc && (
+        <AvatarCropModal
+          src={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 import { useGuestPreferences } from '@/hooks/useGuestPreferences';
 import { SERVER, photoUrl } from '@/lib/api';
+import { AvatarCropModal } from '@/components/AvatarCropModal';
 
 interface ToggleProps {
   on: boolean;
@@ -110,20 +111,34 @@ export function GuestSettingsContent({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(URL.createObjectURL(file));
     e.target.value = '';
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
     setAvatarError('');
     setAvatarUploading(true);
     try {
+      const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
       await updateAvatar(file);
     } catch (err: unknown) {
       setAvatarError(err instanceof Error ? err.message : 'Failed to update photo');
     } finally {
       setAvatarUploading(false);
     }
+  }
+
+  function handleCropCancel() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   }
 
   function handleLeave() {
@@ -318,6 +333,7 @@ export function GuestSettingsContent({
           <div>{leaveButton}</div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+        {cropSrc && <AvatarCropModal src={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} />}
       </div>
     );
   }
@@ -330,6 +346,7 @@ export function GuestSettingsContent({
       {photosSection}
       <div className="pt-2">{leaveButton}</div>
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+      {cropSrc && <AvatarCropModal src={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} />}
     </div>
   );
 }
