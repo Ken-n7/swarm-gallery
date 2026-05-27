@@ -224,40 +224,42 @@ export function AdminSettings() {
             </div>
           )}
 
-          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,.85fr)] 2xl:items-start">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Event Info</h3>
-              <p className="text-sm text-slate-600 mt-1">Basic details about your current event session.</p>
-            </div>
-            <div className="p-6 space-y-6">
-              <FormRow label="Event name" sub="Displayed to guests when they join the gallery.">
-                <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-              </FormRow>
-              <FormRow label="Organizer name" sub="Shown on the join screen as the host.">
-                <input type="text" value={organizerName} onChange={(e) => { setOrganizerName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-              </FormRow>
-              <FormRow label="Event date" sub="For display and record-keeping.">
-                <input type="date" value={eventDate} onChange={(e) => { setEventDate(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-              </FormRow>
-              <FormRow label="Event type" sub="Displayed to guests when they join.">
-                <select value={eventType} onChange={(e) => { setEventType(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent bg-white">
-                  <option>Corporate / Conference</option>
-                  <option>Wedding</option>
-                  <option>Birthday</option>
-                  <option>Other</option>
-                </select>
-              </FormRow>
-              <FormRow label="Expected guest count" sub="Used to prepare event staffing and device setup.">
-                <input type="number" value={expectedGuests} onChange={(e) => { setExpectedGuests(e.target.value); setHasChanges(true); }} className="w-full md:w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-              </FormRow>
-              <FormRow label="Guest privacy tool" sub="Guests may optionally blur faces on their own device before uploading. This is guest-controlled, not an admin moderation setting.">
-                <span className="px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>Optional face blur</span>
-              </FormRow>
-            </div>
-          </div>
-
+          {/* Stacked sections - each one full width */}
           <div className="space-y-6">
+            {/* Event Info */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900">Event Info</h3>
+                <p className="text-sm text-slate-600 mt-1">Basic details about your current event session.</p>
+              </div>
+              <div className="p-6 space-y-6">
+                <FormRow label="Event name" sub="Displayed to guests when they join the gallery.">
+                  <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                </FormRow>
+                <FormRow label="Organizer name" sub="Shown on the join screen as the host.">
+                  <input type="text" value={organizerName} onChange={(e) => { setOrganizerName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                </FormRow>
+                <FormRow label="Event date" sub="For display and record-keeping.">
+                  <input type="date" value={eventDate} onChange={(e) => { setEventDate(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                </FormRow>
+                <FormRow label="Event type" sub="Displayed to guests when they join.">
+                  <select value={eventType} onChange={(e) => { setEventType(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent bg-white">
+                    <option>Corporate / Conference</option>
+                    <option>Wedding</option>
+                    <option>Birthday</option>
+                    <option>Other</option>
+                  </select>
+                </FormRow>
+                <FormRow label="Expected guest count" sub="Used to prepare event staffing and device setup.">
+                  <input type="number" value={expectedGuests} onChange={(e) => { setExpectedGuests(e.target.value); setHasChanges(true); }} className="w-full md:w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                </FormRow>
+                <FormRow label="Guest privacy tool" sub="Guests may optionally blur faces on their own device before uploading. This is guest-controlled, not an admin moderation setting.">
+                  <span className="px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>Optional face blur</span>
+                </FormRow>
+              </div>
+            </div>
+
+            {/* Access & QR */}
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Access & QR</h3>
               <p className="text-slate-600 mb-6">Share this QR code with attendees so they can join the gallery on their phones and contribute media for this event only.</p>
@@ -283,6 +285,7 @@ export function AdminSettings() {
               </div>
             </div>
 
+            {/* Temporary Storage */}
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="p-6 border-b border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-900">Temporary Storage</h3>
@@ -323,91 +326,98 @@ export function AdminSettings() {
                 </div>
               </div>
             </div>
-          </div>
-          </div>
 
-          <div className="space-y-6">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-red-900 mb-2">⚠️ Danger Zone</h3>
-              <p className="text-sm text-red-700">After client handoff, event media should be removed from the system for privacy. These actions are irreversible.</p>
-            </div>
-            <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[
-                  ['Export ready', workflow.handoffPrepared ? 'Ready' : 'Pending'],
-                  ['Handoff complete', workflow.handoffCompleted ? 'Done' : 'Pending'],
-                  ['Media deleted', workflow.mediaDeleted ? 'Done' : 'Pending'],
-                  ['Event closed', workflow.eventClosed ? 'Done' : 'Pending'],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-slate-200 p-3">
-                    <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{label}</div>
-                    <div className="text-sm font-semibold text-slate-900 mt-1">{value}</div>
+            {/* Danger Zone & Workflow Actions */}
+            <div className="space-y-6">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-red-900 mb-2">⚠️ Danger Zone</h3>
+                <p className="text-sm text-red-700">After client handoff, event media should be removed from the system for privacy. These actions are irreversible.</p>
+              </div>
+
+              {/* Workflow Status */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    ['Export ready', workflow.handoffPrepared ? 'Ready' : 'Pending'],
+                    ['Handoff complete', workflow.handoffCompleted ? 'Done' : 'Pending'],
+                    ['Media deleted', workflow.mediaDeleted ? 'Done' : 'Pending'],
+                    ['Event closed', workflow.eventClosed ? 'Done' : 'Pending'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg border border-slate-200 p-3">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{label}</div>
+                      <div className="text-sm font-semibold text-slate-900 mt-1">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Prepare Client Handoff</h4>
+                    <p className="text-sm text-slate-600 mt-1">Create the export package of all event media for delivery to the client.</p>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h4 className="font-semibold text-slate-900">Prepare Client Handoff</h4>
-                  <p className="text-sm text-slate-600 mt-1">Create the export package of all event media for delivery to the client.</p>
-                </div>
-                <button onClick={() => runAction('exportPackage')} disabled={actionState.exportPackage === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-60">
-                  {actionState.exportPackage === 'running' ? 'Preparing...' : workflow.handoffPrepared ? 'Export Ready' : 'Export Package'}
-                </button>
-              </div>
-              <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canMarkComplete ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
-                <div>
-                  <h4 className="font-semibold text-slate-900">Mark Handoff Complete</h4>
-                  <p className="text-sm text-slate-600 mt-1">Record that client delivery is finished and the event is ready for media deletion.</p>
-                  {!canMarkComplete && <p className="text-xs text-amber-700 mt-2">Prepare the client handoff package first so this step follows a clear export trail.</p>}
-                </div>
-                <button onClick={() => runAction('markComplete')} disabled={!canMarkComplete || actionState.markComplete === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50">
-                  {actionState.markComplete === 'running' ? 'Marking...' : workflow.handoffCompleted ? 'Handoff Complete' : 'Mark Complete'}
-                </button>
-              </div>
-              <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteMedia ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
-                <div>
-                  <h4 className="font-semibold text-slate-900">Delete Event Media</h4>
-                  <p className="text-sm text-slate-600 mt-1">Remove all uploaded photos and videos from the system after successful client handoff.</p>
-                  {!canDeleteMedia && <p className="text-xs text-amber-700 mt-2">Locked until client handoff is marked complete.</p>}
-                </div>
-                <div className="space-y-2">
-                  <button onClick={() => setConfirmAction(confirmAction === 'deleteMedia' ? null : 'deleteMedia')} disabled={!canDeleteMedia || actionState.deleteMedia === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
-                    {actionState.deleteMedia === 'running' ? 'Deleting...' : workflow.mediaDeleted ? 'Media Deleted' : 'Delete Media'}
+                  <button onClick={() => runAction('exportPackage')} disabled={actionState.exportPackage === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-60">
+                    {actionState.exportPackage === 'running' ? 'Preparing...' : workflow.handoffPrepared ? 'Export Ready' : 'Export Package'}
                   </button>
-                  {confirmAction === 'deleteMedia' && canDeleteMedia && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
-                      <div className="text-sm font-semibold text-red-900">Delete all event media?</div>
-                      <div className="text-sm text-red-700">This is irreversible and should only happen after the client has received the final handoff package.</div>
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={() => runAction('deleteMedia')} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold">Confirm Delete</button>
-                        <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-              <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteEvent ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
-                <div>
-                  <h4 className="font-semibold text-slate-900">Delete Event Record</h4>
-                  <p className="text-sm text-slate-600 mt-1">Remove remaining guest metadata and close out the event once media has been deleted.</p>
-                  {!canDeleteEvent && <p className="text-xs text-amber-700 mt-2">Locked until event media has been deleted.</p>}
-                </div>
-                <div className="space-y-2">
-                  <button onClick={() => setConfirmAction(confirmAction === 'deleteEvent' ? null : 'deleteEvent')} disabled={!canDeleteEvent || actionState.deleteEvent === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 disabled:opacity-50">
-                    {actionState.deleteEvent === 'running' ? 'Closing...' : workflow.eventClosed ? 'Event Closed' : 'Delete Event'}
+
+                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canMarkComplete ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Mark Handoff Complete</h4>
+                    <p className="text-sm text-slate-600 mt-1">Record that client delivery is finished and the event is ready for media deletion.</p>
+                    {!canMarkComplete && <p className="text-xs text-amber-700 mt-2">Prepare the client handoff package first so this step follows a clear export trail.</p>}
+                  </div>
+                  <button onClick={() => runAction('markComplete')} disabled={!canMarkComplete || actionState.markComplete === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50">
+                    {actionState.markComplete === 'running' ? 'Marking...' : workflow.handoffCompleted ? 'Handoff Complete' : 'Mark Complete'}
                   </button>
-                  {confirmAction === 'deleteEvent' && canDeleteEvent && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
-                      <div className="text-sm font-semibold text-red-900">Delete the event record?</div>
-                      <div className="text-sm text-red-700">Use this only after media is deleted and the event is fully handed off. Guest metadata and event record will be closed out.</div>
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={() => runAction('deleteEvent')} className="px-4 py-2 rounded-lg bg-red-700 text-white text-sm font-semibold">Confirm Closeout</button>
-                        <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
+                </div>
+
+                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteMedia ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Delete Event Media</h4>
+                    <p className="text-sm text-slate-600 mt-1">Remove all uploaded photos and videos from the system after successful client handoff.</p>
+                    {!canDeleteMedia && <p className="text-xs text-amber-700 mt-2">Locked until client handoff is marked complete.</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <button onClick={() => setConfirmAction(confirmAction === 'deleteMedia' ? null : 'deleteMedia')} disabled={!canDeleteMedia || actionState.deleteMedia === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
+                      {actionState.deleteMedia === 'running' ? 'Deleting...' : workflow.mediaDeleted ? 'Media Deleted' : 'Delete Media'}
+                    </button>
+                    {confirmAction === 'deleteMedia' && canDeleteMedia && (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
+                        <div className="text-sm font-semibold text-red-900">Delete all event media?</div>
+                        <div className="text-sm text-red-700">This is irreversible and should only happen after the client has received the final handoff package.</div>
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => runAction('deleteMedia')} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold">Confirm Delete</button>
+                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+
+                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteEvent ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Delete Event Record</h4>
+                    <p className="text-sm text-slate-600 mt-1">Remove remaining guest metadata and close out the event once media has been deleted.</p>
+                    {!canDeleteEvent && <p className="text-xs text-amber-700 mt-2">Locked until event media has been deleted.</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <button onClick={() => setConfirmAction(confirmAction === 'deleteEvent' ? null : 'deleteEvent')} disabled={!canDeleteEvent || actionState.deleteEvent === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 disabled:opacity-50">
+                      {actionState.deleteEvent === 'running' ? 'Closing...' : workflow.eventClosed ? 'Event Closed' : 'Delete Event'}
+                    </button>
+                    {confirmAction === 'deleteEvent' && canDeleteEvent && (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
+                        <div className="text-sm font-semibold text-red-900">Delete the event record?</div>
+                        <div className="text-sm text-red-700">Use this only after media is deleted and the event is fully handed off. Guest metadata and event record will be closed out.</div>
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => runAction('deleteEvent')} className="px-4 py-2 rounded-lg bg-red-700 text-white text-sm font-semibold">Confirm Closeout</button>
+                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
