@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 import { useGuestPreferences } from '@/hooks/useGuestPreferences';
-import { SERVER } from '@/lib/api';
+import { SERVER, photoUrl } from '@/lib/api';
 
 interface ToggleProps {
   on: boolean;
@@ -100,12 +100,31 @@ export function GuestSettingsContent({
   layout?: 'single' | 'double';
 }) {
   const router = useRouter();
-  const { user, rename, leave, joining, error } = useUser();
+  const { user, rename, updateAvatar, leave, joining, error } = useUser();
   const { faceBlurEnabled, setFaceBlurEnabled } = useGuestPreferences();
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [nameError, setNameError] = useState('');
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setAvatarError('');
+    setAvatarUploading(true);
+    try {
+      await updateAvatar(file);
+    } catch (err: unknown) {
+      setAvatarError(err instanceof Error ? err.message : 'Failed to update photo');
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
 
   function handleLeave() {
     leave();
@@ -138,6 +157,37 @@ export function GuestSettingsContent({
     <div className="flex flex-col gap-2">
       <SectionLabel>Your Identity</SectionLabel>
       <Card>
+        {/* Avatar row */}
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={avatarUploading}
+          className="w-full flex items-center justify-between px-4 py-4 disabled:opacity-60"
+        >
+          <div className="flex-1 min-w-0 mr-4 text-left">
+            <p className="text-[15px] font-semibold text-[var(--ink)]">Profile photo</p>
+            <p className="text-[13px] text-[var(--muted)] mt-0.5">
+              {avatarUploading ? 'Uploading…' : 'Tap to change'}
+            </p>
+            {avatarError && <p className="text-[12px] mt-0.5" style={{ color: 'var(--danger)' }}>{avatarError}</p>}
+          </div>
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-lg"
+              style={{ background: user?.avatarUrl ? 'transparent' : 'var(--neon-gradient)' }}>
+              {user?.avatarUrl
+                ? <img src={photoUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                : (user?.username ?? '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+              }
+            </div>
+            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
+              style={{ background: 'var(--violet)' }}>
+              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+              </svg>
+            </div>
+          </div>
+        </button>
+        <Divider />
         {editingName ? (
           <form onSubmit={submitRename} className="px-4 py-4 flex flex-col gap-2">
             <p className="text-[15px] font-semibold text-[var(--ink)]">Change nickname</p>
@@ -267,6 +317,7 @@ export function GuestSettingsContent({
           {photosSection}
           <div>{leaveButton}</div>
         </div>
+        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
       </div>
     );
   }
@@ -278,6 +329,7 @@ export function GuestSettingsContent({
       {privacySection}
       {photosSection}
       <div className="pt-2">{leaveButton}</div>
+      <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
     </div>
   );
 }

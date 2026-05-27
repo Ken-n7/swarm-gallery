@@ -62,6 +62,17 @@ export async function joinEvent(params: {
   return res.json();
 }
 
+export async function updateAvatar(
+  userId: string,
+  avatar: File,
+): Promise<{ userId: string; username: string; avatarUrl: string | null }> {
+  const form = new FormData();
+  form.append('avatar', avatar);
+  const res = await fetch(`${SERVER}/users/${userId}/avatar`, { method: 'PATCH', body: form });
+  if (!res.ok) throw new Error('Failed to update photo');
+  return res.json();
+}
+
 export async function changeUsername(
   userId: string,
   username: string,

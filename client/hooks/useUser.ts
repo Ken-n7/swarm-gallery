@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
-import { joinEvent, changeUsername, checkDevice } from '@/lib/api';
+import { joinEvent, changeUsername, checkDevice, updateAvatar as updateAvatarApi } from '@/lib/api';
 
 const STORAGE_KEY = 'swarm-gallery-user';
 const DEVICE_KEY  = 'swarm-gallery-device-id';
@@ -132,11 +132,29 @@ export function useUser() {
     }
   }
 
+  async function updateAvatar(avatarFile: File) {
+    if (!user) return;
+    setJoining(true);
+    setError('');
+    try {
+      const result = await updateAvatarApi(user.userId, avatarFile);
+      const u = { ...user, avatarUrl: result.avatarUrl };
+      save(u);
+      setUser(u);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      setError(msg || 'Failed to update photo');
+      throw e;
+    } finally {
+      setJoining(false);
+    }
+  }
+
   function leave() {
     clear();
     setUser(null);
     // deviceId intentionally kept — device identity persists across events
   }
 
-  return { user, join, rename, leave, joining, checking, error };
+  return { user, join, rename, updateAvatar, leave, joining, checking, error };
 }

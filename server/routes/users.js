@@ -110,6 +110,24 @@ router.post('/join', uploadAvatar.single('avatar'), (req, res) => {
   });
 });
 
+// PATCH /users/:id/avatar — replace profile photo
+router.patch('/:id/avatar', uploadAvatar.single('avatar'), (req, res) => {
+  const user = getUserById.get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (!req.file)  return res.status(400).json({ error: 'No file provided' });
+
+  const eventId = user.event_id;
+
+  // Delete old avatar file (non-blocking)
+  if (user.avatar_filename) {
+    const oldPath = path.join(config.STORAGE.AVATARS, eventId, user.avatar_filename);
+    fs.rm(oldPath, { force: true }, () => {});
+  }
+
+  db.prepare('UPDATE users SET avatar_filename = ? WHERE id = ?').run(req.file.filename, user.id);
+  res.json(userResponse({ ...user, avatar_filename: req.file.filename }, eventId));
+});
+
 // PATCH /users/:id/username — change nickname
 router.patch('/:id/username', (req, res) => {
   const { username, eventId = config.DEMO_EVENT_ID } = req.body;
