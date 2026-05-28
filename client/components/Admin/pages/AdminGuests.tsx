@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { deleteAdminGuestPhotos, exportAdminGuestAlbum, exportAdminGuests, getAllGuests, getAllPhotos } from '@/lib/api';
-import { AdminImage, DestructiveNote, SearchIcon, StatusBadge, type AdminGuest, type AdminPhoto, type GuestStatus } from '@/components/Admin/shared/AdminShared';
+import { AdminImage, DestructiveNote, GuestAvatar, SearchIcon, StatusBadge, type AdminGuest, type AdminPhoto, type GuestStatus } from '@/components/Admin/shared/AdminShared';
 
 export function AdminGuests() {
   const [guests, setGuests] = useState<AdminGuest[]>([]);
@@ -54,10 +54,9 @@ export function AdminGuests() {
     return <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>Loading guests...</div>;
   }
 
-  const guestStatuses: GuestStatus[] = ['Active', 'Active', 'Idle', 'Left event'];
-  const enrichedGuests = guests.map((guest, index) => ({
+  const enrichedGuests = guests.map((guest) => ({
     ...guest,
-    status: guestStatuses[index % guestStatuses.length],
+    status: (guest.status ?? 'Left event') as GuestStatus,
   }));
   const filters = ['All guests', 'Active', 'Idle', 'Left event'];
   const filteredGuests = enrichedGuests.filter((guest) => {
@@ -182,9 +181,7 @@ export function AdminGuests() {
           <div className="flex-1 overflow-auto">
             {filteredGuests.map((guest) => (
               <div key={guest.id} className="flex items-center gap-3 px-3.5 py-3 cursor-pointer" style={{ borderBottom: '1px solid var(--line)', background: selected?.id === guest.id ? 'var(--violet-tint)' : 'transparent' }} onClick={() => setSelectedGuest(guest)}>
-                <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: 'var(--neon-gradient)' }}>
-                  {guest.username.charAt(0).toUpperCase()}
-                </div>
+                <GuestAvatar guest={guest} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</div>
                   <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{guest.photoCount} photos</div>
@@ -210,9 +207,7 @@ export function AdminGuests() {
           {selected ? (
             <div className="p-5 flex flex-col gap-3">
               <div className="bg-white rounded-[14px] p-5 flex flex-wrap items-center gap-4" style={{ border: '1px solid var(--line)' }}>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ background: 'var(--neon-gradient)' }}>
-                  {selected.username.charAt(0).toUpperCase()}
-                </div>
+                <GuestAvatar guest={selected} size="md" />
                 <div className="flex-1">
                   <div className="text-[18px] font-bold" style={{ color: 'var(--ink)' }}>{selected.username}</div>
                   <StatusBadge status={selected.status} />

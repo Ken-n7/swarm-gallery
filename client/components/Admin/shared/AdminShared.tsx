@@ -33,6 +33,40 @@ function resolveMediaSrc(src: string | null | undefined) {
   return src.startsWith('http://') || src.startsWith('https://') ? src : `${SERVER}${src}`;
 }
 
+export function GuestAvatar({
+  guest,
+  size = 'sm',
+}: {
+  guest: Pick<AdminGuest, 'username' | 'avatarUrl'>;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+}) {
+  const dim: Record<string, string> = {
+    xs: 'w-6 h-6 text-[10px]',
+    sm: 'w-[34px] h-[34px] text-[12px]',
+    md: 'w-12 h-12 text-lg',
+    lg: 'w-16 h-16 text-xl',
+  };
+  const px: Record<string, string> = { xs: '24px', sm: '34px', md: '48px', lg: '64px' };
+  const cls = dim[size];
+
+  if (guest.avatarUrl) {
+    const src = guest.avatarUrl.startsWith('http') ? guest.avatarUrl : `${SERVER}${guest.avatarUrl}`;
+    return (
+      <div className={`${cls} rounded-full overflow-hidden relative shrink-0`}>
+        <Image src={src} alt={guest.username} fill unoptimized sizes={px[size]} className="object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`${cls} rounded-full flex items-center justify-center text-white font-bold shrink-0`}
+      style={{ background: 'var(--neon-gradient)' }}
+    >
+      {guest.username.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 export function AdminImage({
   src,
   alt,
