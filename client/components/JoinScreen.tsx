@@ -161,7 +161,8 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
           <button
             type="submit"
             disabled={joining || !username.trim()}
-            className="w-full bg-zinc-900 text-white font-bold text-base py-4 rounded-2xl hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+            className="w-full text-white font-bold text-base py-4 rounded-2xl disabled:opacity-50 transition-opacity active:scale-[.98]"
+            style={{ background: 'var(--neon-gradient)', boxShadow: '0 6px 24px rgba(124,58,237,.4)' }}
           >
             {joining ? 'Joining...' : 'Join the celebration'}
           </button>

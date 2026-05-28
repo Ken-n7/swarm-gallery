@@ -148,9 +148,7 @@ export default function UploadPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-[22px] font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-paytone)' }}>
-          Add Media
-        </h1>
+        <h1 className="text-[22px] font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-paytone)' }}>Add Media</h1>
       </header>
 
       <div className="flex-1 flex flex-col items-center px-5 pb-28">

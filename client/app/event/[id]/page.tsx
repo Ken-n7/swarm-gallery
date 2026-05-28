@@ -95,7 +95,7 @@ function GalleryView({
 
   // Portrait layout
   return (
-    <div className="flex flex-col min-h-screen bg-white overflow-y-auto">
+    <div className="flex flex-col min-h-screen overflow-y-auto" style={{ background: 'linear-gradient(160deg, #ede9ff 0%, #f9f8ff 18%, #ffffff 52%)' }}>
       {/* Portrait sidebar drawer */}
       <Sidebar
         username={username}

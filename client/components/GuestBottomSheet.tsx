@@ -52,9 +52,7 @@ export function GuestBottomSheet({ open, title, subtitle, onClose, children }: P
               <div className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--violet)' }}>
                 Quick panel
               </div>
-              <h2 className="text-[22px] font-bold text-[var(--ink)] mt-1" style={{ fontFamily: 'var(--font-paytone)' }}>
-                {title}
-              </h2>
+              <h2 className="text-[22px] font-bold text-[var(--ink)] mt-1" style={{ fontFamily: 'var(--font-paytone)' }}>{title}</h2>
               {subtitle && (
                 <p className="text-[12px] mt-1 max-w-md" style={{ color: 'var(--muted)' }}>
                   {subtitle}

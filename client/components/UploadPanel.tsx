@@ -137,14 +137,19 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo', compac
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className="w-full flex flex-col items-center gap-3 rounded-2xl py-8 px-4 transition-colors"
+        className="w-full flex flex-col items-center gap-3 rounded-2xl py-8 px-4 transition-all active:scale-[.98]"
         style={{
-          border: `1.5px dashed ${dragging ? 'var(--violet)' : 'var(--line)'}`,
-          background: dragging ? 'var(--violet-tint)' : 'white',
+          background: dragging
+            ? 'var(--violet-tint)'
+            : 'linear-gradient(135deg, rgba(124,58,237,.07) 0%, rgba(255,61,163,.04) 100%)',
+          border: `1.5px dashed ${dragging ? 'var(--violet)' : 'rgba(124,58,237,.35)'}`,
         }}
       >
-        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'var(--violet-tint)' }}>
-          <svg className="w-7 h-7" style={{ color: 'var(--violet)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center"
+          style={{ background: 'var(--neon-gradient)', boxShadow: '0 4px 16px rgba(124,58,237,.3)' }}
+        >
+          <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
           </svg>
