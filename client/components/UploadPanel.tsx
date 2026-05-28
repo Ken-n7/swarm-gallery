@@ -125,36 +125,33 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo', compac
     >
       {/* Section title */}
       <div>
-        <h2 className="text-[15px] font-bold text-[var(--ink)]">Upload Photos</h2>
-        <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--muted)' }}>{queueSummary}</p>
+        <h2 className="text-[15px] font-bold text-[var(--ink)]">Add to Gallery</h2>
+        {uploads.length > 0 && (
+          <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--muted)' }}>{queueSummary}</p>
+        )}
       </div>
 
-      {/* Drop zone */}
-      <div
+      {/* Tap zone */}
+      <button
+        onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className="flex flex-col items-center gap-3 rounded-2xl py-7 px-4 transition-colors"
+        className="w-full flex flex-col items-center gap-3 rounded-2xl py-8 px-4 transition-colors"
         style={{
           border: `1.5px dashed ${dragging ? 'var(--violet)' : 'var(--line)'}`,
           background: dragging ? 'var(--violet-tint)' : 'white',
         }}
       >
-        <svg className="w-7 h-7 text-[var(--violet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        <p className="text-sm text-[var(--ink-soft)] text-center">
-          Drop files here<br />
-          <span className="text-xs text-[var(--muted)]">JPG, PNG · up to 50 MB</span>
-        </p>
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="px-5 py-2 rounded-full text-sm font-bold text-white"
-          style={{ background: 'var(--ink)' }}
-        >
-          Browse
-        </button>
-      </div>
+        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'var(--violet-tint)' }}>
+          <svg className="w-7 h-7" style={{ color: 'var(--violet)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+          </svg>
+        </div>
+        <p className="text-[14px] font-semibold" style={{ color: 'var(--ink)' }}>Tap to add photos</p>
+        <p className="text-[11px]" style={{ color: 'var(--muted)' }}>Photos and videos from your camera roll</p>
+      </button>
 
       {faceBlurEnabled && (
         <div className="rounded-2xl px-4 py-3" style={{ background: 'var(--violet-tint)', border: '1px solid rgba(139,92,246,.18)' }}>

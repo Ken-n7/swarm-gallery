@@ -252,33 +252,14 @@ export function GuestSettingsContent({
     </div>
   );
 
-  const sharingSection = (
-    <div className="flex flex-col gap-2">
-      <SectionLabel>Sharing</SectionLabel>
-      <Card>
-        <Row
-          title="Upload behavior"
-          subtitle="Photos and videos upload as soon as you pick or capture them."
-          right={<span className="text-[12px] font-semibold shrink-0" style={{ color: 'var(--violet)' }}>Always on</span>}
-        />
-      </Card>
-    </div>
-  );
-
   const privacySection = (
     <div className="flex flex-col gap-2">
       <SectionLabel>Privacy</SectionLabel>
       <Card>
         <Row
-          title="Face blur"
-          subtitle="Pause photos for manual face blur before upload"
+          title="Blur faces before sharing"
+          subtitle="Review and blur faces in your photos before they appear in the gallery"
           right={<Toggle on={faceBlurEnabled} onChange={setFaceBlurEnabled} />}
-        />
-        <Divider />
-        <Row
-          title="Auto-delete my photos"
-          subtitle="Your uploads are removed when the event is closed out."
-          right={<span className="text-[12px] font-semibold" style={{ color: 'var(--violet)' }}>Event policy</span>}
         />
       </Card>
     </div>
@@ -314,10 +295,10 @@ export function GuestSettingsContent({
       {error && <p className="text-[12px] text-center mb-3" style={{ color: 'var(--danger)' }}>{error}</p>}
       <button
         onClick={handleLeave}
-        className="w-full py-4 rounded-[14px] flex items-center justify-center gap-2 text-[15px] font-bold border"
-        style={{ borderWidth: 1.5, borderColor: 'var(--danger-tint)', color: 'var(--danger)' }}
+        className="w-full py-3 text-[13px] font-medium"
+        style={{ color: 'var(--muted)' }}
       >
-        Leave Event
+        Leave event
       </button>
     </>
   );
@@ -327,7 +308,6 @@ export function GuestSettingsContent({
       <div className="flex justify-center px-4 pb-8 pt-2">
         <div className="flex flex-col gap-5 w-full" style={{ maxWidth: 520 }}>
           {identitySection}
-          {sharingSection}
           {privacySection}
           {photosSection}
           <div>{leaveButton}</div>
@@ -341,10 +321,9 @@ export function GuestSettingsContent({
   return (
     <div className="flex flex-col px-4 gap-6 pt-4 pb-8">
       {identitySection}
-      {sharingSection}
       {privacySection}
       {photosSection}
-      <div className="pt-2">{leaveButton}</div>
+      <div>{leaveButton}</div>
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
       {cropSrc && <AvatarCropModal src={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} />}
     </div>

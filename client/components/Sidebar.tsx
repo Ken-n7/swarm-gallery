@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Photo } from '@/types';
 import { GalleryFilter } from './Gallery';
 
@@ -17,31 +17,6 @@ interface Props {
   // Portrait drawer mode
   open?: boolean;
   onClose?: () => void;
-}
-
-interface StatCardProps {
-  value: string | number;
-  label: string;
-  highlight?: boolean;
-}
-
-function StatCard({ value, label, highlight }: StatCardProps) {
-  return (
-    <div
-      className="flex flex-col p-2.5 rounded-xl"
-      style={{ background: 'rgba(255,255,255,.06)' }}
-    >
-      <span
-        className="text-lg font-black leading-none"
-        style={{ color: highlight ? 'var(--violet)' : 'white' }}
-      >
-        {highlight && typeof value === 'number' && value > 0 ? `+${value}` : value}
-      </span>
-      <span className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,.45)' }}>
-        {label}
-      </span>
-    </div>
-  );
 }
 
 const NAV: { key: GalleryFilter; label: string; icon: React.ReactNode }[] = [
@@ -78,14 +53,6 @@ const NAV: { key: GalleryFilter; label: string; icon: React.ReactNode }[] = [
 function SidebarContent({
   username, userCount, photos, filter, onFilterChange, onOpenSettings, onLeave, onClose, compact = false,
 }: Omit<Props, 'open'>) {
-  const [now, setNow] = useState(() => Date.now());
-  const myPhotos = photos.filter((p) => p.uploader === username).length;
-  const newPhotos = photos.filter((p) => now - p.uploadedAt < 5 * 60 * 1000).length;
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
 
   function handleNav(f: GalleryFilter) {
     onFilterChange(f);
@@ -125,28 +92,12 @@ function SidebarContent({
       <div className={`${compact ? 'px-3.5 pb-3.5' : 'px-4 lg:px-5 pb-4'}`} style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         <div className="flex items-center gap-1.5 mb-1">
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--good)' }} />
-          <span className="text-[11px] font-semibold" style={{ color: 'var(--good)' }}>Live Now</span>
+          <span className="text-[11px] font-semibold" style={{ color: 'var(--good)' }}>Live</span>
         </div>
         <p className="text-white font-bold text-[15px]">Event Gallery</p>
-        {!compact && (
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-[11px]" style={{ color: 'rgba(255,255,255,.4)' }}>📶 Offline</span>
-            <span className="text-[11px]" style={{ color: 'rgba(255,255,255,.4)' }}>🔒 Secure</span>
-          </div>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className={`${compact ? 'px-3 py-3.5' : 'px-3.5 lg:px-4 py-4'}`} style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,.35)' }}>
-          Gallery Stats
+        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,.4)' }}>
+          {photos.length} {photos.length === 1 ? 'photo' : 'photos'}{userCount > 0 ? ` · ${userCount} here` : ''}
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          <StatCard value={photos.length} label="Photos" />
-          <StatCard value={userCount || '—'} label="Guests" />
-          <StatCard value={myPhotos} label="Mine" />
-          <StatCard value={newPhotos} label="New" highlight />
-        </div>
       </div>
 
       {/* Browse nav */}
@@ -170,29 +121,25 @@ function SidebarContent({
         })}
       </div>
 
-      <div className={`${compact ? 'px-3.5 py-3.5' : 'px-4 lg:px-5 py-4'} mt-auto space-y-2.5`} style={{ borderTop: '1px solid rgba(255,255,255,.08)' }}>
+      <div className={`${compact ? 'px-3.5 py-3.5' : 'px-4 lg:px-5 py-4'} mt-auto flex flex-col gap-2`} style={{ borderTop: '1px solid rgba(255,255,255,.08)' }}>
         {onOpenSettings && (
           <button
-            onClick={() => {
-              onOpenSettings();
-              onClose?.();
-            }}
-            className="w-full py-2.5 rounded-xl text-sm font-bold border flex items-center justify-center gap-2"
-            style={{ borderColor: 'rgba(139,92,255,.28)', color: 'var(--violet)', background: 'rgba(139,92,255,.08)' }}
+            onClick={() => { onOpenSettings(); onClose?.(); }}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.75)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
             </svg>
-            Settings
+            My Profile
           </button>
         )}
         <button
           onClick={onLeave}
-          className="w-full py-2.5 rounded-xl text-sm font-bold border flex items-center justify-center gap-2"
-          style={{ borderColor: 'rgba(224,92,92,.4)', color: 'var(--danger)' }}
+          className="w-full py-2 text-[12px] font-medium"
+          style={{ color: 'rgba(255,255,255,.3)' }}
         >
-          Leave Event
+          Leave event
         </button>
       </div>
     </div>
