@@ -284,8 +284,6 @@ app.get('/users/:id/album', (req, res) => {
 
 // Socket.IO
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-
   const eventId = config.DEMO_EVENT_ID;
   const rawUserId = typeof socket.handshake.auth?.userId === 'string' ? socket.handshake.auth.userId : null;
 
@@ -293,6 +291,8 @@ io.on('connection', (socket) => {
   // run would otherwise inflate the live count with phantom users.
   const userExists = rawUserId ? !!db.prepare('SELECT 1 FROM users WHERE id = ?').get(rawUserId) : false;
   const userId = userExists ? rawUserId : null;
+
+  console.log(`Client connected: ${socket.id}${userId ? ` (${userId})` : ''}`);
 
   connectedSockets.set(socket.id, userId);
   if (userId) {
