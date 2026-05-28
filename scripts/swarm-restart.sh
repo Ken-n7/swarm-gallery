@@ -3,6 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-MODE="${1:-network}"
 bash "$ROOT_DIR/scripts/swarm-stop.sh"
-bash "$ROOT_DIR/scripts/swarm-start.sh" "$MODE"
+
+echo "Rebuilding client..."
+(cd "$ROOT_DIR/client" && npm run build) 2>&1 | tail -6
+
+bash "$ROOT_DIR/scripts/swarm-start.sh"
