@@ -3,100 +3,108 @@ title Swarm Gallery - Setup
 cd /d "%~dp0"
 
 echo.
-echo  ================================
+echo  ==========================================
 echo   Swarm Gallery - First Time Setup
-echo  ================================
+echo  ==========================================
 echo.
 
-:: Check Node.js
+:: ─── Node.js ──────────────────────────────────────────────────────
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-  echo ERROR: Node.js is not installed.
-  echo Download it from https://nodejs.org ^(LTS version^)
+  echo  ERROR: Node.js is not installed.
+  echo.
+  echo  1. Go to https://nodejs.org
+  echo  2. Download and install the LTS version
+  echo  3. Run this setup again
   echo.
   pause
   exit /b 1
 )
 
 for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
-echo Node.js found: %NODE_VER%
+echo  Node.js %NODE_VER% found.
 echo.
 
-:: Install server dependencies
-echo [1/3] Installing server dependencies...
+:: ─── Server deps ──────────────────────────────────────────────────
+echo  [1/4] Installing server...
 cd server
 call npm install
 if %errorlevel% neq 0 (
-  echo ERROR: Failed to install server dependencies.
-  pause
-  exit /b 1
+  echo  ERROR: Server install failed.
+  pause & exit /b 1
 )
 cd ..
-echo Done.
+echo         Done.
 echo.
 
-:: Install client dependencies
-echo [2/3] Installing client dependencies...
+:: ─── Client deps ──────────────────────────────────────────────────
+echo  [2/4] Installing client...
 cd client
 call npm install
 if %errorlevel% neq 0 (
-  echo ERROR: Failed to install client dependencies.
-  pause
-  exit /b 1
+  echo  ERROR: Client install failed.
+  pause & exit /b 1
 )
 cd ..
-echo Done.
+echo         Done.
 echo.
 
-:: Write environment files
-echo [3/3] Configuring network...
-set SERVER_IP=192.168.137.1
+:: ─── Detect IP and write env ──────────────────────────────────────
+echo  [3/4] Detecting network and writing config...
+
 set SERVER_PORT=4000
 set CLIENT_PORT=3000
+set SERVER_IP=
+
+for /f "tokens=*" %%i in ('powershell -NoProfile -Command ^
+  "(Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue ^| Sort-Object RouteMetric ^| Select-Object -First 1 ^| ForEach-Object { (Get-NetIPAddress -InterfaceIndex $_.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue ^| Select-Object -First 1).IPAddress })" 2^>nul') do set SERVER_IP=%%i
+
+if "%SERVER_IP%"=="" set SERVER_IP=localhost
 
 echo NEXT_PUBLIC_SERVER_URL=http://%SERVER_IP%:%SERVER_PORT%> client\.env.local
 
 (
   echo PORT=%SERVER_PORT%
-  echo CLIENT_URL=http://%SERVER_IP%:%CLIENT_PORT%
   echo ADMIN_PASSWORD=admin123
   echo COOKIE_SECRET=change-this-before-event
 ) > server\.env
 
-echo Configured for hotspot IP: %SERVER_IP%
+echo         Network: %SERVER_IP%
 echo.
 
-:: Build client
-echo [4/4] Building client ^(this may take a minute^)...
+:: ─── Build client ─────────────────────────────────────────────────
+echo  [4/4] Building client ^(this takes 1-2 minutes^)...
 cd client
 call npm run build
 if %errorlevel% neq 0 (
-  echo ERROR: Client build failed.
-  pause
-  exit /b 1
+  echo  ERROR: Build failed.
+  pause & exit /b 1
 )
 cd ..
-echo Done.
+echo         Done.
 echo.
 
-:: Create desktop shortcut
-echo Creating desktop shortcut...
+:: ─── Desktop shortcut ─────────────────────────────────────────────
+echo  Creating desktop shortcut...
 set SHORTCUT=%USERPROFILE%\Desktop\Swarm Gallery.lnk
 powershell -NoProfile -Command ^
-  "$ws = New-Object -ComObject WScript.Shell;" ^
-  "$s = $ws.CreateShortcut('%SHORTCUT%');" ^
-  "$s.TargetPath = '%~dp0start.bat';" ^
-  "$s.WorkingDirectory = '%~dp0';" ^
-  "$s.IconLocation = '%~dp0logo.ico';" ^
-  "$s.Description = 'Launch Swarm Gallery';" ^
+  "$ws=New-Object -ComObject WScript.Shell;" ^
+  "$s=$ws.CreateShortcut('%SHORTCUT%');" ^
+  "$s.TargetPath='%~dp0start.bat';" ^
+  "$s.WorkingDirectory='%~dp0';" ^
+  "$s.Description='Launch Swarm Gallery';" ^
   "$s.Save()"
-echo Done.
+echo         Done.
 echo.
 
-echo  ================================
+echo  ==========================================
 echo   Setup complete!
-echo   A shortcut has been added to your desktop.
-echo   Double-click "Swarm Gallery" to launch.
-echo  ================================
+echo.
+echo   Double-click "Swarm Gallery" on your
+echo   desktop to start the app.
+echo.
+echo   NOTE: If you switch networks, the app
+echo   rebuilds automatically on next launch.
+echo  ==========================================
 echo.
 pause
