@@ -6,9 +6,7 @@ export default function Home() {
       {/* Header */}
       <header className="flex items-center justify-between pt-10 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center">
-            <span className="text-white font-black text-lg">S</span>
-          </div>
+          <img src="/logo-512.png" alt="Swarm Gallery" className="w-12 h-12 rounded-2xl object-cover shrink-0" />
           <div>
             <p className="text-xs font-bold text-zinc-900 tracking-widest leading-none">SWARM</p>
             <p className="text-xs font-bold text-zinc-900 tracking-widest leading-none">GALLERY</p>

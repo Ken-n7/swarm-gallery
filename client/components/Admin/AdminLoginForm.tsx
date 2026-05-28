@@ -31,12 +31,7 @@ export function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg-soft)' }}>
       <div className="w-full max-w-md bg-white rounded-[18px] p-8" style={{ border: '1px solid var(--line)' }}>
         <div className="text-center mb-8">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4"
-            style={{ background: 'var(--neon-gradient)', fontFamily: 'var(--font-paytone)' }}
-          >
-            S
-          </div>
+          <img src="/logo-512.png" alt="Swarm Gallery" className="w-16 h-16 rounded-full object-cover mx-auto mb-4" />
           <h1 className="text-[22px]" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>Swarm Admin</h1>
           <p className="mt-2 text-[14px]" style={{ color: 'var(--ink-soft)' }}>Enter admin password to continue</p>
         </div>

@@ -46,9 +46,7 @@ export function AdminTopBar({ title, subtitle, onMenu, activeGuests = 0, lastSyn
           </div>
         )}
       </div>
-      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: 'var(--neon-gradient)' }}>
-        A
-      </div>
+      <img src="/logo-512.png" alt="Swarm Gallery" className="w-9 h-9 rounded-full object-cover shrink-0" />
     </div>
   );
 }

@@ -58,12 +58,11 @@ export function AdminSidebar({ currentPage, onPageChange, onClose }: AdminSideba
       {/* Brand */}
       <div className="p-4 flex-none" style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm"
-            style={{ background: 'var(--neon-gradient)', fontFamily: 'var(--font-paytone)' }}
-          >
-            S
-          </div>
+          <img
+            src="/logo-512.png"
+            alt="Swarm Gallery"
+            className="w-9 h-9 rounded-full object-cover shrink-0"
+          />
           <div>
             <div className="text-[15px] text-white" style={{ fontFamily: 'var(--font-paytone)' }}>Swarm Admin</div>
             <div className="text-[11px]" style={{ color: 'rgba(255,255,255,.45)' }}>Control room</div>
