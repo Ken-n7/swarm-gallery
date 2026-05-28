@@ -13,6 +13,7 @@ const { nanoid } = require('nanoid');
 ffmpeg.setFfmpegPath(ffmpegPath);
 const config = require('./config');
 const db = require('./db');
+const { connectedSockets, connectedUserIds, liveGuestCount } = require('./liveCount');
 const adminRouter = require('./routes/admin');
 const eventsRouter = require('./routes/events');
 const usersRouter = require('./routes/users');
@@ -287,13 +288,30 @@ io.on('connection', (socket) => {
 
   const eventId = config.DEMO_EVENT_ID;
   const userId = typeof socket.handshake.auth?.userId === 'string' ? socket.handshake.auth.userId : null;
-  socket.emit('photo-history', getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId, userId)));
-  io.emit('user-count', { count: io.engine.clientsCount });
 
-  socket.on('ping', () => socket.emit('pong'));
+  connectedSockets.set(socket.id, userId);
+  if (userId) {
+    connectedUserIds.add(userId);
+    // Keep last_seen fresh so DB queries also stay accurate
+    db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(Date.now(), userId);
+  }
+
+  socket.emit('photo-history', getPhotos.all(eventId).map((r) => toPhotoObj(r, eventId, userId)));
+  io.emit('user-count', { count: liveGuestCount() });
+
+  socket.on('ping', () => {
+    if (userId) db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(Date.now(), userId);
+    socket.emit('pong');
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
-    io.emit('user-count', { count: io.engine.clientsCount });
+    connectedSockets.delete(socket.id);
+    // Only remove from the Set if no other socket from this user remains
+    if (userId && ![...connectedSockets.values()].includes(userId)) {
+      connectedUserIds.delete(userId);
+    }
+    io.emit('user-count', { count: liveGuestCount() });
   });
 });
 

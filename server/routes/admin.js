@@ -5,6 +5,7 @@ const archiver = require('archiver');
 const config = require('../config');
 const db = require('../db');
 const { requireAdmin } = require('../middleware/auth');
+const { liveGuestCount } = require('../liveCount');
 
 const router = express.Router();
 
@@ -83,7 +84,6 @@ function eventStateResponse(eventId) {
 
   const photoCount = db.prepare('SELECT COUNT(*) as count FROM photos WHERE event_id = ?').get(eventId).count;
   const guestCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ?').get(eventId).count;
-  const activeGuests = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ? AND last_seen > ?').get(eventId, Date.now() - 5 * 60 * 1000).count;
   const storageUsedBytes = calculateStorageUsed(eventId);
 
   return {
@@ -103,7 +103,7 @@ function eventStateResponse(eventId) {
     closedAt: event.closed_at,
     photoCount,
     guestCount,
-    activeGuests,
+    activeGuests: liveGuestCount(),
     storageUsed: Number((storageUsedBytes / 1024 / 1024 / 1024).toFixed(1)),
     storageTotal: 50,
   };
@@ -156,13 +156,12 @@ router.get('/stats', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
   const photoCount = db.prepare('SELECT COUNT(*) as count FROM photos WHERE event_id = ?').get(eventId).count;
   const guestCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ?').get(eventId).count;
-  const activeGuests = db.prepare('SELECT COUNT(*) as count FROM users WHERE event_id = ? AND last_seen > ?').get(eventId, Date.now() - 5 * 60 * 1000).count;
   const storageUsed = calculateStorageUsed(eventId);
 
   res.json({
     photoCount,
     guestCount,
-    activeGuests,
+    activeGuests: liveGuestCount(),
     storageUsed: Math.round(storageUsed / (1024 * 1024)),
   });
 });
