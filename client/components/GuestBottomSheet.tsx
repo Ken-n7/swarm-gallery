@@ -46,7 +46,7 @@ export function GuestBottomSheet({ open, title, subtitle, onClose, children }: P
           className="mx-auto w-full max-w-3xl rounded-t-[28px] shadow-[0_-20px_60px_rgba(15,23,42,.2)]"
           style={{ background: 'var(--bg-soft)', minHeight: '58vh', maxHeight: '86vh' }}
         >
-          <div className="flex items-start justify-between gap-4 px-5 pt-3 pb-4 sticky top-0 z-10 rounded-t-[28px]" style={{ background: 'rgba(248,247,255,.94)', backdropFilter: 'blur(14px)', borderBottom: '1px solid var(--line)' }}>
+          <div className="flex items-start justify-between gap-4 px-5 pt-3 pb-4 sticky top-0 z-10 rounded-t-[28px]" style={{ background: 'color-mix(in srgb, var(--bg-soft) 96%, transparent)', backdropFilter: 'blur(14px)', borderBottom: '1px solid var(--line)' }}>
             <div className="flex-1 min-w-0">
               <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--line)' }} />
               <div className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--violet)' }}>
@@ -64,7 +64,7 @@ export function GuestBottomSheet({ open, title, subtitle, onClose, children }: P
               onClick={onClose}
               aria-label={`Close ${title.toLowerCase()} panel`}
               className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'white', border: '1px solid var(--line)', color: 'var(--ink-soft)' }}
+              style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)', color: 'var(--ink-soft)' }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

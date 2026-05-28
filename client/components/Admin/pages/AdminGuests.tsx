@@ -155,7 +155,7 @@ export function AdminGuests() {
         </div>
       )}
       <div className="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)_220px] gap-4 items-start">
-        <div className="bg-white rounded-[16px] flex flex-col min-h-[520px]" style={{ border: '1px solid var(--line)' }}>
+        <div className="rounded-[16px] flex flex-col min-h-[520px]" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="p-3.5 flex-none" style={{ borderBottom: '1px solid var(--line)' }}>
             <div className="flex items-center gap-2 px-3 py-2 rounded-[9px]" style={{ background: 'var(--bg-deep)' }}>
               <span style={{ color: 'var(--muted)' }}><SearchIcon /></span>
@@ -196,7 +196,7 @@ export function AdminGuests() {
           <div className="p-3.5 flex-none" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="text-[10px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--muted)' }}>Bulk Actions</div>
             <div className="flex flex-col gap-1.5">
-              <button onClick={() => runGuestAction('exportGuests')} disabled={filteredGuests.length === 0 || actionState.exportGuests === 'running'} className="px-3 py-2 rounded-[9px] text-[12px] text-left font-medium disabled:opacity-50" style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)', background: '#fff' }}>
+              <button onClick={() => runGuestAction('exportGuests')} disabled={filteredGuests.length === 0 || actionState.exportGuests === 'running'} className="px-3 py-2 rounded-[9px] text-[12px] text-left font-medium disabled:opacity-50" style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)', background: 'var(--bg-soft)'}}>
                 {actionState.exportGuests === 'running' ? 'Preparing export...' : 'Export guest list'}
               </button>
             </div>
@@ -206,7 +206,7 @@ export function AdminGuests() {
         <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--bg-deep)', border: '1px solid var(--line)' }}>
           {selected ? (
             <div className="p-5 flex flex-col gap-3">
-              <div className="bg-white rounded-[14px] p-5 flex flex-wrap items-center gap-4" style={{ border: '1px solid var(--line)' }}>
+              <div className="rounded-[14px] p-5 flex flex-wrap items-center gap-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                 <GuestAvatar guest={selected} size="md" />
                 <div className="flex-1">
                   <div className="text-[18px] font-bold" style={{ color: 'var(--ink)' }}>{selected.username}</div>
@@ -219,7 +219,7 @@ export function AdminGuests() {
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                <div className="bg-white rounded-[14px] p-5" style={{ border: '1px solid var(--line)' }}>
+                <div className="rounded-[14px] p-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div className="text-[10px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--muted)' }}>Details</div>
                   {[
                     ['Joined', new Date(selected.joinedAt).toLocaleString()],
@@ -233,7 +233,7 @@ export function AdminGuests() {
                   ))}
                 </div>
 
-                <div className="bg-white rounded-[14px] p-5" style={{ border: '1px solid var(--line)' }}>
+                <div className="rounded-[14px] p-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div className="text-[10px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--muted)' }}>Recent Photos</div>
                   {selectedGuestPhotos.length > 0 ? (
                     <div className="grid grid-cols-3 gap-[5px]">
@@ -256,7 +256,7 @@ export function AdminGuests() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-[14px] p-5" style={{ border: '1px solid var(--line)' }}>
+              <div className="rounded-[14px] p-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                   <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Admin Controls</div>
                   <DestructiveNote>Review before removal</DestructiveNote>
@@ -290,7 +290,7 @@ export function AdminGuests() {
           )}
         </div>
 
-        <div className="bg-white rounded-[16px] px-4 py-4 xl:min-h-[520px]" style={{ border: '1px solid var(--line)' }}>
+        <div className="rounded-[16px] px-4 py-4 xl:min-h-[520px]" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Live Stats</div>
             <div className="text-[11px]" style={{ color: 'var(--muted)' }}>Guest overview</div>

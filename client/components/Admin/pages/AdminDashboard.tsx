@@ -60,7 +60,7 @@ function NetworkCard() {
     'var(--muted)';
 
   return (
-    <div className="bg-white rounded-[14px] p-6 flex flex-col gap-4" style={{ border: '1px solid var(--line)' }}>
+    <div className="rounded-[14px] p-6 flex flex-col gap-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
       <div className="flex items-center justify-between">
         <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Network</h3>
         <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ function QRCard() {
   }, []);
 
   return (
-    <div className="bg-white rounded-[14px] p-6 flex flex-col gap-5" style={{ border: '1px solid var(--line)' }}>
+    <div className="rounded-[14px] p-6 flex flex-col gap-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
       <div className="flex items-center justify-between">
         <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Event QR Code</h3>
         <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>
@@ -226,18 +226,18 @@ export function AdminDashboard() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-[14px] p-6 animate-pulse bg-white" style={{ border: '1px solid var(--line)' }}>
+            <div key={index} className="rounded-[14px] p-6 animate-pulse" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
               <div className="h-3 w-24 rounded-full mb-4" style={{ background: 'var(--bg-deep)' }} />
               <div className="h-8 w-20 rounded-full" style={{ background: 'var(--bg-deep)' }} />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-[14px] p-6 animate-pulse bg-white" style={{ border: '1px solid var(--line)' }}>
+          <div className="rounded-[14px] p-6 animate-pulse" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="h-4 w-32 rounded-full mb-4" style={{ background: 'var(--bg-deep)' }} />
             <div className="mx-auto w-44 h-44 rounded-[14px]" style={{ background: 'var(--bg-deep)' }} />
           </div>
-          <div className="rounded-[14px] p-6 animate-pulse bg-white" style={{ border: '1px solid var(--line)' }}>
+          <div className="rounded-[14px] p-6 animate-pulse" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="h-4 w-32 rounded-full mb-4" style={{ background: 'var(--bg-deep)' }} />
             <div className="grid grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -253,7 +253,7 @@ export function AdminDashboard() {
   if (loadFailed) {
     return (
       <div className="p-6">
-        <div className="rounded-[14px] p-6 bg-white" style={{ border: '1px solid rgba(224,92,92,.2)' }}>
+        <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid rgba(224,92,92,.2)' }}>
           <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--danger)' }}>Dashboard unavailable</div>
           <div className="text-sm" style={{ color: 'var(--ink-soft)' }}>
             Admin metrics could not be loaded from the server. Refresh the page or check that the server is still reachable.
@@ -279,7 +279,7 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <QRCard />
           <NetworkCard />
-          <div className="rounded-[14px] p-8 bg-white flex flex-col items-center justify-center text-center" style={{ border: '1px solid var(--line)' }}>
+          <div className="rounded-[14px] p-8 flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>Ready for guests</div>
             <div className="text-sm max-w-xs" style={{ color: 'var(--muted)' }}>
               Share the QR code so guests can join. Activity, uploads, and recent guests will appear here once people start joining.
@@ -305,7 +305,7 @@ export function AdminDashboard() {
         <QRCard />
         <NetworkCard />
 
-        <div className="bg-white rounded-[14px] p-6" style={{ border: '1px solid var(--line)' }}>
+        <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Recent Photos</h3>
             <span className="text-sm font-medium" style={{ color: 'var(--muted)' }}>Latest uploads</span>
@@ -327,7 +327,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Recent Guests */}
-      <div className="bg-white rounded-[14px] overflow-hidden" style={{ border: '1px solid var(--line)' }}>
+      <div className="rounded-[14px] overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
         <div className="px-[18px] py-[14px] flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)' }}>
           <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Recent Guests</h3>
           <span className="text-sm font-medium" style={{ color: 'var(--muted)' }}>Latest joins</span>

@@ -227,23 +227,23 @@ export function AdminSettings() {
           {/* Stacked sections - each one full width */}
           <div className="space-y-6">
             {/* Event Info */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900">Event Info</h3>
-                <p className="text-sm text-slate-600 mt-1">Basic details about your current event session.</p>
+            <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+              <div className="p-6" style={{ borderBottom: '1px solid var(--line)' }}>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>Event Info</h3>
+                <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Basic details about your current event session.</p>
               </div>
               <div className="p-6 space-y-6">
                 <FormRow label="Event name" sub="Displayed to guests when they join the gallery.">
-                  <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                  <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                 </FormRow>
                 <FormRow label="Organizer name" sub="Shown on the join screen as the host.">
-                  <input type="text" value={organizerName} onChange={(e) => { setOrganizerName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                  <input type="text" value={organizerName} onChange={(e) => { setOrganizerName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                 </FormRow>
                 <FormRow label="Event date" sub="For display and record-keeping.">
-                  <input type="date" value={eventDate} onChange={(e) => { setEventDate(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                  <input type="date" value={eventDate} onChange={(e) => { setEventDate(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                 </FormRow>
                 <FormRow label="Event type" sub="Displayed to guests when they join.">
-                  <select value={eventType} onChange={(e) => { setEventType(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent bg-white">
+                  <select value={eventType} onChange={(e) => { setEventType(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}>
                     <option>Corporate / Conference</option>
                     <option>Wedding</option>
                     <option>Birthday</option>
@@ -251,7 +251,7 @@ export function AdminSettings() {
                   </select>
                 </FormRow>
                 <FormRow label="Expected guest count" sub="Used to prepare event staffing and device setup.">
-                  <input type="number" value={expectedGuests} onChange={(e) => { setExpectedGuests(e.target.value); setHasChanges(true); }} className="w-full md:w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                  <input type="number" value={expectedGuests} onChange={(e) => { setExpectedGuests(e.target.value); setHasChanges(true); }} className="w-full md:w-24 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                 </FormRow>
                 <FormRow label="Guest privacy tool" sub="Guests may optionally blur faces on their own device before uploading. This is guest-controlled, not an admin moderation setting.">
                   <span className="px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>Optional face blur</span>
@@ -260,25 +260,25 @@ export function AdminSettings() {
             </div>
 
             {/* Access & QR */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Access & QR</h3>
-              <p className="text-slate-600 mb-6">Share this QR code with attendees so they can join the gallery on their phones and contribute media for this event only.</p>
+            <div className="rounded-xl p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--ink)' }}>Access & QR</h3>
+              <p className="mb-6" style={{ color: 'var(--muted)' }}>Share this QR code with attendees so they can join the gallery on their phones and contribute media for this event only.</p>
               <div className="flex justify-center mb-6">
-                <div className="relative p-4 bg-white border border-slate-200 rounded-xl shadow-sm w-56 h-56">
+                <div className="relative p-4 rounded-xl shadow-sm w-56 h-56" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="224px" className="object-contain p-4" />
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-sm text-slate-500 mb-2">Join link</p>
-                <a href={joinUrl || '#'} target="_blank" rel="noreferrer" className="text-slate-900 font-medium break-all">
+              <div className="rounded-lg p-4" style={{ background: 'var(--bg-soft)' }}>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>Join link</p>
+                <a href={joinUrl || '#'} target="_blank" rel="noreferrer" className="font-medium break-all" style={{ color: 'var(--ink)' }}>
                   {joinUrl || 'Loading…'}
                 </a>
               </div>
-              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="mt-4 rounded-lg p-4" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)' }}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">Access status</div>
-                    <div className="text-xs text-slate-500 mt-1">QR and join link are live for the current event session.</div>
+                    <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Access status</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>QR and join link are live for the current event session.</div>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>Accepting guests</span>
                 </div>
@@ -286,22 +286,22 @@ export function AdminSettings() {
             </div>
 
             {/* Temporary Storage */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900">Temporary Storage</h3>
-                <p className="text-sm text-slate-600 mt-1">Media is stored only until handoff to the client is complete, then removed for privacy.</p>
+            <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+              <div className="p-6" style={{ borderBottom: '1px solid var(--line)' }}>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>Temporary Storage</h3>
+                <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Media is stored only until handoff to the client is complete, then removed for privacy.</p>
               </div>
               <div className="p-6 space-y-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Used</span>
-                    <span className="text-sm font-medium text-slate-900">{storageUsed} GB of {storageTotal} GB</span>
+                    <span className="text-sm" style={{ color: 'var(--muted)' }}>Used</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{storageUsed} GB of {storageTotal} GB</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-3">
+                  <div className="w-full rounded-full h-3" style={{ background: 'var(--line)' }}>
                     <div className="bg-violet-600 h-3 rounded-full transition-all duration-300" style={{ width: `${storagePercent}%` }} />
                   </div>
-                  <div className="text-xs text-slate-500">{storagePercent.toFixed(1)}% used • {(storageTotal - storageUsed).toFixed(1)} GB available</div>
-                  <div className="pt-2 border-t border-slate-200 space-y-4">
+                  <div className="text-xs" style={{ color: 'var(--muted)' }}>{storagePercent.toFixed(1)}% used • {(storageTotal - storageUsed).toFixed(1)} GB available</div>
+                  <div className="pt-2 space-y-4" style={{ borderTop: '1px solid var(--line)' }}>
                     <FormRow label="Retention before handoff" sub="Event media remains on the laptop only until the client handoff is completed.">
                       <span className="inline-flex px-3 py-2 rounded-full text-xs font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
                         {retentionPolicy || 'Until handoff'}
@@ -309,16 +309,16 @@ export function AdminSettings() {
                     </FormRow>
                     <FormRow label="Storage warning" sub="Alert the team when temporary event storage is nearing capacity before export.">
                       <div className="flex items-center gap-2">
-                        <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} className="w-16 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
-                        <span className="text-sm text-slate-600">%</span>
+                        <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} className="w-16 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
+                        <span className="text-sm" style={{ color: 'var(--muted)' }}>%</span>
                       </div>
                     </FormRow>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
-                      <div className="text-sm font-semibold text-slate-900">Storage cleanup happens through event closeout</div>
-                      <div className="text-sm text-slate-600">
+                    <div className="rounded-lg p-4 space-y-2" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)' }}>
+                      <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Storage cleanup happens through event closeout</div>
+                      <div className="text-sm" style={{ color: 'var(--muted)' }}>
                         Generated thumbnails and original media are removed together when you complete handoff, delete event media, and close the event.
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs" style={{ color: 'var(--muted)' }}>
                         There is no separate cache-clearing step for this workflow.
                       </div>
                     </div>
@@ -335,7 +335,7 @@ export function AdminSettings() {
               </div>
 
               {/* Workflow Status */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     ['Export ready', workflow.handoffPrepared ? 'Ready' : 'Pending'],
@@ -343,9 +343,9 @@ export function AdminSettings() {
                     ['Media deleted', workflow.mediaDeleted ? 'Done' : 'Pending'],
                     ['Event closed', workflow.eventClosed ? 'Done' : 'Pending'],
                   ].map(([label, value]) => (
-                    <div key={label} className="rounded-lg border border-slate-200 p-3">
-                      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{label}</div>
-                      <div className="text-sm font-semibold text-slate-900 mt-1">{value}</div>
+                    <div key={label} className="rounded-lg p-3" style={{ border: '1px solid var(--line)' }}>
+                      <div className="text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: 'var(--muted)' }}>{label}</div>
+                      <div className="text-sm font-semibold mt-1" style={{ color: 'var(--ink)' }}>{value}</div>
                     </div>
                   ))}
                 </div>
@@ -353,20 +353,20 @@ export function AdminSettings() {
 
               {/* Action Buttons */}
               <div className="space-y-4">
-                <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="rounded-xl p-6 flex flex-wrap items-center justify-between gap-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Prepare Client Handoff</h4>
-                    <p className="text-sm text-slate-600 mt-1">Create the export package of all event media for delivery to the client.</p>
+                    <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Prepare Client Handoff</h4>
+                    <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Create the export package of all event media for delivery to the client.</p>
                   </div>
                   <button onClick={() => runAction('exportPackage')} disabled={actionState.exportPackage === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-60">
                     {actionState.exportPackage === 'running' ? 'Preparing...' : workflow.handoffPrepared ? 'Export Ready' : 'Export Package'}
                   </button>
                 </div>
 
-                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canMarkComplete ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                <div className={`rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canMarkComplete ? 'opacity-70' : ''}`} style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Mark Handoff Complete</h4>
-                    <p className="text-sm text-slate-600 mt-1">Record that client delivery is finished and the event is ready for media deletion.</p>
+                    <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Mark Handoff Complete</h4>
+                    <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Record that client delivery is finished and the event is ready for media deletion.</p>
                     {!canMarkComplete && <p className="text-xs text-amber-700 mt-2">Prepare the client handoff package first so this step follows a clear export trail.</p>}
                   </div>
                   <button onClick={() => runAction('markComplete')} disabled={!canMarkComplete || actionState.markComplete === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50">
@@ -374,10 +374,10 @@ export function AdminSettings() {
                   </button>
                 </div>
 
-                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteMedia ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                <div className={`rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteMedia ? 'opacity-70' : ''}`} style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Delete Event Media</h4>
-                    <p className="text-sm text-slate-600 mt-1">Remove all uploaded photos and videos from the system after successful client handoff.</p>
+                    <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Delete Event Media</h4>
+                    <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Remove all uploaded photos and videos from the system after successful client handoff.</p>
                     {!canDeleteMedia && <p className="text-xs text-amber-700 mt-2">Locked until client handoff is marked complete.</p>}
                   </div>
                   <div className="space-y-2">
@@ -397,10 +397,10 @@ export function AdminSettings() {
                   </div>
                 </div>
 
-                <div className={`bg-white border rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteEvent ? 'opacity-70' : ''}`} style={{ borderColor: '#e2e8f0' }}>
+                <div className={`rounded-xl p-6 flex flex-wrap items-center justify-between gap-4 ${!canDeleteEvent ? 'opacity-70' : ''}`} style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
                   <div>
-                    <h4 className="font-semibold text-slate-900">Delete Event Record</h4>
-                    <p className="text-sm text-slate-600 mt-1">Remove remaining guest metadata and close out the event once media has been deleted.</p>
+                    <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Delete Event Record</h4>
+                    <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Remove remaining guest metadata and close out the event once media has been deleted.</p>
                     {!canDeleteEvent && <p className="text-xs text-amber-700 mt-2">Locked until event media has been deleted.</p>}
                   </div>
                   <div className="space-y-2">
@@ -426,8 +426,8 @@ export function AdminSettings() {
       </div>
 
       {hasChanges && (
-        <div className="border-t border-slate-200 bg-white px-6 py-4 flex justify-end gap-3">
-          <button onClick={handleDiscard} className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50">Discard</button>
+        <div className="px-6 py-4 flex justify-end gap-3" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
+          <button onClick={handleDiscard} className="px-4 py-2 rounded-lg" style={{ border: '1px solid var(--line)', color: 'var(--muted)', background: 'var(--bg-soft)' }}>Discard</button>
           <button onClick={handleSave} disabled={saveState === 'saving'} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-60">
             {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : 'Save Changes'}
           </button>

@@ -136,7 +136,7 @@ export function AdminGalleries() {
       {/* ── Toolbar ────────────────────────────────────────────── */}
       <div className="px-6 pt-5 pb-4 flex flex-wrap items-center gap-2.5">
         {/* Search */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-full flex-1 min-w-[180px] bg-white" style={{ border: '1px solid var(--line)' }}>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-full flex-1 min-w-[180px] " style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <span style={{ color: 'var(--muted)' }}><SearchIcon /></span>
           <input
             value={query}
@@ -158,7 +158,7 @@ export function AdminGalleries() {
             className="px-3 py-1.5 rounded-full text-[12px] font-semibold"
             style={{
               border: `1px solid ${filter === opt.id ? 'var(--ink)' : 'var(--line)'}`,
-              background: filter === opt.id ? 'var(--ink)' : 'white',
+              background: filter === opt.id ? 'var(--ink)' : 'var(--bg-soft)',
               color: filter === opt.id ? 'white' : 'var(--ink-soft)',
             }}
           >
@@ -183,7 +183,7 @@ export function AdminGalleries() {
         </a>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 rounded-[12px] p-1 bg-white" style={{ border: '1px solid var(--line)' }}>
+        <div className="flex items-center gap-1 rounded-[12px] p-1 " style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <button
             onClick={() => setViewMode('grid')}
             aria-label="Grid view"
@@ -201,7 +201,7 @@ export function AdminGalleries() {
 
       {/* ── Moderation review panel ─────────────────────────────── */}
       {focusedPhoto && (
-        <div className="mx-6 mb-4 bg-white rounded-[14px] p-4" style={{ border: '1px solid var(--line)' }}>
+        <div className="mx-6 mb-4 rounded-[14px] p-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--muted)' }}>
@@ -311,7 +311,7 @@ export function AdminGalleries() {
             </div>
           ) : (
             /* List */
-            <div className="bg-white rounded-[14px] overflow-hidden" style={{ border: '1px solid var(--line)' }}>
+            <div className="rounded-[14px] overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
               {/* List header */}
               <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--line)' }}>
                 <input
@@ -326,7 +326,7 @@ export function AdminGalleries() {
               </div>
 
               {filtered.map((photo) => (
-                <div key={photo.id} style={{ borderTop: '1px solid var(--line)', background: selectedPhotos.has(photo.id) ? 'var(--violet-tint)' : 'white' }}>
+                <div key={photo.id} style={{ borderTop: '1px solid var(--line)', background: selectedPhotos.has(photo.id) ? 'var(--violet-tint)' : 'var(--bg)' }}>
                   {/* Main row */}
                   <div className="flex items-center gap-3 px-4 py-3">
                     <input

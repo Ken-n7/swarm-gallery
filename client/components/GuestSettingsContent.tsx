@@ -27,8 +27,8 @@ function Toggle({ on, onChange }: ToggleProps) {
       }}
     >
       <div
-        className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200"
-        style={{ left: on ? 'calc(100% - 22px)' : 2 }}
+        className="absolute top-0.5 w-5 h-5 rounded-full shadow transition-all duration-200"
+        style={{ background: 'white', left: on ? 'calc(100% - 22px)' : 2 }}
       />
     </button>
   );
@@ -82,7 +82,7 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="rounded-[14px] overflow-hidden"
-      style={{ border: '1px solid var(--line)', background: 'white' }}
+      style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}
     >
       {children}
     </div>

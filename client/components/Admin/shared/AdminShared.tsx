@@ -94,7 +94,7 @@ export function AdminImage({
 
 export function StatCard({ title, value }: { title: string; value: string | number }) {
   return (
-    <div className="bg-white rounded-[14px] p-6" style={{ border: '1px solid var(--line)' }}>
+    <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
       <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--muted)' }}>{title}</div>
       <div className="text-2xl" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>{value}</div>
     </div>
@@ -148,10 +148,10 @@ export function DestructiveNote({ children }: { children: string }) {
 
 export function FormRow({ label, sub, children }: { label: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 border-b border-slate-100 last:border-b-0">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-4 last:border-b-0" style={{ borderBottom: '1px solid var(--line)' }}>
       <div className="flex-1 md:pr-4">
-        <div className="text-sm font-semibold text-slate-900">{label}</div>
-        {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
+        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{label}</div>
+        {sub && <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{sub}</div>}
       </div>
       <div className="flex-none w-full md:w-auto">{children}</div>
     </div>

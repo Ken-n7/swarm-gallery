@@ -14,7 +14,7 @@ export function AdminTopBar({ title, subtitle, onMenu, activeGuests = 0, lastSyn
     : null;
 
   return (
-    <div className="h-16 bg-white flex items-center px-5 gap-3 flex-none" style={{ borderBottom: '1px solid var(--line)' }}>
+    <div className="h-16 flex items-center px-5 gap-3 flex-none" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--line)' }}>
       {onMenu && (
         <button
           onClick={onMenu}

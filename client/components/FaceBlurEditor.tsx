@@ -159,8 +159,8 @@ export function FaceBlurEditor({
   return (
     <div className="fixed inset-0 z-[80] overflow-y-auto" style={{ background: 'rgba(15,23,42,.74)' }}>
       <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
-        <div className="w-full max-w-3xl rounded-[24px] overflow-hidden my-4" style={{ background: 'white', boxShadow: '0 24px 80px rgba(15,23,42,.28)' }}>
-          <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 sticky top-0 z-10" style={{ borderBottom: '1px solid var(--line)', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(12px)' }}>
+        <div className="w-full max-w-3xl rounded-[24px] overflow-hidden my-4" style={{ background: 'var(--bg)', boxShadow: '0 24px 80px rgba(15,23,42,.28)' }}>
+          <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 sticky top-0 z-10" style={{ borderBottom: '1px solid var(--line)', background: 'color-mix(in srgb, var(--bg) 96%, transparent)', backdropFilter: 'blur(12px)' }}>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--violet)' }}>
                 Privacy tool {indexLabel ? `· ${indexLabel}` : ''}
@@ -184,7 +184,7 @@ export function FaceBlurEditor({
                   {showHelp && (
                     <div
                       className="absolute right-0 sm:left-0 sm:right-auto top-9 w-56 max-w-[calc(100vw-3rem)] rounded-[14px] px-3 py-3 text-[12px] leading-5 z-10"
-                      style={{ background: 'white', color: 'var(--ink-soft)', border: '1px solid var(--line)', boxShadow: '0 12px 40px rgba(15,23,42,.14)' }}
+                      style={{ background: 'var(--bg-soft)', color: 'var(--ink-soft)', border: '1px solid var(--line)', boxShadow: '0 12px 40px rgba(15,23,42,.14)' }}
                     >
                       Tap once for each face you want blurred. The blur is applied on your device before the photo uploads.
                     </div>
@@ -212,7 +212,7 @@ export function FaceBlurEditor({
             <div className="p-4 md:p-5" style={{ background: 'var(--bg-soft)' }}>
               <div
                 className="relative rounded-[20px] overflow-hidden mx-auto"
-                style={{ background: '#0f172a' }}
+                style={{ background: 'var(--bg-deep)' }}
                 onClick={addRegion}
               >
                 {previewUrl && (

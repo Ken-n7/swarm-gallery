@@ -29,7 +29,7 @@ export function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg-soft)' }}>
-      <div className="w-full max-w-md bg-white rounded-[18px] p-8" style={{ border: '1px solid var(--line)' }}>
+      <div className="w-full max-w-md rounded-[18px] p-8" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
         <div className="text-center mb-8">
           <img src="/logo-512.png" alt="Swarm Gallery" className="w-16 h-16 rounded-full object-cover mx-auto mb-4" />
           <h1 className="text-[22px]" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>Swarm Admin</h1>

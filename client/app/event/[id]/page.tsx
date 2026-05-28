@@ -74,7 +74,7 @@ function GalleryView({
         />
 
         {/* Gallery — scrollable center */}
-        <div className="flex-1 min-w-0 overflow-y-auto bg-white">
+        <div className="flex-1 min-w-0 overflow-y-auto" style={{ background: 'var(--bg)' }}>
           <Gallery
             photos={photos}
             userCount={userCount}
@@ -95,7 +95,7 @@ function GalleryView({
 
   // Portrait layout
   return (
-    <div className="flex flex-col min-h-screen overflow-y-auto" style={{ background: 'linear-gradient(160deg, #ede9ff 0%, #f9f8ff 18%, #ffffff 52%)' }}>
+    <div className="flex flex-col min-h-screen overflow-y-auto" style={{ background: 'linear-gradient(160deg, var(--violet-tint) 0%, var(--bg-soft) 18%, var(--bg) 52%)' }}>
       {/* Portrait sidebar drawer */}
       <Sidebar
         username={username}
