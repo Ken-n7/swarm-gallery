@@ -6,21 +6,25 @@
  *   node seed.js           — seed (skips if already seeded)
  *   node seed.js --reset   — clear seed data then re-seed
  *   node seed.js --clear   — clear seed data only
+ *   node seed.js --offline — skip downloads, use generated color images
  */
 
 'use strict';
 
-const { execSync }  = require('child_process');
-const fs            = require('fs');
-const path          = require('path');
+const https          = require('https');
+const http           = require('http');
+const { execSync }   = require('child_process');
+const fs             = require('fs');
+const path           = require('path');
 const { randomUUID } = require('crypto');
 
-const db          = require('./db');
-const config      = require('./config');
-const ffmpegPath  = require('ffmpeg-static');
+const db         = require('./db');
+const config     = require('./config');
+const ffmpegPath = require('ffmpeg-static');
 
-const RESET = process.argv.includes('--reset');
-const CLEAR = process.argv.includes('--clear');
+const RESET   = process.argv.includes('--reset');
+const CLEAR   = process.argv.includes('--clear');
+const OFFLINE = process.argv.includes('--offline');
 const EVENT_ID = config.DEMO_EVENT_ID;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -29,51 +33,94 @@ function uid() {
   return randomUUID().replace(/-/g, '').slice(0, 21);
 }
 
-/** Generate a solid-color JPEG using ffmpeg (no extra npm packages needed). */
-function generateJpeg(outputPath, hexColor, width = 800, height = 600) {
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+/**
+ * Download a URL to a file.
+ * Follows up to 5 redirects. Rejects on non-2xx or timeout.
+ */
+function download(url, dest, redirects = 0) {
+  return new Promise((resolve, reject) => {
+    if (redirects > 5) return reject(new Error('Too many redirects'));
+    const mod = url.startsWith('https') ? https : http;
+    const req = mod.get(url, { timeout: 10000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        return resolve(download(res.headers.location, dest, redirects + 1));
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        res.resume();
+        return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+      }
+      const out = fs.createWriteStream(dest);
+      res.pipe(out);
+      out.on('finish', resolve);
+      out.on('error', reject);
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
+
+/** Fallback: solid-color JPEG via ffmpeg (no internet needed). */
+function generateJpeg(dest, hexColor, width = 800, height = 600) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
   execSync(
     `"${ffmpegPath}" -y -f lavfi \
       -i "color=c=${hexColor}:size=${width}x${height}:rate=1" \
-      -frames:v 1 -q:v 4 "${outputPath}"`,
+      -frames:v 1 -q:v 4 "${dest}"`,
     { stdio: 'pipe' },
   );
+}
+
+/**
+ * Try downloading `url` to `dest`.
+ * If offline mode or download fails, fall back to a solid-color JPEG.
+ */
+async function fetchImage(url, dest, fallbackColor, fallbackW = 800, fallbackH = 600) {
+  if (!OFFLINE) {
+    try {
+      await download(url, dest);
+      return true; // downloaded
+    } catch (e) {
+      process.stdout.write(` (download failed: ${e.message}, using fallback)`);
+    }
+  }
+  generateJpeg(dest, fallbackColor, fallbackW, fallbackH);
+  return false; // generated
 }
 
 // ── Seed data ──────────────────────────────────────────────────────────────
 
 const USERS = [
-  { name: 'Alice Kim',     avatarColor: '#7c3aed', deviceId: `seed-device-alice-${EVENT_ID}` },
-  { name: 'Bob Nguyen',    avatarColor: '#ec4899', deviceId: `seed-device-bob-${EVENT_ID}` },
-  { name: 'Carlos Ruiz',   avatarColor: '#0ea5e9', deviceId: `seed-device-carlos-${EVENT_ID}` },
-  { name: 'Diana Patel',   avatarColor: '#22c55e', deviceId: `seed-device-diana-${EVENT_ID}` },
-  { name: 'Eve Johansson', avatarColor: '#f59e0b', deviceId: `seed-device-eve-${EVENT_ID}` },
+  { name: 'Alice Kim',     fallbackColor: '#7c3aed', pravatar: 1  },
+  { name: 'Bob Nguyen',    fallbackColor: '#ec4899', pravatar: 3  },
+  { name: 'Carlos Ruiz',   fallbackColor: '#0ea5e9', pravatar: 12 },
+  { name: 'Diana Patel',   fallbackColor: '#22c55e', pravatar: 25 },
+  { name: 'Eve Johansson', fallbackColor: '#f59e0b', pravatar: 47 },
 ];
 
-// Each entry: [uploaderIndex, color, width, height, secondsAgo]
+// [uploaderIndex, picsumSeed, fallbackColor, width, height, secondsAgo]
 const PHOTO_SPECS = [
-  [0, '#7c3aed', 1080, 720,  7200],
-  [1, '#ec4899', 800,  600,  6800],
-  [2, '#0ea5e9', 1200, 800,  6200],
-  [0, '#9333ea', 900,  600,  5900],
-  [3, '#22c55e', 1080, 720,  5400],
-  [1, '#db2777', 750,  500,  5100],
-  [4, '#f59e0b', 1000, 667,  4800],
-  [2, '#0284c7', 800,  800,  4300],
-  [0, '#6d28d9', 1200, 675,  3900],
-  [3, '#16a34a', 900,  600,  3400],
-  [4, '#d97706', 1080, 720,  3000],
-  [1, '#be185d', 800,  533,  2600],
-  [2, '#0369a1', 1000, 750,  2100],
-  [0, '#5b21b6', 900,  600,  1800],
-  [3, '#15803d', 1080, 720,  1200],
-  [4, '#b45309', 800,  600,   600],
+  [0, 'swarm-1',  '#7c3aed', 1080, 720,  7200],
+  [1, 'swarm-2',  '#ec4899',  800, 600,  6800],
+  [2, 'swarm-3',  '#0ea5e9', 1200, 800,  6200],
+  [0, 'swarm-4',  '#9333ea',  900, 600,  5900],
+  [3, 'swarm-5',  '#22c55e', 1080, 720,  5400],
+  [1, 'swarm-6',  '#db2777',  750, 500,  5100],
+  [4, 'swarm-7',  '#f59e0b', 1000, 667,  4800],
+  [2, 'swarm-8',  '#0284c7',  800, 800,  4300],
+  [0, 'swarm-9',  '#6d28d9', 1200, 675,  3900],
+  [3, 'swarm-10', '#16a34a',  900, 600,  3400],
+  [4, 'swarm-11', '#d97706', 1080, 720,  3000],
+  [1, 'swarm-12', '#be185d',  800, 533,  2600],
+  [2, 'swarm-13', '#0369a1', 1000, 750,  2100],
+  [0, 'swarm-14', '#5b21b6',  900, 600,  1800],
+  [3, 'swarm-15', '#15803d', 1080, 720,  1200],
+  [4, 'swarm-16', '#b45309',  800, 600,   600],
 ];
 
 // ── Clear ──────────────────────────────────────────────────────────────────
 
 function clearSeedData() {
-  // Find seeded users (device_id starts with 'seed-device-')
   const seededUsers = db.prepare(
     `SELECT id, avatar_filename FROM users WHERE device_id LIKE 'seed-device-%' AND event_id = ?`
   ).all(EVENT_ID);
@@ -84,11 +131,10 @@ function clearSeedData() {
   }
 
   const userIds = seededUsers.map((u) => u.id);
-  const placeholders = userIds.map(() => '?').join(',');
+  const ph = userIds.map(() => '?').join(',');
 
-  // Delete likes on seeded photos
   const seededPhotos = db.prepare(
-    `SELECT id, filename, thumb_filename FROM photos WHERE user_id IN (${placeholders})`
+    `SELECT id, filename, thumb_filename FROM photos WHERE user_id IN (${ph})`
   ).all(...userIds);
 
   const photoIds = seededPhotos.map((p) => p.id);
@@ -96,33 +142,28 @@ function clearSeedData() {
     const pp = photoIds.map(() => '?').join(',');
     db.prepare(`DELETE FROM photo_likes WHERE photo_id IN (${pp})`).run(...photoIds);
     db.prepare(`DELETE FROM photos WHERE id IN (${pp})`).run(...photoIds);
-
-    // Remove image files
+    const photoDir = path.join(config.STORAGE.EVENTS, EVENT_ID);
     for (const p of seededPhotos) {
-      const dir = path.join(config.STORAGE.EVENTS, EVENT_ID);
       [p.filename, p.thumb_filename].filter(Boolean).forEach((f) => {
-        try { fs.rmSync(path.join(dir, f)); } catch { /* already gone */ }
+        try { fs.rmSync(path.join(photoDir, f)); } catch { /* gone */ }
       });
     }
   }
 
-  // Delete users + avatars
+  const avatarDir = path.join(config.STORAGE.AVATARS, EVENT_ID);
   for (const u of seededUsers) {
     if (u.avatar_filename) {
-      try {
-        fs.rmSync(path.join(config.STORAGE.AVATARS, EVENT_ID, u.avatar_filename));
-      } catch { /* already gone */ }
+      try { fs.rmSync(path.join(avatarDir, u.avatar_filename)); } catch { /* gone */ }
     }
   }
-  db.prepare(`DELETE FROM users WHERE id IN (${placeholders})`).run(...userIds);
+  db.prepare(`DELETE FROM users WHERE id IN (${ph})`).run(...userIds);
 
   console.log(`Cleared ${seededUsers.length} users and ${seededPhotos.length} photos.`);
 }
 
 // ── Seed ───────────────────────────────────────────────────────────────────
 
-function seed() {
-  // Check if already seeded
+async function seed() {
   const existing = db.prepare(
     `SELECT COUNT(*) as n FROM users WHERE device_id LIKE 'seed-device-%' AND event_id = ?`
   ).get(EVENT_ID).n;
@@ -132,55 +173,75 @@ function seed() {
     return;
   }
 
-  console.log('Seeding demo event…');
+  const mode = OFFLINE ? 'offline (color fills)' : 'online (picsum.photos + pravatar.cc)';
+  console.log(`Seeding demo event — ${mode}…`);
 
-  // Ensure avatar dir exists
   const avatarDir = path.join(config.STORAGE.AVATARS, EVENT_ID);
   const photoDir  = path.join(config.STORAGE.EVENTS,  EVENT_ID);
   fs.mkdirSync(avatarDir, { recursive: true });
   fs.mkdirSync(photoDir,  { recursive: true });
 
-  // ── Insert users ─────────────────────────────────────────────────────────
   const insertUser = db.prepare(`
     INSERT OR IGNORE INTO users (id, event_id, username, device_id, avatar_filename, joined_at, last_seen)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   const now = Date.now();
-  const userRows = USERS.map((u, i) => {
+
+  // ── Users + avatars ───────────────────────────────────────────────────────
+  const userRows = [];
+  for (let i = 0; i < USERS.length; i++) {
+    const u        = USERS[i];
     const userId   = uid();
     const filename = `seed-avatar-${userId}.jpg`;
-    const joinedAt = now - (8000 - i * 400) * 1000; // spread joins over ~2 hrs
+    const dest     = path.join(avatarDir, filename);
+    const joinedAt = now - (8000 - i * 400) * 1000;
+    const deviceId = `seed-device-${u.name.toLowerCase().replace(/\s+/g, '-')}-${EVENT_ID}`;
 
-    console.log(`  Generating avatar for ${u.name}…`);
-    generateJpeg(path.join(avatarDir, filename), u.avatarColor, 400, 400);
+    process.stdout.write(`  Avatar ${i + 1}/${USERS.length}: ${u.name}… `);
+    // pravatar.cc serves real face photos — great for avatar placeholders
+    await fetchImage(
+      `https://i.pravatar.cc/400?img=${u.pravatar}`,
+      dest,
+      u.fallbackColor, 400, 400,
+    );
+    console.log('✓');
 
-    insertUser.run(userId, EVENT_ID, u.name, u.deviceId, filename, joinedAt, joinedAt);
-    return { ...u, userId, joinedAt };
-  });
+    insertUser.run(userId, EVENT_ID, u.name, deviceId, filename, joinedAt, joinedAt);
+    userRows.push({ ...u, userId, joinedAt });
+  }
 
   console.log(`  Created ${userRows.length} users.`);
 
-  // ── Insert photos ─────────────────────────────────────────────────────────
+  // ── Photos ────────────────────────────────────────────────────────────────
   const insertPhoto = db.prepare(`
     INSERT INTO photos
-      (id, event_id, filename, original_name, mimetype, size_bytes, uploaded_at, uploader_ip, uploader_name, user_id, thumb_filename)
+      (id, event_id, filename, original_name, mimetype, size_bytes, uploaded_at,
+       uploader_ip, uploader_name, user_id, thumb_filename)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const photoRows = [];
-  for (const [uploaderIdx, color, w, h, secsAgo] of PHOTO_SPECS) {
+  for (let i = 0; i < PHOTO_SPECS.length; i++) {
+    const [uploaderIdx, picsumSeed, fallbackColor, w, h, secsAgo] = PHOTO_SPECS[i];
     const uploader   = userRows[uploaderIdx];
     const photoId    = uid();
     const filename   = `seed-photo-${photoId}.jpg`;
+    const dest       = path.join(photoDir, filename);
     const uploadedAt = now - secsAgo * 1000;
 
-    process.stdout.write(`  Generating photo ${photoRows.length + 1}/${PHOTO_SPECS.length}…\r`);
-    generateJpeg(path.join(photoDir, filename), color, w, h);
+    process.stdout.write(`  Photo ${i + 1}/${PHOTO_SPECS.length}: ${uploader.name}… `);
+    // picsum.photos/seed/{seed}/{w}/{h} returns a consistent real photo each run
+    await fetchImage(
+      `https://picsum.photos/seed/${picsumSeed}/${w}/${h}`,
+      dest,
+      fallbackColor, w, h,
+    );
+    console.log('✓');
 
-    const stat = fs.statSync(path.join(photoDir, filename));
+    const stat = fs.statSync(dest);
     insertPhoto.run(
-      photoId, EVENT_ID, filename, `seed-photo-${photoRows.length + 1}.jpg`,
+      photoId, EVENT_ID, filename, `seed-photo-${i + 1}.jpg`,
       'image/jpeg', stat.size,
       uploadedAt, '127.0.0.1',
       uploader.name, uploader.userId, null,
@@ -188,31 +249,37 @@ function seed() {
     photoRows.push({ photoId, uploadedAt, uploaderUserId: uploader.userId });
   }
 
-  console.log(`\n  Created ${photoRows.length} photos.`);
+  console.log(`  Created ${photoRows.length} photos.`);
 
-  // ── Add some likes ────────────────────────────────────────────────────────
-  const insertLike = db.prepare(`
-    INSERT OR IGNORE INTO photo_likes (photo_id, user_id, liked_at) VALUES (?, ?, ?)
-  `);
+  // ── Likes ─────────────────────────────────────────────────────────────────
+  const insertLike = db.prepare(
+    `INSERT OR IGNORE INTO photo_likes (photo_id, user_id, liked_at) VALUES (?, ?, ?)`
+  );
 
-  // Every user likes a random subset of photos from OTHER uploaders
   let likeCount = 0;
   for (const user of userRows) {
     const eligible = photoRows.filter((p) => p.uploaderUserId !== user.userId);
-    // Like roughly half
     for (const photo of eligible) {
       if (Math.random() < 0.45) {
-        insertLike.run(photo.photoId, user.userId, photo.uploadedAt + Math.floor(Math.random() * 600_000));
+        insertLike.run(
+          photo.photoId, user.userId,
+          photo.uploadedAt + Math.floor(Math.random() * 600_000),
+        );
         likeCount++;
       }
     }
   }
 
   console.log(`  Added ${likeCount} likes.`);
-  console.log('Done. Restart the server to see seeded data in the gallery.');
+  console.log('\nDone ✓  Refresh the app to see seeded data.');
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-if (RESET || CLEAR) clearSeedData();
-if (!CLEAR)         seed();
+(async () => {
+  if (RESET || CLEAR) clearSeedData();
+  if (!CLEAR) await seed();
+})().catch((err) => {
+  console.error('Seed failed:', err.message);
+  process.exit(1);
+});

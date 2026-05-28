@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "seed": "node seed.js",
     "seed:reset": "node seed.js --reset",
-    "seed:clear": "node seed.js --clear"
+    "seed:clear": "node seed.js --clear",
+    "seed:offline": "node seed.js --reset --offline"
   },
   "license": "ISC",
   "dependencies": {
