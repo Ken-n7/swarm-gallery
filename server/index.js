@@ -287,7 +287,12 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   const eventId = config.DEMO_EVENT_ID;
-  const userId = typeof socket.handshake.auth?.userId === 'string' ? socket.handshake.auth.userId : null;
+  const rawUserId = typeof socket.handshake.auth?.userId === 'string' ? socket.handshake.auth.userId : null;
+
+  // Validate userId against DB — stale localStorage from a previous server
+  // run would otherwise inflate the live count with phantom users.
+  const userExists = rawUserId ? !!db.prepare('SELECT 1 FROM users WHERE id = ?').get(rawUserId) : false;
+  const userId = userExists ? rawUserId : null;
 
   connectedSockets.set(socket.id, userId);
   if (userId) {
