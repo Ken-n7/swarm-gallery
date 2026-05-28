@@ -350,36 +350,52 @@ export function Gallery({
   return (
     <>
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-3 border-b bg-white sticky top-0 z-10" style={{ borderColor: 'var(--line)' }}>
+      <div
+        className="flex items-center gap-3 px-4 pt-5 pb-3 sticky top-0 z-10 relative overflow-hidden"
+        style={{
+          borderBottom: '1px solid rgba(124,58,237,.12)',
+          background: 'linear-gradient(135deg, rgba(124,58,237,.09) 0%, rgba(255,255,255,.88) 55%, rgba(45,224,255,.05) 100%)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+        }}
+      >
+        {/* Neon accent strip at top */}
+        <span
+          className="absolute top-0 left-0 right-0"
+          style={{ height: 2, background: 'var(--neon-gradient)', opacity: 0.7 }}
+        />
+
         {onOpenSidebar && (
-          <button onClick={onOpenSidebar} aria-label="Open event sidebar" className="w-8 h-8 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-[var(--ink-soft)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            onClick={onOpenSidebar}
+            aria-label="Open event sidebar"
+            className="w-8 h-8 flex items-center justify-center shrink-0 rounded-xl"
+            style={{ background: 'rgba(124,58,237,.09)' }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--violet)' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         )}
 
-        {/* Logo */}
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-black text-white text-sm"
-          style={{ background: 'var(--neon-gradient)', fontFamily: 'var(--font-paytone)' }}
-        >
-          S
-        </div>
-
-        <h1
-          className="flex-1 text-[var(--ink)] text-[17px] font-bold truncate"
-          style={{ fontFamily: 'var(--font-paytone)' }}
-        >
+        <h1 className="flex-1 text-[17px] font-bold truncate" style={{ fontFamily: 'var(--font-paytone)', color: 'var(--ink)' }}>
           {eventName}
         </h1>
 
         {userCount > 0 && (
           <div
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1 shrink-0 text-xs font-semibold"
-            style={{ background: 'var(--good-tint)', color: 'var(--good)' }}
+            style={{
+              background: 'rgba(220,252,231,.9)',
+              color: '#15803d',
+              border: '1px solid rgba(34,197,94,.2)',
+              boxShadow: '0 0 10px rgba(34,197,94,.18)',
+            }}
           >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--good)' }} />
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#22c55e', boxShadow: '0 0 5px #22c55e' }}
+            />
             Live · {userCount}
           </div>
         )}
@@ -388,16 +404,16 @@ export function Gallery({
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 px-4 py-3 overflow-x-auto bg-white">
+      <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ background: 'transparent' }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors"
+            className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={
               filter === f.key
-                ? { background: 'var(--ink)', color: '#fff', borderColor: 'var(--ink)' }
-                : { background: 'transparent', color: 'var(--ink-soft)', borderColor: 'var(--line)' }
+                ? { background: 'var(--violet)', color: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,.35)' }
+                : { background: 'rgba(255,255,255,.8)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }
             }
           >
             {f.label}
