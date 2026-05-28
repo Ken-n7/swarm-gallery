@@ -254,7 +254,7 @@ export function UploadPanel({ username, userId, photos, eventId = 'demo', compac
       )}
 
       {myPhotos.length === 0 && uploads.length === 0 && (
-        <div className="mt-auto rounded-2xl px-4 py-4" style={{ background: 'white', border: '1px solid var(--line)' }}>
+        <div className="mt-auto rounded-2xl px-4 py-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>No uploads from you yet</div>
           <p className="text-[11px] mt-1 leading-5" style={{ color: 'var(--muted)' }}>
             Start with a photo or video and use the Mine tab in the gallery to review your uploads.

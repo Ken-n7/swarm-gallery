@@ -71,36 +71,35 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
     <div
       className="flex flex-col min-h-screen items-center justify-center px-6 py-10"
       style={{
-        background:
-          'radial-gradient(circle at top, rgba(139,92,246,.14), transparent 36%), linear-gradient(180deg, #ffffff 0%, #f8f7ff 100%)',
+        background: 'radial-gradient(circle at top, rgba(139,92,246,.14), transparent 36%), var(--bg)',
       }}
     >
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center gap-5 rounded-[28px] px-6 py-7 border shadow-[0_24px_80px_rgba(15,23,42,.08)]"
-        style={{ background: 'rgba(255,255,255,.94)', borderColor: 'rgba(139,92,246,.12)', backdropFilter: 'blur(14px)' }}
+        style={{ background: 'var(--bg-soft)', borderColor: 'rgba(139,92,246,.18)', backdropFilter: 'blur(14px)' }}
       >
 
         {/* Event info */}
         <div className="text-center">
-          <p className="text-sm text-zinc-400 mb-1">Welcome to</p>
-          <h1 className="text-3xl font-black text-zinc-900 leading-tight">{eventName}</h1>
-          <p className="text-sm text-zinc-400 mt-1">Swarm Gallery · Offline event</p>
+          <p className="text-sm mb-1" style={{ color: 'var(--muted)' }}>Welcome to</p>
+          <h1 className="text-3xl font-black leading-tight" style={{ color: 'var(--ink)' }}>{eventName}</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Swarm Gallery · Offline event</p>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2">
           <div className="rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}>
             Fast local sharing
           </div>
-          <div className="rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: '#ecfeff', color: '#0f766e' }}>
+          <div className="rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>
             Privacy-first handoff
           </div>
         </div>
 
         {/* Guest count badge */}
         {guestCount !== undefined && guestCount > 0 && (
-          <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-4 py-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-            <span className="text-sm text-green-700 font-medium">{guestCount} guests already inside</span>
+          <div className="flex items-center gap-1.5 rounded-full px-4 py-1.5" style={{ background: 'var(--good-tint)', border: '1px solid rgba(34,197,94,.2)' }}>
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#22c55e' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--good)' }}>{guestCount} guests already inside</span>
           </div>
         )}
 
@@ -152,7 +151,8 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
               }}
               maxLength={32}
               required
-              className="w-full text-base text-zinc-900 outline-none bg-transparent placeholder:text-zinc-300"
+              className="w-full text-base outline-none bg-transparent"
+              style={{ color: 'var(--ink)' }}
             />
           </div>
 
@@ -168,7 +168,7 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
           </button>
         </form>
 
-        <p className="text-[12px] text-center leading-5 text-zinc-400">
+        <p className="text-[12px] text-center leading-5" style={{ color: 'var(--muted)' }}>
           Pick a nickname and you&apos;re in. Photos stay local to this event until handoff.
         </p>
       </div>

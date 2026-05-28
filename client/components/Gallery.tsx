@@ -6,6 +6,7 @@ import { Photo } from '@/types';
 import { photoUrl } from '@/lib/api';
 import { UserAvatar } from './UserAvatar';
 import { PhotoViewer } from './PhotoViewer';
+import { ThemeToggle } from './ThemeToggle';
 import { timeAgo } from '@/lib/time';
 
 export type GalleryFilter = 'all' | 'recent' | 'mine' | 'liked';
@@ -354,9 +355,10 @@ export function Gallery({
         className="flex items-center gap-3 px-4 pt-5 pb-3 sticky top-0 z-10 relative overflow-hidden"
         style={{
           borderBottom: '1px solid rgba(124,58,237,.12)',
-          background: 'linear-gradient(135deg, rgba(124,58,237,.09) 0%, rgba(255,255,255,.88) 55%, rgba(45,224,255,.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(124,58,237,.09) 0%, var(--bg) 55%, rgba(45,224,255,.05) 100%)',
           backdropFilter: 'blur(18px)',
           WebkitBackdropFilter: 'blur(18px)',
+          opacity: 0.97,
         }}
       >
         {/* Neon accent strip at top */}
@@ -386,8 +388,8 @@ export function Gallery({
           <div
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1 shrink-0 text-xs font-semibold"
             style={{
-              background: 'rgba(220,252,231,.9)',
-              color: '#15803d',
+              background: 'var(--good-tint)',
+              color: 'var(--good)',
               border: '1px solid rgba(34,197,94,.2)',
               boxShadow: '0 0 10px rgba(34,197,94,.18)',
             }}
@@ -400,6 +402,7 @@ export function Gallery({
           </div>
         )}
 
+        <ThemeToggle />
         <UserAvatar username={currentUser} avatarUrl={currentUserAvatarUrl} size="sm" />
       </div>
 
@@ -413,7 +416,7 @@ export function Gallery({
             style={
               filter === f.key
                 ? { background: 'var(--violet)', color: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,.35)' }
-                : { background: 'rgba(255,255,255,.8)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }
+                : { background: 'var(--bg-soft)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }
             }
           >
             {f.label}

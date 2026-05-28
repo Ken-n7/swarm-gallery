@@ -56,7 +56,7 @@ export function BottomNav({ eventId, onUploadTap, onSettingsTap, activeOverride 
       style={{
         height: 58,
         borderTop: '1px solid var(--line)',
-        background: 'rgba(255,255,255,.88)',
+        background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
       }}

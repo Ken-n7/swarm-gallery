@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind 4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --ink:        #121229;
   --ink-soft:   #4a4a6d;
@@ -25,6 +28,22 @@
   --neon-gradient: linear-gradient(135deg, #ff3da3 0%, #8b5cff 48%, #2de0ff 100%);
 
   --font-paytone: var(--font-paytone-src);
+}
+
+/* ── Dark mode ─────────────────────────────────────────────── */
+.dark {
+  --ink:          #e4e2f4;
+  --ink-soft:     #9e9cc0;
+  --muted:        #6a6890;
+  --line:         #252342;
+  --bg:           #0d0b1e;
+  --bg-soft:      #12102a;
+  --bg-deep:      #1a1836;
+
+  --violet-tint:  #1f1a40;
+  --pink-tint:    #27101e;
+  --good-tint:    #0a1f12;
+  --danger-tint:  #270d12;
 }
 
 @theme inline {
