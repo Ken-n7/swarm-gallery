@@ -5,7 +5,7 @@ const archiver = require('archiver');
 const config = require('../config');
 const db = require('../db');
 const { requireAdmin } = require('../middleware/auth');
-const { liveGuestCount } = require('../liveCount');
+const { liveGuestCount, connectedUserIds } = require('../liveCount');
 
 const router = express.Router();
 
