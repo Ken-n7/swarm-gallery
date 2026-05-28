@@ -193,6 +193,7 @@ router.get('/recent-photos', requireAdmin, (req, res) => {
 router.get('/recent-guests', requireAdmin, (req, res) => {
   const eventId = req.query.eventId || config.DEMO_EVENT_ID;
   const limit = parseInt(req.query.limit, 10) || 10;
+  const IDLE_MS = 15 * 60 * 1000; // 15 minutes without a socket = Idle
 
   const guests = db.prepare(`
     SELECT u.*, COUNT(p.id) as photo_count
@@ -204,14 +205,28 @@ router.get('/recent-guests', requireAdmin, (req, res) => {
     LIMIT ?
   `).all(eventId, limit);
 
-  res.json(guests.map((g) => ({
-    id: g.id,
-    username: g.username,
-    avatarUrl: g.avatar_filename ? `/avatars/${eventId}/${g.avatar_filename}` : null,
-    joinedAt: g.joined_at,
-    lastSeen: g.last_seen,
-    photoCount: g.photo_count,
-  })));
+  const now = Date.now();
+
+  res.json(guests.map((g) => {
+    let status;
+    if (connectedUserIds.has(g.id)) {
+      status = 'Active';
+    } else if (now - g.last_seen < IDLE_MS) {
+      status = 'Idle';
+    } else {
+      status = 'Left event';
+    }
+
+    return {
+      id: g.id,
+      username: g.username,
+      avatarUrl: g.avatar_filename ? `/avatars/${eventId}/${g.avatar_filename}` : null,
+      joinedAt: g.joined_at,
+      lastSeen: g.last_seen,
+      photoCount: g.photo_count,
+      status,
+    };
+  }));
 });
 
 router.get('/photos', requireAdmin, (req, res) => {

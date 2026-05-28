@@ -149,7 +149,6 @@ export function AdminDashboard() {
     );
   }
 
-  const guestStatuses: GuestStatus[] = ['Active', 'Active', 'Active', 'Active', 'Idle'];
   const topUploader = [...recentGuests].sort((a, b) => (b.photoCount || 0) - (a.photoCount || 0))[0];
   const hasActivity = (stats?.photoCount || 0) > 0 || (stats?.guestCount || 0) > 0;
 
@@ -227,7 +226,7 @@ export function AdminDashboard() {
               ))}
             </div>
             {recentGuests.map((guest, index) => {
-              const status = guestStatuses[index % guestStatuses.length];
+              const status = (guest.status as GuestStatus) ?? 'Left event';
               return (
                 <div key={guest.id} style={{ borderTop: '1px solid var(--line)' }}>
                   <div className="hidden xl:grid grid-cols-[1.9fr_1fr_.8fr_.9fr_.6fr] px-[18px] py-[11px] items-center">
