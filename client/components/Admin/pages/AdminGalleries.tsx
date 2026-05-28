@@ -418,58 +418,69 @@ export function AdminGalleries() {
       </div>
 
       {/* ── Sticky bulk selection bar ───────────────────────────── */}
-      {/*   Appears only when photos are selected.                  */}
-      {/*   Floats at bottom of the scroll container.               */}
+      {/*   Floats as a dark pill — appears only when selecting.    */}
       {selectedCount > 0 && (
-        <div
-          className="sticky bottom-0 z-10"
-          style={{ borderTop: '1px solid var(--line)', background: 'white' }}
-        >
+        <div className="sticky bottom-0 z-10 px-6 py-4 flex justify-center pointer-events-none">
+          <div
+            className="pointer-events-auto flex flex-wrap items-center gap-2 px-5 py-3 rounded-2xl"
+            style={{
+              background: 'var(--ink)',
+              boxShadow: '0 8px 32px rgba(18,18,41,.35), 0 2px 8px rgba(18,18,41,.2)',
+              animation: 'slide-up 0.18s ease-out',
+              maxWidth: 600,
+              width: '100%',
+            }}
+          >
           {confirmDelete === 'bulk' ? (
             /* Confirm state */
-            <div className="px-6 py-3 flex flex-wrap items-center gap-3">
-              <svg className="w-4 h-4 shrink-0" style={{ color: 'var(--danger)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <>
+              <svg className="w-4 h-4 shrink-0" style={{ color: '#f87171' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              <span className="text-[13px] font-semibold" style={{ color: 'var(--danger)' }}>
-                Permanently delete {selectedCount} photo{selectedCount === 1 ? '' : 's'}?
+              <span className="text-[13px] font-semibold text-white">
+                Delete {selectedCount} photo{selectedCount === 1 ? '' : 's'} permanently?
               </span>
+              <div className="flex-1" />
               <button
                 onClick={runDelete}
                 disabled={bulkRunning === 'delete'}
-                className="px-4 py-2 rounded-[9px] text-[13px] font-semibold text-white disabled:opacity-60"
-                style={{ background: 'var(--danger)' }}
+                className="px-4 py-1.5 rounded-[9px] text-[13px] font-semibold text-white disabled:opacity-60"
+                style={{ background: '#e05c5c' }}
               >
                 {bulkRunning === 'delete' ? 'Deleting…' : 'Confirm delete'}
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="text-[13px] font-semibold"
-                style={{ color: 'var(--muted)' }}
+                style={{ color: 'rgba(255,255,255,.45)' }}
               >
                 Cancel
               </button>
-            </div>
+            </>
           ) : (
             /* Normal selection state */
-            <div className="px-6 py-3 flex flex-wrap items-center gap-2">
-              {/* Selection count + select-all / clear */}
-              <span className="text-[13px] font-bold" style={{ color: 'var(--ink)' }}>
+            <>
+              {/* Count badge */}
+              <span
+                className="text-[12px] font-bold px-2.5 py-1 rounded-full"
+                style={{ background: 'rgba(139,92,255,.3)', color: '#c4b5fd' }}
+              >
                 {selectedCount} selected
               </span>
+
               <button
                 onClick={toggleSelectAll}
-                className="text-[12px] font-medium px-2.5 py-1 rounded-[7px]"
-                style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}
+                className="text-[12px] font-medium"
+                style={{ color: 'rgba(255,255,255,.5)' }}
               >
                 {allSelected ? 'Deselect all' : `Select all ${filtered.length}`}
               </button>
               <button
                 onClick={() => setSelectedPhotos(new Set())}
                 className="text-[12px] font-medium"
-                style={{ color: 'var(--muted)' }}
+                style={{ color: 'rgba(255,255,255,.35)' }}
               >
-                Clear
+                ✕ Clear
               </button>
 
               <div className="flex-1" />
@@ -479,7 +490,7 @@ export function AdminGalleries() {
                 onClick={runExport}
                 disabled={bulkRunning === 'export'}
                 className="px-4 py-2 rounded-[9px] text-[13px] font-semibold disabled:opacity-50"
-                style={{ background: 'var(--violet-tint)', color: 'var(--violet)' }}
+                style={{ background: 'rgba(139,92,255,.22)', color: '#c4b5fd' }}
               >
                 {bulkRunning === 'export' ? 'Exporting…' : 'Export ZIP'}
               </button>
@@ -487,12 +498,13 @@ export function AdminGalleries() {
                 onClick={() => setConfirmDelete('bulk')}
                 disabled={bulkRunning === 'delete'}
                 className="px-4 py-2 rounded-[9px] text-[13px] font-semibold disabled:opacity-50"
-                style={{ background: 'var(--danger-tint)', color: 'var(--danger)' }}
+                style={{ background: 'rgba(224,92,92,.18)', color: '#f87171' }}
               >
                 Delete
               </button>
-            </div>
+            </>
           )}
+          </div>
         </div>
       )}
     </div>
