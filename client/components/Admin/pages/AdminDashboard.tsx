@@ -2,21 +2,135 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { getAdminStats, getRecentGuests, getRecentPhotos, SERVER } from '@/lib/api';
-import { AdminImage, type AdminGuest, type AdminPhoto, type AdminStats, type GuestStatus, StatCard, StatusBadge } from '@/components/Admin/shared/AdminShared';
+import { getAdminStats, getNetworkInfo, getRecentGuests, getRecentPhotos, SERVER } from '@/lib/api';
+import { AdminImage, GuestAvatar, type AdminGuest, type AdminPhoto, type AdminStats, type GuestStatus, StatCard, StatusBadge } from '@/components/Admin/shared/AdminShared';
 
-function GuestAvatar({ guest, size }: { guest: AdminGuest; size: 'sm' | 'md' }) {
-  const cls = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-xs';
-  if (guest.avatarUrl) {
-    return (
-      <div className={`${cls} rounded-full overflow-hidden relative shrink-0`}>
-        <AdminImage src={guest.avatarUrl} alt={guest.username} sizes={size === 'sm' ? '28px' : '32px'} />
-      </div>
-    );
+type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error';
+
+function NetworkCard() {
+  const [ips, setIps] = useState<string[]>([]);
+  const [status, setStatus] = useState<SyncStatus>('syncing');
+  const [copied, setCopied] = useState(false);
+  const [log, setLog] = useState('Detecting network…');
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+
+  const guestUrl = ips[0] ? `http://${ips[0]}:3000/event/demo` : null;
+
+  function resync() {
+    setStatus('syncing');
+    setLog('Detecting network…');
+    getNetworkInfo()
+      .then(({ ips: detected }) => {
+        setLastChecked(new Date());
+        if (!detected.length) {
+          setStatus('error');
+          setLog('No network found. Connect to Wi-Fi or a router first.');
+        } else {
+          setIps(detected);
+          setStatus('ok');
+          setLog(`Network ready. Guest link is live.`);
+        }
+      })
+      .catch(() => {
+        setLastChecked(new Date());
+        setStatus('error');
+        setLog('Could not reach the server. Is it still running?');
+      });
   }
+
+  // Auto-scan on mount and every 10 seconds
+  useEffect(() => {
+    resync();
+    const id = window.setInterval(resync, 10_000);
+    return () => window.clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function copyLink() {
+    if (!guestUrl) return;
+    navigator.clipboard.writeText(guestUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const dotColor =
+    status === 'ok' ? 'var(--good)' :
+    status === 'error' ? 'var(--danger)' :
+    status === 'syncing' ? '#f59e0b' :
+    'var(--muted)';
+
   return (
-    <div className={`${cls} rounded-full flex items-center justify-center text-white font-bold shrink-0`} style={{ background: 'var(--neon-gradient)' }}>
-      {guest.username.charAt(0).toUpperCase()}
+    <div className="bg-white rounded-[14px] p-6 flex flex-col gap-4" style={{ border: '1px solid var(--line)' }}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Network</h3>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: dotColor, transition: 'background .3s' }} />
+          <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: dotColor }}>
+            {status === 'idle' ? 'Not checked' : status === 'syncing' ? 'Checking…' : status === 'ok' ? 'Connected' : 'Error'}
+          </span>
+        </div>
+      </div>
+
+      {/* Log message */}
+      <div className="rounded-[10px] px-4 py-3 text-[12px]" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)', minHeight: '48px' }}>
+        <p>{log}</p>
+        {lastChecked && (
+          <p className="mt-1 text-[10px]" style={{ color: 'var(--muted)' }}>
+            Last checked {lastChecked.toLocaleTimeString()}
+          </p>
+        )}
+      </div>
+
+      {/* Detected IPs */}
+      {ips.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {ips.map((ip) => (
+            <div key={ip} className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
+              <span className="text-[13px] font-mono" style={{ color: 'var(--ink)' }}>{ip}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Guest link + copy */}
+      {guestUrl && (
+        <div className="rounded-[10px] px-4 py-3" style={{ background: 'var(--bg-deep)' }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--muted)' }}>Guest link</p>
+          <p className="text-[12px] break-all" style={{ color: 'var(--ink-soft)' }}>{guestUrl}</p>
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={resync}
+          disabled={status === 'syncing'}
+          className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
+        >
+          <svg className={`w-4 h-4 ${status === 'syncing' ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {status === 'syncing' ? 'Checking…' : 'Refresh'}
+        </button>
+
+        {guestUrl && (
+          <button
+            onClick={copyLink}
+            className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2"
+            style={{ background: copied ? 'var(--good-tint)' : 'var(--bg-deep)', color: copied ? 'var(--good)' : 'var(--ink-soft)', border: '1px solid var(--line)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {copied
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              }
+            </svg>
+            {copied ? 'Copied!' : 'Copy link'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -162,8 +276,9 @@ export function AdminDashboard() {
           <StatCard title="Temp Storage" value="0 MB" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <QRCard />
+          <NetworkCard />
           <div className="rounded-[14px] p-8 bg-white flex flex-col items-center justify-center text-center" style={{ border: '1px solid var(--line)' }}>
             <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>Ready for guests</div>
             <div className="text-sm max-w-xs" style={{ color: 'var(--muted)' }}>
@@ -185,9 +300,10 @@ export function AdminDashboard() {
         <StatCard title="Temp Storage" value={`${stats?.storageUsed || 0} MB`} />
       </div>
 
-      {/* QR code + Recent Photos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* QR code + Network + Recent Photos */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <QRCard />
+        <NetworkCard />
 
         <div className="bg-white rounded-[14px] p-6" style={{ border: '1px solid var(--line)' }}>
           <div className="flex items-center justify-between mb-4">
