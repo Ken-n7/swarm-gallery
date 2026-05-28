@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Photo } from '@/types';
 import { GalleryFilter } from './Gallery';
 
@@ -14,7 +13,6 @@ interface Props {
   onOpenSettings?: () => void;
   onLeave: () => void;
   compact?: boolean;
-  // Portrait drawer mode
   open?: boolean;
   onClose?: () => void;
 }
@@ -60,20 +58,29 @@ function SidebarContent({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto" style={{ color: 'rgba(255,255,255,.85)' }}>
+    <div className="flex flex-col h-full overflow-y-auto">
+
       {/* Header */}
-      <div className={`flex items-center gap-3 ${compact ? 'px-3.5 pt-4 pb-3.5' : 'px-5 pt-5 pb-4'}`}>
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center font-black text-white shrink-0"
-          style={{ background: 'var(--neon-gradient)', fontFamily: 'var(--font-paytone)' }}
-        >
-          S
-        </div>
+      <div
+        className={`flex items-center gap-3 ${compact ? 'px-3.5 pt-5 pb-4' : 'px-5 pt-6 pb-5'}`}
+        style={{
+          background: 'linear-gradient(160deg, rgba(124,58,237,.35) 0%, transparent 70%)',
+          borderBottom: '1px solid rgba(255,255,255,.07)',
+        }}
+      >
+        <img
+          src="/logo-512.png"
+          alt="Swarm Gallery"
+          className="w-10 h-10 rounded-full object-cover shrink-0"
+          style={{ boxShadow: '0 0 0 2px rgba(124,58,237,.4), 0 4px 12px rgba(0,0,0,.3)' }}
+        />
         <div className="min-w-0">
           <p className="font-black text-white text-sm leading-tight" style={{ fontFamily: 'var(--font-paytone)' }}>
             Swarm
           </p>
-          {!compact && <p className="text-[11px]" style={{ color: 'rgba(255,255,255,.4)' }}>by K3DP Events</p>}
+          {!compact && (
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,.45)' }}>by K3DP Events</p>
+          )}
         </div>
         {onClose && (
           <button
@@ -89,44 +96,72 @@ function SidebarContent({
       </div>
 
       {/* Event info */}
-      <div className={`${compact ? 'px-3.5 pb-3.5' : 'px-4 lg:px-5 pb-4'}`} style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-        <div className="flex items-center gap-1.5 mb-1">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--good)' }} />
-          <span className="text-[11px] font-semibold" style={{ color: 'var(--good)' }}>Live</span>
+      <div
+        className={`${compact ? 'px-3.5 py-3' : 'px-5 py-4'}`}
+        style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}
+      >
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
+          />
+          <span className="text-[11px] font-bold tracking-wide" style={{ color: '#4ade80' }}>LIVE</span>
         </div>
-        <p className="text-white font-bold text-[15px]">Event Gallery</p>
-        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,.4)' }}>
-          {photos.length} {photos.length === 1 ? 'photo' : 'photos'}{userCount > 0 ? ` · ${userCount} here` : ''}
+        <p className="text-white font-bold text-[15px] leading-tight">Event Gallery</p>
+        <p className="text-[12px] mt-1 font-medium" style={{ color: 'rgba(255,255,255,.5)' }}>
+          <span style={{ color: 'rgba(167,139,250,.9)' }}>{photos.length}</span>
+          {' '}{photos.length === 1 ? 'photo' : 'photos'}
+          {userCount > 0 && (
+            <> · <span style={{ color: 'rgba(167,139,250,.9)' }}>{userCount}</span> here</>
+          )}
         </p>
       </div>
 
-      {/* Browse nav */}
-      <div className={`${compact ? 'px-2 py-2.5' : 'px-2.5 lg:px-3 py-3'}`} style={{ borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      {/* Nav */}
+      <div className={`${compact ? 'px-2 py-2' : 'px-2.5 py-3'} flex-1`}>
         {NAV.map((item) => {
           const active = filter === item.key;
           return (
             <button
               key={item.key}
               onClick={() => handleNav(item.key)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
-              style={active ? { background: 'rgba(139,92,255,.22)', color: 'var(--violet)' } : { color: 'rgba(255,255,255,.65)' }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all relative overflow-hidden"
+              style={
+                active
+                  ? { background: 'rgba(124,58,237,.28)', color: '#c4b5fd' }
+                  : { color: 'rgba(255,255,255,.55)' }
+              }
             >
-              {item.icon}
-              <span className={`${compact ? 'text-[13px]' : 'text-sm'} font-semibold`}>{compact ? item.label.replace(' Uploads', '').replace(' Arrivals', '') : item.label}</span>
+              {/* Left accent bar */}
               {active && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--violet)' }} />
+                <span
+                  className="absolute left-0 top-2 bottom-2 rounded-full"
+                  style={{ width: 3, background: 'var(--neon-gradient)' }}
+                />
               )}
+              {item.icon}
+              <span className={`${compact ? 'text-[13px]' : 'text-sm'} font-semibold`}>
+                {compact ? item.label.replace(' Uploads', '').replace(' Arrivals', '') : item.label}
+              </span>
             </button>
           );
         })}
       </div>
 
-      <div className={`${compact ? 'px-3.5 py-3.5' : 'px-4 lg:px-5 py-4'} mt-auto flex flex-col gap-2`} style={{ borderTop: '1px solid rgba(255,255,255,.08)' }}>
+      {/* Footer */}
+      <div
+        className={`${compact ? 'px-3.5 py-3.5' : 'px-4 py-4'} flex flex-col gap-2`}
+        style={{ borderTop: '1px solid rgba(255,255,255,.07)' }}
+      >
         {onOpenSettings && (
           <button
             onClick={() => { onOpenSettings(); onClose?.(); }}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-            style={{ background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.75)' }}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,58,237,.3), rgba(255,61,163,.18))',
+              color: '#e9d5ff',
+              border: '1px solid rgba(124,58,237,.3)',
+            }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -137,7 +172,7 @@ function SidebarContent({
         <button
           onClick={onLeave}
           className="w-full py-2 text-[12px] font-medium"
-          style={{ color: 'rgba(255,255,255,.3)' }}
+          style={{ color: 'rgba(255,255,255,.25)' }}
         >
           Leave event
         </button>
@@ -147,26 +182,23 @@ function SidebarContent({
 }
 
 export function Sidebar({ open, onClose, ...rest }: Props) {
-  // Landscape: always visible fixed column (caller controls via CSS/layout)
-  // Portrait: drawer overlay
+  const sidebarBg = 'linear-gradient(180deg, #1a0f3a 0%, #120d2a 40%, #0f0d1f 100%)';
+
   if (onClose !== undefined) {
-    // Portrait drawer mode
     return (
       <>
-        {/* Backdrop */}
         {open && (
           <div
             className="fixed inset-0 z-40"
-            style={{ background: 'rgba(18,18,41,.4)' }}
+            style={{ background: 'rgba(10,8,30,.55)', backdropFilter: 'blur(2px)' }}
             onClick={onClose}
           />
         )}
-        {/* Drawer */}
         <div
           className="fixed top-0 left-0 bottom-0 z-50 transition-transform duration-300"
           style={{
             width: 'min(288px, 82vw)',
-            background: 'var(--sidebar-bg)',
+            background: sidebarBg,
             transform: open ? 'translateX(0)' : 'translateX(-100%)',
           }}
         >
@@ -176,12 +208,11 @@ export function Sidebar({ open, onClose, ...rest }: Props) {
     );
   }
 
-  // Landscape fixed column
   return (
     <div
       className="h-full overflow-hidden shrink-0"
       style={{
-        background: 'var(--sidebar-bg)',
+        background: sidebarBg,
         width: rest.compact ? 'clamp(152px, 18vw, 188px)' : 'clamp(188px, 24vw, 248px)',
       }}
     >
