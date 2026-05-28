@@ -124,6 +124,13 @@ function mapPhotoRow(row, eventId) {
 }
 
 function mapGuestRow(row, eventId) {
+  const IDLE_MS = 15 * 60 * 1000;
+  const now = Date.now();
+  let status;
+  if (connectedUserIds.has(row.id)) status = 'Active';
+  else if (now - row.last_seen < IDLE_MS) status = 'Idle';
+  else status = 'Left event';
+
   return {
     id: row.id,
     username: row.username,
@@ -131,6 +138,7 @@ function mapGuestRow(row, eventId) {
     joinedAt: row.joined_at,
     lastSeen: row.last_seen,
     photoCount: row.photo_count,
+    status,
   };
 }
 
@@ -150,6 +158,18 @@ router.get('/logout', (_req, res) => {
 
 router.get('/me', requireAdmin, (_req, res) => {
   res.json({ admin: true });
+});
+
+router.get('/network', requireAdmin, (_req, res) => {
+  const { networkInterfaces } = require('os');
+  const nets = networkInterfaces();
+  const ips = [];
+  for (const iface of Object.values(nets)) {
+    for (const addr of iface) {
+      if (addr.family === 'IPv4' && !addr.internal) ips.push(addr.address);
+    }
+  }
+  res.json({ ips, port: config.PORT });
 });
 
 router.get('/stats', requireAdmin, (req, res) => {

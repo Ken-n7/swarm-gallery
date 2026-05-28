@@ -1,6 +1,11 @@
 import type { Photo } from '@/types';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+// Derive server URL from the browser's own hostname so the build works on
+// any network without rebuilding. Falls back to env / localhost for SSR.
+const SERVER =
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:4000`
+    : process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
 
 function adminFetch(input: string, init?: RequestInit) {
   return fetch(input, { ...init, credentials: 'include' });
@@ -13,6 +18,7 @@ export interface AdminGuestSummary {
   joinedAt: number;
   lastSeen: number;
   photoCount: number;
+  status?: 'Active' | 'Idle' | 'Left event';
 }
 
 export interface AdminEventSettingsResponse {
@@ -181,6 +187,12 @@ export async function checkAdmin(): Promise<{ admin: boolean }> {
   const res = await adminFetch(`${SERVER}/admin/me`, { method: 'GET' });
   if (res.status === 401) return { admin: false };
   if (!res.ok) throw new Error('Server error');
+  return res.json();
+}
+
+export async function getNetworkInfo(): Promise<{ ips: string[]; port: number }> {
+  const res = await adminFetch(`${SERVER}/admin/network`);
+  if (!res.ok) throw new Error('Failed to fetch network info');
   return res.json();
 }
 
