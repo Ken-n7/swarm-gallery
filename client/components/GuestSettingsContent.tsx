@@ -268,7 +268,7 @@ export function GuestSettingsContent({
   const photosSection = (
     <div className="flex flex-col gap-2">
       <SectionLabel>Your Photos</SectionLabel>
-      <div className="rounded-[14px]" style={{ border: '1px solid var(--line)', background: 'white' }}>
+      <div className="rounded-[14px]" style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}>
         <a
           href={user ? `${SERVER}/users/${user.userId}/album?eventId=${eventId}` : undefined}
           download="my-album.zip"
