@@ -157,8 +157,8 @@ export function AdminGalleries() {
             onClick={() => setFilter(opt.id)}
             className="px-3 py-1.5 rounded-full text-[12px] font-semibold"
             style={{
-              border: `1px solid ${filter === opt.id ? 'var(--ink)' : 'var(--line)'}`,
-              background: filter === opt.id ? 'var(--ink)' : 'var(--bg-soft)',
+              border: `1px solid ${filter === opt.id ? 'var(--violet)' : 'var(--line)'}`,
+              background: filter === opt.id ? 'var(--violet)' : 'var(--bg-soft)',
               color: filter === opt.id ? 'white' : 'var(--ink-soft)',
             }}
           >
@@ -174,7 +174,7 @@ export function AdminGalleries() {
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold"
-          style={{ background: 'var(--ink)', color: 'white' }}
+          style={{ background: 'var(--violet)', color: 'white' }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -300,7 +300,7 @@ export function AdminGalleries() {
                       <button
                         onClick={(e) => { e.stopPropagation(); setFocusedPhotoId(photo.id); }}
                         className="mt-1.5 px-2 py-0.5 rounded-[6px] text-[10px] font-semibold"
-                        style={{ background: 'rgba(255,255,255,.92)', color: 'var(--ink)' }}
+                        style={{ background: 'rgba(255,255,255,.15)', color: 'white', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,.25)' }}
                       >
                         Review
                       </button>
@@ -424,8 +424,9 @@ export function AdminGalleries() {
           <div
             className="pointer-events-auto flex flex-wrap items-center gap-2 px-5 py-3 rounded-2xl"
             style={{
-              background: 'var(--ink)',
-              boxShadow: '0 8px 32px rgba(18,18,41,.35), 0 2px 8px rgba(18,18,41,.2)',
+              background: '#0d0b20',
+              border: '1px solid rgba(255,255,255,.08)',
+              boxShadow: '0 8px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3)',
               animation: 'slide-up 0.18s ease-out',
               maxWidth: 600,
               width: '100%',
