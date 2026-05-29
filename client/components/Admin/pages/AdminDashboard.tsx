@@ -117,7 +117,7 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
       )}
 
       {/* Buttons */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-auto">
         <button
           onClick={resync}
           disabled={status === 'syncing'}
