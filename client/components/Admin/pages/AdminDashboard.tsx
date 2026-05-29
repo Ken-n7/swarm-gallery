@@ -7,7 +7,7 @@ import { AdminImage, GuestAvatar, type AdminGuest, type AdminPhoto, type AdminSt
 
 type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error';
 
-function NetworkCard() {
+function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) {
   const [ips, setIps] = useState<string[]>([]);
   const [status, setStatus] = useState<SyncStatus>('syncing');
   const [copied, setCopied] = useState(false);
@@ -29,6 +29,7 @@ function NetworkCard() {
           setIps(detected);
           setStatus('ok');
           setLog(`Network ready. Guest link is live.`);
+          if (detected[0]) onIpDetected?.(detected[0]);
         }
       })
       .catch(() => {
@@ -135,13 +136,11 @@ function NetworkCard() {
   );
 }
 
-function QRCard() {
-  const qrUrl = `${SERVER}/events/demo/qr`;
-  const [joinUrl, setJoinUrl] = useState('');
-
-  useEffect(() => {
-    setJoinUrl(`${window.location.origin}/event/demo`);
-  }, []);
+function QRCard({ liveIp }: { liveIp: string }) {
+  // Cache-bust the QR image whenever the detected IP changes.
+  // The server regenerates the QR from the live IP on every request.
+  const qrUrl = `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp || 'unknown')}`;
+  const joinUrl = liveIp ? `http://${liveIp}:3000/event/demo` : '';
 
   return (
     <div className="rounded-[14px] p-6 flex flex-col gap-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
@@ -154,22 +153,25 @@ function QRCard() {
 
       <div className="flex justify-center">
         <div className="relative w-44 h-44 rounded-[14px] overflow-hidden p-3 border" style={{ borderColor: 'var(--line)' }}>
-          <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
+          {liveIp
+            ? <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
+            : <div className="w-full h-full flex items-center justify-center text-[11px]" style={{ color: 'var(--muted)' }}>Detecting IP…</div>
+          }
         </div>
       </div>
 
       <div className="rounded-[10px] px-4 py-3 text-[12px] break-all" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--muted)' }}>Join link</p>
-        {joinUrl || 'Loading…'}
+        {joinUrl || 'Detecting network…'}
       </div>
 
       <a
-        href={qrUrl}
+        href={liveIp ? qrUrl : undefined}
         download="event-qr.png"
         target="_blank"
         rel="noreferrer"
         className="w-full py-2.5 rounded-[10px] text-[13px] font-semibold text-center flex items-center justify-center gap-2"
-        style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
+        style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)', opacity: liveIp ? 1 : 0.4, pointerEvents: liveIp ? 'auto' : 'none' }}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -186,6 +188,7 @@ export function AdminDashboard() {
   const [recentGuests, setRecentGuests] = useState<AdminGuest[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [liveIp, setLiveIp] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -277,8 +280,8 @@ export function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <QRCard />
-          <NetworkCard />
+          <QRCard liveIp={liveIp} />
+          <NetworkCard onIpDetected={setLiveIp} />
           <div className="rounded-[14px] p-8 flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>Ready for guests</div>
             <div className="text-sm max-w-xs" style={{ color: 'var(--muted)' }}>
@@ -302,7 +305,7 @@ export function AdminDashboard() {
 
       {/* QR code + Network + Recent Photos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <QRCard />
+        <QRCard liveIp={liveIp} />
         <NetworkCard />
 
         <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
