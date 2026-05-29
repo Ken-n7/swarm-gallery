@@ -9,7 +9,15 @@ const paytone = Paytone_One({ weight: '400', subsets: ['latin'], variable: '--fo
 export const metadata: Metadata = {
   title: 'Swarm Gallery',
   description: "Your event. Everyone's gallery.",
-  icons: { icon: '/favicon.ico' },
+  icons: { icon: '/favicon.ico', apple: '/logo-512.png' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Swarm',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
