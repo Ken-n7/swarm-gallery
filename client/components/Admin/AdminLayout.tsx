@@ -10,18 +10,19 @@ interface AdminLayoutProps {
   title: string;
   subtitle?: string;
   activeGuests?: number;
+  photoCount?: number;
   lastSyncedAt?: number | null;
   children: React.ReactNode;
 }
 
-export function AdminLayout({ currentPage, onPageChange, title, subtitle, activeGuests = 0, lastSyncedAt = null, children }: AdminLayoutProps) {
+export function AdminLayout({ currentPage, onPageChange, title, subtitle, activeGuests = 0, photoCount = 0, lastSyncedAt = null, children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
     <div className="h-screen flex" style={{ background: 'var(--bg-soft)' }}>
       {/* Desktop sidebar */}
       <div className="hidden lg:block w-64" style={{ borderRight: '1px solid var(--line)' }}>
-        <AdminSidebar currentPage={currentPage} onPageChange={onPageChange} />
+        <AdminSidebar currentPage={currentPage} onPageChange={onPageChange} photoCount={photoCount} activeGuests={activeGuests} />
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -33,6 +34,8 @@ export function AdminLayout({ currentPage, onPageChange, title, subtitle, active
               currentPage={currentPage}
               onPageChange={onPageChange}
               onClose={() => setSidebarOpen(false)}
+              photoCount={photoCount}
+              activeGuests={activeGuests}
             />
           </div>
         </div>

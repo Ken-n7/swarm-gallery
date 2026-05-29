@@ -50,9 +50,11 @@ interface AdminSidebarProps {
   currentPage: string;
   onPageChange: (page: string) => void;
   onClose?: () => void;
+  photoCount?: number;
+  activeGuests?: number;
 }
 
-export function AdminSidebar({ currentPage, onPageChange, onClose }: AdminSidebarProps) {
+export function AdminSidebar({ currentPage, onPageChange, onClose, photoCount = 0, activeGuests = 0 }: AdminSidebarProps) {
   return (
     <div className="w-full h-full text-white flex flex-col overflow-hidden" style={{ background: 'var(--sidebar-bg)' }}>
       {/* Brand */}
@@ -87,8 +89,12 @@ export function AdminSidebar({ currentPage, onPageChange, onClose }: AdminSideba
             <div className="text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: 'rgba(255,255,255,.4)' }}>Active Event</div>
             <div className="px-2 py-1 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(31,143,74,.18)', color: '#9fe0b5' }}>Live</div>
           </div>
-          <div className="text-sm text-white">Demo Event</div>
-          <div className="text-[11px]" style={{ color: 'rgba(255,255,255,.45)' }}>Guests uploading in real time</div>
+          <div className="text-sm text-white font-semibold">Demo Event</div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,.55)' }}>{photoCount} photo{photoCount !== 1 ? 's' : ''}</span>
+            <span style={{ color: 'rgba(255,255,255,.2)' }}>·</span>
+            <span className="text-[11px] font-medium" style={{ color: activeGuests > 0 ? '#9fe0b5' : 'rgba(255,255,255,.4)' }}>{activeGuests} active</span>
+          </div>
         </div>
       </div>
 
@@ -103,14 +109,16 @@ export function AdminSidebar({ currentPage, onPageChange, onClose }: AdminSideba
                   onPageChange(item.id);
                   onClose?.();
                 }}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                className={`relative w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors overflow-hidden ${
                   isActive ? 'text-white' : 'hover:text-white'
                 }`}
                 style={isActive ? { background: 'rgba(139,92,255,.18)', color: '#c8b5ff' } : { color: 'rgba(255,255,255,.52)' }}
               >
+                {isActive && (
+                  <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full" style={{ background: 'var(--neon-gradient)' }} />
+                )}
                 <span>{item.icon}</span>
                 <span className="text-sm font-medium">{item.label}</span>
-                {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--violet)' }} />}
               </button>
             </div>
           );

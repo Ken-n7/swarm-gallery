@@ -282,10 +282,10 @@ export function AdminDashboard() {
     return (
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Photos" value={0} />
-          <StatCard title="Total Guests" value={0} />
-          <StatCard title="Active Guests" value={0} />
-          <StatCard title="Temp Storage" value="0 MB" />
+          <StatCard title="Total Photos" value={0} accent="var(--violet)" icon={<svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>} />
+          <StatCard title="Total Guests" value={0} accent="#3b82f6" icon={<svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>} />
+          <StatCard title="Active Now" value={0} accent="var(--good)" icon={<span className="w-4 h-4 rounded-full block" style={{ background: 'var(--good)' }} />} />
+          <StatCard title="Temp Storage" value="0 MB" accent="#f59e0b" icon={<svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -302,14 +302,37 @@ export function AdminDashboard() {
     );
   }
 
+  const now = Date.now();
+  const newestGuestId = recentGuests.length > 0
+    ? [...recentGuests].sort((a, b) => b.joinedAt - a.joinedAt)[0]?.id
+    : null;
+
   return (
     <div className="p-6 space-y-6">
       {/* Stat cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Photos" value={stats?.photoCount || 0} />
-        <StatCard title="Total Guests" value={stats?.guestCount || 0} />
-        <StatCard title="Active Guests" value={stats?.activeGuests || 0} />
-        <StatCard title="Temp Storage" value={`${stats?.storageUsed || 0} MB`} />
+        <StatCard title="Total Photos" value={stats?.photoCount || 0} accent="var(--violet)" icon={
+          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+          </svg>
+        } />
+        <StatCard title="Total Guests" value={stats?.guestCount || 0} accent="#3b82f6" icon={
+          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+          </svg>
+        } />
+        <StatCard title="Active Now" value={stats?.activeGuests || 0} accent="var(--good)" icon={
+          <span className="relative flex w-4 h-4 items-center justify-center">
+            <span className="ping-ring absolute inline-flex w-3 h-3 rounded-full" style={{ background: 'var(--good)', opacity: .5 }} />
+            <span className="relative w-2.5 h-2.5 rounded-full" style={{ background: 'var(--good)' }} />
+          </span>
+        } />
+        <StatCard title="Temp Storage" value={`${stats?.storageUsed || 0} MB`} accent="#f59e0b" icon={
+          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+          </svg>
+        } />
       </div>
 
       {/* QR code + Network + Recent Photos */}
@@ -324,11 +347,16 @@ export function AdminDashboard() {
           </div>
           {recentPhotos.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
-              {recentPhotos.map((photo) => (
-                <div key={photo.id} className="relative aspect-square rounded-[12px] overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
+              {recentPhotos.map((photo) => {
+                const isNew = now - photo.uploadedAt < 2 * 60 * 1000;
+                return (
+                <div key={photo.id} className="relative aspect-square rounded-[12px] overflow-hidden" style={{ background: 'var(--bg-deep)', outline: isNew ? '2px solid var(--violet)' : 'none', outlineOffset: '-1px' }}>
                   <AdminImage src={photo.thumbUrl || photo.url} alt={`${photo.uploader} photo`} sizes="(max-width: 1024px) 33vw, 180px" />
+                  {isNew && (
+                    <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'var(--violet)', letterSpacing: '0.04em' }}>NEW</span>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
           ) : (
             <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
@@ -355,13 +383,17 @@ export function AdminDashboard() {
             </div>
             {recentGuests.map((guest, index) => {
               const status = (guest.status as GuestStatus) ?? 'Left event';
+              const isNewest = guest.id === newestGuestId;
               return (
-                <div key={guest.id} style={{ borderTop: '1px solid var(--line)' }}>
+                <div key={guest.id} style={{ borderTop: '1px solid var(--line)', background: isNewest ? 'color-mix(in srgb, var(--violet) 6%, transparent)' : undefined }}>
                   <div className="hidden xl:grid grid-cols-[1.9fr_1fr_.8fr_.9fr_.6fr] px-[18px] py-[11px] items-center">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <GuestAvatar guest={guest} size="sm" />
                       <div className="min-w-0">
-                        <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</span>
+                          {isNewest && <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'var(--violet)', color: 'white', letterSpacing: '0.04em' }}>NEW</span>}
+                        </div>
                         <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{index + 2}m ago</div>
                       </div>
                     </div>

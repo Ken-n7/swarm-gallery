@@ -101,6 +101,7 @@ export default function AdminPage() {
       title={getPageTitle(currentPage)}
       subtitle={getPageSubtitle(currentPage)}
       activeGuests={stats?.activeGuests || 0}
+      photoCount={stats?.photoCount || 0}
       lastSyncedAt={statsUpdatedAt}
     >
       {renderContent()}

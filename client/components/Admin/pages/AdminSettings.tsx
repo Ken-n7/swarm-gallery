@@ -329,9 +329,9 @@ export function AdminSettings() {
 
             {/* Danger Zone & Workflow Actions */}
             <div className="space-y-6">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-red-900 mb-2">⚠️ Danger Zone</h3>
-                <p className="text-sm text-red-700">After client handoff, event media should be removed from the system for privacy. These actions are irreversible.</p>
+              <div className="rounded-xl p-6" style={{ background: 'var(--danger-tint)', border: '1px solid rgba(224,92,92,.2)' }}>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--danger)' }}>⚠️ Danger Zone</h3>
+                <p className="text-sm" style={{ color: 'var(--danger)', opacity: .8 }}>After client handoff, event media should be removed from the system for privacy. These actions are irreversible.</p>
               </div>
 
               {/* Workflow Status */}
@@ -367,7 +367,7 @@ export function AdminSettings() {
                   <div>
                     <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Mark Handoff Complete</h4>
                     <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Record that client delivery is finished and the event is ready for media deletion.</p>
-                    {!canMarkComplete && <p className="text-xs text-amber-700 mt-2">Prepare the client handoff package first so this step follows a clear export trail.</p>}
+                    {!canMarkComplete && <p className="text-xs mt-2" style={{ color: "#b45309" }}>Prepare the client handoff package first so this step follows a clear export trail.</p>}
                   </div>
                   <button onClick={() => runAction('markComplete')} disabled={!canMarkComplete || actionState.markComplete === 'running' || workflow.eventClosed} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50">
                     {actionState.markComplete === 'running' ? 'Marking...' : workflow.handoffCompleted ? 'Handoff Complete' : 'Mark Complete'}
@@ -378,19 +378,19 @@ export function AdminSettings() {
                   <div>
                     <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Delete Event Media</h4>
                     <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Remove all uploaded photos and videos from the system after successful client handoff.</p>
-                    {!canDeleteMedia && <p className="text-xs text-amber-700 mt-2">Locked until client handoff is marked complete.</p>}
+                    {!canDeleteMedia && <p className="text-xs mt-2" style={{ color: "#b45309" }}>Locked until client handoff is marked complete.</p>}
                   </div>
                   <div className="space-y-2">
                     <button onClick={() => setConfirmAction(confirmAction === 'deleteMedia' ? null : 'deleteMedia')} disabled={!canDeleteMedia || actionState.deleteMedia === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
                       {actionState.deleteMedia === 'running' ? 'Deleting...' : workflow.mediaDeleted ? 'Media Deleted' : 'Delete Media'}
                     </button>
                     {confirmAction === 'deleteMedia' && canDeleteMedia && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
-                        <div className="text-sm font-semibold text-red-900">Delete all event media?</div>
-                        <div className="text-sm text-red-700">This is irreversible and should only happen after the client has received the final handoff package.</div>
+                      <div className="rounded-lg p-4 space-y-3 max-w-sm" style={{ border: '1px solid rgba(224,92,92,.2)', background: 'var(--danger-tint)' }}>
+                        <div className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Delete all event media?</div>
+                        <div className="text-sm" style={{ color: 'var(--danger)', opacity: .8 }}>This is irreversible and should only happen after the client has received the final handoff package.</div>
                         <div className="flex flex-wrap gap-2">
-                          <button onClick={() => runAction('deleteMedia')} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold">Confirm Delete</button>
-                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
+                          <button onClick={() => runAction('deleteMedia')} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: 'var(--danger)' }}>Confirm Delete</button>
+                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ border: '1px solid rgba(224,92,92,.2)', color: 'var(--danger)' }}>Cancel</button>
                         </div>
                       </div>
                     )}
@@ -401,19 +401,19 @@ export function AdminSettings() {
                   <div>
                     <h4 className="font-semibold" style={{ color: 'var(--ink)' }}>Delete Event Record</h4>
                     <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Remove remaining guest metadata and close out the event once media has been deleted.</p>
-                    {!canDeleteEvent && <p className="text-xs text-amber-700 mt-2">Locked until event media has been deleted.</p>}
+                    {!canDeleteEvent && <p className="text-xs mt-2" style={{ color: "#b45309" }}>Locked until event media has been deleted.</p>}
                   </div>
                   <div className="space-y-2">
                     <button onClick={() => setConfirmAction(confirmAction === 'deleteEvent' ? null : 'deleteEvent')} disabled={!canDeleteEvent || actionState.deleteEvent === 'running' || workflow.eventClosed} className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 disabled:opacity-50">
                       {actionState.deleteEvent === 'running' ? 'Closing...' : workflow.eventClosed ? 'Event Closed' : 'Delete Event'}
                     </button>
                     {confirmAction === 'deleteEvent' && canDeleteEvent && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3 max-w-sm">
-                        <div className="text-sm font-semibold text-red-900">Delete the event record?</div>
-                        <div className="text-sm text-red-700">Use this only after media is deleted and the event is fully handed off. Guest metadata and event record will be closed out.</div>
+                      <div className="rounded-lg p-4 space-y-3 max-w-sm" style={{ border: '1px solid rgba(224,92,92,.2)', background: 'var(--danger-tint)' }}>
+                        <div className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Delete the event record?</div>
+                        <div className="text-sm" style={{ color: 'var(--danger)', opacity: .8 }}>Use this only after media is deleted and the event is fully handed off. Guest metadata and event record will be closed out.</div>
                         <div className="flex flex-wrap gap-2">
-                          <button onClick={() => runAction('deleteEvent')} className="px-4 py-2 rounded-lg bg-red-700 text-white text-sm font-semibold">Confirm Closeout</button>
-                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg border border-red-200 text-red-700 text-sm font-semibold">Cancel</button>
+                          <button onClick={() => runAction('deleteEvent')} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: 'var(--danger)' }}>Confirm Closeout</button>
+                          <button onClick={() => setConfirmAction(null)} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ border: '1px solid rgba(224,92,92,.2)', color: 'var(--danger)' }}>Cancel</button>
                         </div>
                       </div>
                     )}

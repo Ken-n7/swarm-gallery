@@ -34,8 +34,11 @@ export function AdminTopBar({ title, subtitle, onMenu, activeGuests = 0, lastSyn
         {subtitle && <div className="text-[12px]" style={{ color: 'var(--muted)' }}>{subtitle}</div>}
       </div>
       <div className="px-3 py-1.5 rounded-full text-xs font-semibold leading-tight shrink-0" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>
-        <div>
-          <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle" style={{ background: 'var(--good)' }} />
+        <div className="flex items-center gap-1.5">
+          <span className="relative inline-flex w-2 h-2 shrink-0">
+            <span className="ping-ring absolute inline-flex w-full h-full rounded-full" style={{ background: 'var(--good)', opacity: .6 }} />
+            <span className="relative inline-flex w-2 h-2 rounded-full" style={{ background: 'var(--good)' }} />
+          </span>
           Live · {activeGuests} guests
         </div>
         {lastSyncedLabel ? (

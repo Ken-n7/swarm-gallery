@@ -92,11 +92,28 @@ export function AdminImage({
   );
 }
 
-export function StatCard({ title, value }: { title: string; value: string | number }) {
+export function StatCard({
+  title, value, icon, accent = 'var(--violet)',
+}: {
+  title: string;
+  value: string | number;
+  icon?: React.ReactNode;
+  accent?: string;
+}) {
   return (
-    <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
-      <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--muted)' }}>{title}</div>
-      <div className="text-2xl" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>{value}</div>
+    <div className="rounded-[14px] p-5 flex flex-col gap-3" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+      {icon && (
+        <div
+          className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+          style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}
+        >
+          <span style={{ color: accent }}>{icon}</span>
+        </div>
+      )}
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1" style={{ color: 'var(--muted)' }}>{title}</div>
+        <div key={String(value)} className="text-[28px] leading-none stat-pop" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>{value}</div>
+      </div>
     </div>
   );
 }

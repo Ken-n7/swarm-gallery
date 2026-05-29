@@ -290,22 +290,32 @@ export function AdminGuests() {
           )}
         </div>
 
-        <div className="rounded-[16px] px-4 py-4 xl:min-h-[520px]" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Live Stats</div>
-            <div className="text-[11px]" style={{ color: 'var(--muted)' }}>Guest overview</div>
-          </div>
-          {[
-            ['Total joined', String(enrichedGuests.length)],
-            ['Active now', String(enrichedGuests.filter((g) => g.status === 'Active').length)],
-            ['Avg photos', (enrichedGuests.reduce((sum, g) => sum + g.photoCount, 0) / totalGuests).toFixed(1)],
-            ['Left event', String(enrichedGuests.filter((g) => g.status === 'Left event').length)],
-          ].map(([label, value]) => (
-            <div key={label} className="mb-3">
-              <div className="text-[20px] font-bold" style={{ color: 'var(--ink)' }}>{value}</div>
-              <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{label}</div>
-            </div>
-          ))}
+        <div className="rounded-[16px] px-4 py-4 xl:min-h-[520px] flex flex-col gap-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--muted)' }}>Live Stats</div>
+          {(() => {
+            const total = Math.max(enrichedGuests.length, 1);
+            const activeCount = enrichedGuests.filter((g) => g.status === 'Active').length;
+            const leftCount = enrichedGuests.filter((g) => g.status === 'Left event').length;
+            const avgPhotos = enrichedGuests.reduce((sum, g) => sum + g.photoCount, 0) / total;
+            const maxPhotos = Math.max(...enrichedGuests.map((g) => g.photoCount), 1);
+            const rows: [string, string | number, number, string][] = [
+              ['Total joined', enrichedGuests.length, enrichedGuests.length / Math.max(enrichedGuests.length, 1), 'var(--violet)'],
+              ['Active now', activeCount, activeCount / total, 'var(--good)'],
+              ['Left event', leftCount, leftCount / total, 'var(--muted)'],
+              ['Avg photos', avgPhotos.toFixed(1), avgPhotos / maxPhotos, '#f59e0b'],
+            ];
+            return rows.map(([label, value, ratio, color]) => (
+              <div key={label}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-[11px]" style={{ color: 'var(--muted)' }}>{label}</span>
+                  <span key={String(value)} className="text-[20px] font-bold stat-pop" style={{ color: 'var(--ink)', fontFamily: 'var(--font-paytone)' }}>{value}</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(ratio * 100, 100)}%`, background: color }} />
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
     </div>
