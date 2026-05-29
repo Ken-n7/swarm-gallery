@@ -1,143 +1,145 @@
 @echo off
 title Swarm Gallery
 cd /d "%~dp0"
-setlocal EnableDelayedExpansion
+setlocal
 
-echo.
-echo  ============================================================
-echo    Swarm Gallery  ^|  K3DP Events
-echo  ============================================================
-echo.
+set TOOLS=%~dp0tools
 
-:: ─── Node.js ─────────────────────────────────────────────────────────────────
+:: Header
+powershell -NoProfile -Command ^
+  "Write-Host '';" ^
+  "Write-Host ' ================================================================' -ForegroundColor DarkCyan;" ^
+  "Write-Host '   Swarm Gallery  |  K3DP Events' -ForegroundColor Cyan;" ^
+  "Write-Host ' ================================================================' -ForegroundColor DarkCyan;" ^
+  "Write-Host ''"
+
+:: Node.js check
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-  echo  [ERROR] Node.js is not installed.
-  echo          Run setup.bat first.
-  echo.
-  pause & exit /b 1
+    powershell -NoProfile -Command "Write-Host '  [!]  Node.js not found. Run setup.bat first.' -ForegroundColor Red"
+    echo.
+    pause & exit /b 1
 )
+for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
+powershell -NoProfile -Command "Write-Host '  [+]  Node.js %NODE_VER%' -ForegroundColor Green"
 
-:: ─── First-run check ─────────────────────────────────────────────────────────
-:: If deps or config are missing, run setup and skip the rebuild below
-:: (setup.bat already builds the client as its final step).
-set SKIP_BUILD=0
+:: Logs folder
+if not exist "logs" mkdir logs
 
+:: First-run check
 if not exist "server\node_modules" goto :needs_setup
 if not exist "server\.env"         goto :needs_setup
 if not exist "client\node_modules" goto :needs_setup
 if not exist "client\.next"        goto :needs_setup
-goto :build
 
-:needs_setup
-echo  First run — launching setup...
+powershell -NoProfile -Command "Write-Host '  [+]  Dependencies ready' -ForegroundColor Green"
 echo.
-call setup.bat
-if %errorlevel% neq 0 exit /b 1
-set SKIP_BUILD=1
 goto :launch
 
-:: ─── Rebuild client ───────────────────────────────────────────────────────────
-:: Always rebuild on subsequent starts so code changes are picked up.
-:build
-if %SKIP_BUILD%==1 goto :launch
-
-echo  Building client  ^(picking up any changes^)...
-cd client
-call npm run build
+:needs_setup
+powershell -NoProfile -Command "Write-Host '  First run - running setup...' -ForegroundColor Yellow"
+echo.
+call setup.bat
 if %errorlevel% neq 0 (
-  echo.
-  echo  [ERROR] Build failed. Check output above.
-  pause & exit /b 1
+    powershell -NoProfile -Command "Write-Host '  [!]  Setup failed. Check output above.' -ForegroundColor Red"
+    echo.
+    pause >nul
+    exit /b 1
 )
-cd ..
-echo  Build complete.
-echo.
+goto :launch
 
-:: ─── Launch server ────────────────────────────────────────────────────────────
 :launch
-echo  Starting server...
-start "Swarm Gallery - Server" cmd /k ^
-  "title Swarm Gallery - Server && cd /d "%~dp0server" && node index.js"
 
-:: Wait for server to accept connections on port 4000 (max 30 s)
-set /a TRIES=0
-:wait_server
-set /a TRIES+=1
-powershell -NoProfile -Command ^
-  "try { $null = (New-Object Net.Sockets.TcpClient).Connect('127.0.0.1',4000); exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 goto :server_ready
-if %TRIES% GEQ 30 (
-  echo  [ERROR] Server did not start within 30 seconds.
-  echo          Check the Server window for errors.
-  pause & exit /b 1
+:: [1/2] Server
+powershell -NoProfile -Command "Write-Host '  [1/2]  Server' -ForegroundColor DarkCyan"
+
+powershell -NoProfile -File "%TOOLS%\kill-port.ps1" -Port 4000
+
+powershell -NoProfile -Command "Write-Host '   ~    Launching server...' -ForegroundColor DarkGray"
+powershell -NoProfile -File "%TOOLS%\launch.ps1" -Bin "index.js" -Dir "%~dp0server" -StdOut "%~dp0logs\server.log" -StdErr "%~dp0logs\server-err.log" -PidFile "%TEMP%\swarm-server.pid"
+set /p SERVER_PID=<"%TEMP%\swarm-server.pid"
+del "%TEMP%\swarm-server.pid" >nul 2>&1
+
+if not defined SERVER_PID (
+    powershell -NoProfile -Command "Write-Host '   [!]  Server process failed to launch.' -ForegroundColor Red"
+    echo.
+    pause & exit /b 1
 )
-timeout /t 1 /nobreak >nul
-goto :wait_server
 
-:server_ready
-echo  Server ready.
+powershell -NoProfile -File "%TOOLS%\wait-port.ps1" -Msg "Server (pid %SERVER_PID%)" -Port 4000 -MaxWait 30
+if %errorlevel% neq 0 (
+    powershell -NoProfile -Command "Write-Host '   [!]  Server did not come up - last log lines:' -ForegroundColor Red"
+    powershell -NoProfile -Command "if(Test-Path 'logs\server-err.log'){Get-Content 'logs\server-err.log' | Select-Object -Last 10 | ForEach-Object { Write-Host '        '$_ -ForegroundColor DarkGray }}"
+    echo.
+    pause & exit /b 1
+)
+
+:: [2/2] Client
+powershell -NoProfile -Command "Write-Host '  [2/2]  Client' -ForegroundColor DarkCyan"
+
+powershell -NoProfile -File "%TOOLS%\kill-port.ps1" -Port 3000
+
+powershell -NoProfile -Command "Write-Host '   ~    Launching client...' -ForegroundColor DarkGray"
+powershell -NoProfile -File "%TOOLS%\launch.ps1" -Bin "node_modules\next\dist\bin\next start" -Dir "%~dp0client" -StdOut "%~dp0logs\client.log" -StdErr "%~dp0logs\client-err.log" -PidFile "%TEMP%\swarm-client.pid"
+set /p CLIENT_PID=<"%TEMP%\swarm-client.pid"
+del "%TEMP%\swarm-client.pid" >nul 2>&1
+
+if not defined CLIENT_PID (
+    powershell -NoProfile -Command "Write-Host '   [!]  Client process failed to launch.' -ForegroundColor Red"
+    echo.
+    pause & exit /b 1
+)
+
+powershell -NoProfile -File "%TOOLS%\wait-port.ps1" -Msg "Client (pid %CLIENT_PID%)" -Port 3000 -MaxWait 30
+if %errorlevel% neq 0 (
+    powershell -NoProfile -Command "Write-Host '   [!]  Client did not come up - last log lines:' -ForegroundColor Red"
+    powershell -NoProfile -Command "if(Test-Path 'logs\client-err.log'){Get-Content 'logs\client-err.log' | Select-Object -Last 10 | ForEach-Object { Write-Host '        '$_ -ForegroundColor DarkGray }}"
+    echo.
+    pause & exit /b 1
+)
+
 echo.
 
-:: ─── Launch client ────────────────────────────────────────────────────────────
-echo  Starting client...
-start "Swarm Gallery - Client" cmd /k ^
-  "title Swarm Gallery - Client && cd /d "%~dp0client" && npm start"
-
-:: Wait for client to accept connections on port 3000 (max 30 s)
-set /a TRIES=0
-:wait_client
-set /a TRIES+=1
-powershell -NoProfile -Command ^
-  "try { $null = (New-Object Net.Sockets.TcpClient).Connect('127.0.0.1',3000); exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 goto :client_ready
-if %TRIES% GEQ 30 (
-  echo  [ERROR] Client did not start within 30 seconds.
-  echo          Check the Client window for errors.
-  pause & exit /b 1
-)
-timeout /t 1 /nobreak >nul
-goto :wait_client
-
-:client_ready
-echo  Client ready.
-echo.
-
-:: ─── Detect admin password ────────────────────────────────────────────────────
+:: Detect admin password
 set ADMIN_PW=admin123
 for /f "tokens=2 delims==" %%p in ('findstr /i "ADMIN_PASSWORD" server\.env 2^>nul') do set ADMIN_PW=%%p
 
-:: ─── Detect guest URL ────────────────────────────────────────────────────────
-:: Ask the running server which IP it prefers (hotspot-first logic in server/utils/qr.js).
-:: Falls back to "check the Network card in the admin panel" if the API isn't ready.
+:: Detect guest URL
 set GUEST_URL=http://localhost:3000/event/demo
-for /f "tokens=*" %%u in ('powershell -NoProfile -Command ^
-  "try { $r=(Invoke-RestMethod http://localhost:4000/admin/network -ErrorAction Stop 2>$null); if($r.liveIp){\"http://$($r.liveIp):3000/event/demo\"}else{\"\"} } catch { \"\" }"') do (
+for /f "tokens=*" %%u in ('powershell -NoProfile -File "%TOOLS%\get-guest-url.ps1"') do (
   if not "%%u"=="" set GUEST_URL=%%u
 )
 
-:: ─── Open admin panel ─────────────────────────────────────────────────────────
+:: Open admin panel
 start "" "http://localhost:3000/admin"
 
-:: ─── Ready ────────────────────────────────────────────────────────────────────
-echo  ============================================================
-echo    Ready!
-echo.
-echo    Admin panel   ^>  http://localhost:3000/admin
-echo    Password      ^>  %ADMIN_PW%
-echo.
-echo    Guest link    ^>  %GUEST_URL%
-echo    ^(Share this URL or the QR code from the admin panel^)
-echo.
-echo    Press any key to shut everything down.
-echo  ============================================================
-echo.
-pause >nul
+:: Ready screen
+powershell -NoProfile -Command ^
+  "Write-Host ' ================================================================' -ForegroundColor DarkCyan;" ^
+  "Write-Host '   Ready!' -ForegroundColor Cyan;" ^
+  "Write-Host '';" ^
+  "Write-Host '   Admin panel  ' -ForegroundColor DarkGray -NoNewline; Write-Host 'http://localhost:3000/admin' -ForegroundColor White;" ^
+  "Write-Host '   Password     ' -ForegroundColor DarkGray -NoNewline; Write-Host '%ADMIN_PW%' -ForegroundColor Yellow;" ^
+  "Write-Host '';" ^
+  "Write-Host '   Guest link   ' -ForegroundColor DarkGray -NoNewline; Write-Host '%GUEST_URL%' -ForegroundColor White;" ^
+  "Write-Host '   (Share this URL or the QR code from the admin panel)' -ForegroundColor DarkGray;" ^
+  "Write-Host '';" ^
+  "Write-Host '   Logs  >  logs\server.log   logs\client.log' -ForegroundColor DarkGray;" ^
+  "Write-Host '';" ^
+  "Write-Host '   Type  stop  and press Enter to shut everything down.' -ForegroundColor DarkGray;" ^
+  "Write-Host ' ================================================================' -ForegroundColor DarkCyan;" ^
+  "Write-Host ''"
 
-:: ─── Shutdown ─────────────────────────────────────────────────────────────────
+:wait_stop
+set /p "_INPUT=> "
+if /i "%_INPUT%"=="stop" goto :shutdown
+powershell -NoProfile -Command "Write-Host '  Type  stop  and press Enter to shut down.' -ForegroundColor DarkGray"
+goto :wait_stop
+
+:shutdown
 echo.
-echo  Stopping...
-taskkill /fi "WindowTitle eq Swarm Gallery - Server*" /t /f >nul 2>&1
-taskkill /fi "WindowTitle eq Swarm Gallery - Client*" /t /f >nul 2>&1
-echo  Stopped. Safe to close this window.
+powershell -NoProfile -Command "Write-Host '  Stopping...' -ForegroundColor Yellow"
+if defined SERVER_PID taskkill /pid %SERVER_PID% /t /f >nul 2>&1
+if defined CLIENT_PID taskkill /pid %CLIENT_PID% /t /f >nul 2>&1
+powershell -NoProfile -Command "Write-Host '  [+]  Stopped. Safe to close this window.' -ForegroundColor Green"
 endlocal

@@ -96,8 +96,8 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
         )}
       </div>
 
-      {/* Detected IPs */}
-      {ips.length > 0 && (
+      {/* Detected IPs — only show the list when there are multiple */}
+      {ips.length > 1 && (
         <div className="flex flex-col gap-1.5">
           {ips.map((ip) => (
             <div key={ip} className="flex items-center gap-2">
