@@ -169,7 +169,7 @@ export function AdminGuests() {
                 onClick={() => setFilter(label)}
                 className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
                 style={{
-                  background: filter === label ? 'var(--ink)' : 'transparent',
+                  background: filter === label ? 'var(--violet)' : 'transparent',
                   color: filter === label ? '#fff' : 'var(--muted)',
                   outline: filter === label ? 'none' : '1px solid var(--line)',
                 }}

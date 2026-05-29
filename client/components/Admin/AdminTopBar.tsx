@@ -1,5 +1,7 @@
 'use client';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 interface AdminTopBarProps {
   title: string;
   subtitle?: string;
@@ -46,6 +48,7 @@ export function AdminTopBar({ title, subtitle, onMenu, activeGuests = 0, lastSyn
           </div>
         )}
       </div>
+      <ThemeToggle />
       <img src="/logo-512.png" alt="Swarm Gallery" className="w-9 h-9 rounded-full object-cover shrink-0" />
     </div>
   );

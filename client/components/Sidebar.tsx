@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Photo } from '@/types';
 import { GalleryFilter } from './Gallery';
 
@@ -48,9 +49,27 @@ const NAV: { key: GalleryFilter; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
+function StatPill({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="flex flex-col items-center px-3 py-2 rounded-xl flex-1" style={{ background: 'rgba(255,255,255,.06)' }}>
+      <span className="text-[17px] font-black leading-none" style={{ color: '#c4b5fd' }}>{value}</span>
+      <span className="text-[10px] mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,.38)' }}>{label}</span>
+    </div>
+  );
+}
+
 function SidebarContent({
   username, userCount, photos, filter, onFilterChange, onOpenSettings, onLeave, onClose, compact = false,
 }: Omit<Props, 'open'>) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const myPhotos = photos.filter((p) => p.uploader === username).length;
+  const newPhotos = photos.filter((p) => now - p.uploadedAt < 5 * 60 * 1000).length;
 
   function handleNav(f: GalleryFilter) {
     onFilterChange(f);
@@ -95,26 +114,25 @@ function SidebarContent({
         )}
       </div>
 
-      {/* Event info */}
+      {/* Event info + Stats */}
       <div
-        className={`${compact ? 'px-3.5 py-3' : 'px-5 py-4'}`}
+        className={`${compact ? 'px-3.5 py-3' : 'px-4 py-4'}`}
         style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}
       >
-        <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 mb-2">
           <span
             className="w-2 h-2 rounded-full"
             style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
           />
           <span className="text-[11px] font-bold tracking-wide" style={{ color: '#4ade80' }}>LIVE</span>
         </div>
-        <p className="text-white font-bold text-[15px] leading-tight">Event Gallery</p>
-        <p className="text-[12px] mt-1 font-medium" style={{ color: 'rgba(255,255,255,.5)' }}>
-          <span style={{ color: 'rgba(167,139,250,.9)' }}>{photos.length}</span>
-          {' '}{photos.length === 1 ? 'photo' : 'photos'}
-          {userCount > 0 && (
-            <> · <span style={{ color: 'rgba(167,139,250,.9)' }}>{userCount}</span> here</>
-          )}
-        </p>
+        <p className="text-white font-bold text-[14px] leading-tight mb-3">Event Gallery</p>
+        <div className="flex gap-2">
+          <StatPill value={photos.length} label="Photos" />
+          <StatPill value={userCount || '—'} label="Guests" />
+          <StatPill value={myPhotos} label="Mine" />
+          {!compact && <StatPill value={newPhotos > 0 ? `+${newPhotos}` : '—'} label="New" />}
+        </div>
       </div>
 
       {/* Nav */}
