@@ -190,7 +190,7 @@ export async function checkAdmin(): Promise<{ admin: boolean }> {
   return res.json();
 }
 
-export async function getNetworkInfo(): Promise<{ ips: string[]; port: number }> {
+export async function getNetworkInfo(): Promise<{ ips: string[]; liveIp: string | null; port: number }> {
   const res = await adminFetch(`${SERVER}/admin/network`);
   if (!res.ok) throw new Error('Failed to fetch network info');
   return res.json();

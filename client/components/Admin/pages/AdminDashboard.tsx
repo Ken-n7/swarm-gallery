@@ -136,10 +136,20 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
   );
 }
 
-function QRCard({ liveIp }: { liveIp: string }) {
-  // The server reads the live IP on every request, so the image loads
-  // immediately. liveIp is only used as a cache-bust key so the browser
-  // re-fetches when the hotspot IP actually changes.
+function QRCard() {
+  const [liveIp, setLiveIp] = useState('');
+
+  useEffect(() => {
+    function refresh() {
+      getNetworkInfo()
+        .then(({ liveIp: ip }) => { if (ip) setLiveIp(ip); })
+        .catch(() => {});
+    }
+    refresh();
+    const id = window.setInterval(refresh, 10_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const qrSrc = liveIp
     ? `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp)}`
     : `${SERVER}/events/demo/qr`;
@@ -188,7 +198,6 @@ export function AdminDashboard() {
   const [recentGuests, setRecentGuests] = useState<AdminGuest[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [liveIp, setLiveIp] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -280,8 +289,8 @@ export function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <QRCard liveIp={liveIp} />
-          <NetworkCard onIpDetected={setLiveIp} />
+          <QRCard />
+          <NetworkCard />
           <div className="rounded-[14px] p-8 flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>Ready for guests</div>
             <div className="text-sm max-w-xs" style={{ color: 'var(--muted)' }}>
@@ -305,7 +314,7 @@ export function AdminDashboard() {
 
       {/* QR code + Network + Recent Photos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <QRCard liveIp={liveIp} />
+        <QRCard />
         <NetworkCard />
 
         <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>

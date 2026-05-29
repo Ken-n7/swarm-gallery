@@ -161,6 +161,7 @@ router.get('/me', requireAdmin, (_req, res) => {
 });
 
 router.get('/network', requireAdmin, (_req, res) => {
+  const { getLiveIp } = require('../utils/qr');
   const { networkInterfaces } = require('os');
   const nets = networkInterfaces();
   const ips = [];
@@ -169,7 +170,7 @@ router.get('/network', requireAdmin, (_req, res) => {
       if (addr.family === 'IPv4' && !addr.internal) ips.push(addr.address);
     }
   }
-  res.json({ ips, port: config.PORT });
+  res.json({ ips, liveIp: getLiveIp() || ips[0] || null, port: config.PORT });
 });
 
 router.get('/stats', requireAdmin, (req, res) => {
