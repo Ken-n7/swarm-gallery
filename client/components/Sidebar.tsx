@@ -127,11 +127,11 @@ function SidebarContent({
           <span className="text-[11px] font-bold tracking-wide" style={{ color: '#4ade80' }}>LIVE</span>
         </div>
         <p className="text-white font-bold text-[14px] leading-tight mb-3">Event Gallery</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
           <StatPill value={photos.length} label="Photos" />
           <StatPill value={userCount || '—'} label="Guests" />
           <StatPill value={myPhotos} label="Mine" />
-          {!compact && <StatPill value={newPhotos > 0 ? `+${newPhotos}` : '—'} label="New" />}
+          <StatPill value={newPhotos > 0 ? `+${newPhotos}` : '—'} label="New" />
         </div>
       </div>
 
