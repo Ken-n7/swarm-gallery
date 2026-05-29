@@ -223,8 +223,8 @@ function QRNetworkCard() {
 
       {/* QR code */}
       <div className="flex justify-center">
-        <div className="relative w-44 h-44 rounded-[14px] overflow-hidden p-3 border" style={{ borderColor: 'var(--line)' }}>
-          <Image src={qrSrc} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
+        <div className="relative w-56 h-56 rounded-[14px] overflow-hidden p-3 border" style={{ borderColor: 'var(--line)' }}>
+          <Image src={qrSrc} alt="Event QR code" fill unoptimized sizes="224px" className="object-contain p-2" />
         </div>
       </div>
 
@@ -238,8 +238,8 @@ function QRNetworkCard() {
         )}
       </div>
 
-      {/* Guest link — flex-1 fills remaining height */}
-      <div className="rounded-[10px] px-4 py-4 flex-1 flex flex-col justify-between" style={{ background: 'var(--bg-deep)', border: '1px solid var(--line)' }}>
+      {/* Guest link */}
+      <div className="rounded-[10px] px-4 py-4 flex flex-col gap-3" style={{ background: 'var(--bg-deep)', border: '1px solid var(--line)' }}>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--muted)' }}>Guest Link</p>
           <p className="text-[13px] font-mono break-all leading-relaxed" style={{ color: guestUrl ? 'var(--ink)' : 'var(--muted)' }}>
@@ -247,7 +247,7 @@ function QRNetworkCard() {
           </p>
         </div>
         {ips.length > 0 && (
-          <div className="flex items-center gap-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="flex items-center gap-1.5 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
             <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
               {ips[0]}{ips.length > 1 ? ` +${ips.length - 1} more` : ''}
@@ -294,7 +294,7 @@ function QRNetworkCard() {
                 : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               }
             </svg>
-            Copy
+            {copied ? 'Copied!' : 'Copy link'}
           </button>
         )}
       </div>
