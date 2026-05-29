@@ -3,22 +3,12 @@ title Swarm Gallery - Installer
 setlocal EnableDelayedExpansion
 chcp 65001 >nul 2>&1
 
-:: ═══════════════════════════════════════════════════════════════════
-::  SWARM GALLERY  |  Installer
-::  Run this once. Everything else is handled automatically.
-:: ═══════════════════════════════════════════════════════════════════
-
 set REPO_URL=https://github.com/Ken-n7/swarm-gallery/archive/refs/heads/main.zip
 set INSTALL_DIR=C:\swarm-gallery
 set NODE_VER=22.11.0
 set NODE_MIN=18
-set LOG_FILE=%TEMP%\swarm-install.log
 
-:: ─── Step 0: Self-elevate to admin ───────────────────────────────────────────
-::
-:: Many steps (Node.js install, writing to C:\) need admin rights.
-:: If we are not admin yet, relaunch ourselves elevated and exit.
-::
+:: ─── Self-elevate to admin ────────────────────────────────────────────────────
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     cls
@@ -27,10 +17,9 @@ if %errorlevel% neq 0 (
     echo    Swarm Gallery Installer
     echo  ============================================================
     echo.
-    echo  This installer needs administrator permission to continue.
-    echo  A Windows security prompt will appear — click YES to allow.
+    echo  A Windows security prompt will appear.
+    echo  Click YES to allow the installer to continue.
     echo.
-    pause
     powershell -NoProfile -Command ^
       "Start-Process -FilePath cmd.exe -ArgumentList '/c ""%~f0""' -Verb RunAs -Wait"
     exit /b
@@ -40,40 +29,28 @@ cls
 echo.
 echo  ============================================================
 echo    Swarm Gallery  ^|  K3DP Events
-echo    Installer  v1.0
+echo    Installer
 echo  ============================================================
 echo.
-echo  This will install Swarm Gallery on this computer.
-echo  It takes about 2-5 minutes depending on your internet speed.
-echo.
-echo  Press any key to begin, or close this window to cancel.
-pause >nul
+echo  Starting setup — this takes about 3-5 minutes.
+echo  You do not need to do anything until it finishes.
 echo.
 
-:: ─── Step 1: Internet check ───────────────────────────────────────────────────
-call :print_step "Checking internet connection..."
+:: ─── Internet check ───────────────────────────────────────────────────────────
+call :step "Checking internet connection..."
 powershell -NoProfile -Command ^
-  "try { (New-Object Net.WebClient).DownloadString('http://www.msftconnecttest.com/connecttest.txt') | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+  "try{(New-Object Net.WebClient).DownloadString('http://www.msftconnecttest.com/connecttest.txt')|Out-Null;exit 0}catch{exit 1}" >nul 2>&1
 if %errorlevel% neq 0 (
-    call :print_error "No internet connection detected."
-    echo.
-    echo   Please connect to Wi-Fi or a network cable, then
-    echo   double-click this installer again.
-    echo.
-    call :wait_exit
+    call :fail "No internet connection detected." ^
+               "Connect to Wi-Fi or a network cable, then run this installer again."
 )
-call :print_ok "Connected."
+call :ok "Connected."
 
-:: ─── Step 2: Node.js ─────────────────────────────────────────────────────────
-call :print_step "Checking for Node.js..."
+:: ─── Node.js check / install ──────────────────────────────────────────────────
+call :step "Checking for Node.js..."
 
-:: Detect architecture
 if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-    if "%PROCESSOR_ARCHITEW6432%"=="" (
-        set NODE_ARCH=x86
-    ) else (
-        set NODE_ARCH=x64
-    )
+    if "%PROCESSOR_ARCHITEW6432%"=="" (set NODE_ARCH=x86) else (set NODE_ARCH=x64)
 ) else (
     set NODE_ARCH=x64
 )
@@ -82,234 +59,173 @@ set NODE_MSI=%TEMP%\node-installer.msi
 
 where node >nul 2>&1
 if %errorlevel% neq 0 goto :install_node
-
-:: Node found — check version
 for /f "tokens=2 delims=v." %%M in ('node -v 2^>nul') do set NODE_MAJOR=%%M
 if not defined NODE_MAJOR goto :install_node
 if %NODE_MAJOR% LSS %NODE_MIN% goto :install_node
-call :print_ok "Node.js found ^(v%NODE_MAJOR%.x^). OK."
+call :ok "Node.js found."
 goto :after_node
 
 :install_node
-call :print_step "Node.js not found — downloading installer..."
-echo.
-echo   This may take a minute. Please wait.
-echo.
+call :step "Node.js not found — downloading (this may take a minute)..."
+call :download_file "%NODE_URL%" "%NODE_MSI%" "Node.js installer"
 
-:: Download Node.js MSI with retry
-set DOWNLOAD_OK=0
-for /l %%t in (1,1,3) do (
-    if !DOWNLOAD_OK!==0 (
-        powershell -NoProfile -Command ^
-          "try { $wc=New-Object Net.WebClient; $wc.DownloadFile('%NODE_URL%','%NODE_MSI%'); exit 0 } catch { exit 1 }" >nul 2>&1
-        if !errorlevel!==0 set DOWNLOAD_OK=1
-    )
-)
-if %DOWNLOAD_OK%==0 (
-    call :print_error "Failed to download Node.js after 3 attempts."
-    echo.
-    echo   Check your internet connection and try again.
-    echo   If the problem persists, manually install Node.js from:
-    echo   https://nodejs.org
-    echo.
-    call :wait_exit
-)
-
-call :print_step "Installing Node.js silently (this takes 1-2 minutes)..."
+call :step "Installing Node.js..."
 msiexec /i "%NODE_MSI%" /qn /norestart >nul 2>&1
 del "%NODE_MSI%" >nul 2>&1
 
-:: Refresh PATH from registry so node is available in this session
+:: Refresh PATH from registry so node is usable in this session
 for /f "tokens=2,*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul') do set "SYS_PATH=%%b"
 if defined SYS_PATH set "PATH=%SYS_PATH%;%PATH%"
 
-:: Verify install worked
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-    call :print_error "Node.js installation failed."
-    echo.
-    echo   Please install Node.js manually from https://nodejs.org
-    echo   then run this installer again.
-    echo.
-    call :wait_exit
+    call :fail "Node.js installation did not complete." ^
+               "Please install it manually from https://nodejs.org then run this installer again."
 )
-call :print_ok "Node.js installed successfully."
+call :ok "Node.js installed."
 
 :after_node
 
-:: ─── Step 3: Handle existing installation ────────────────────────────────────
+:: ─── Handle existing installation ────────────────────────────────────────────
 if not exist "%INSTALL_DIR%" goto :download
 
 echo.
 echo  ──────────────────────────────────────────────────────────────
-echo    Swarm Gallery is already installed on this computer.
+echo    Swarm Gallery is already installed.
 echo  ──────────────────────────────────────────────────────────────
 echo.
-echo    1  Update to the latest version  ^(keeps your settings^)
-echo    2  Reinstall from scratch        ^(resets everything^)
+echo    1  Update to the latest version  ^(your password is kept^)
+echo    2  Reinstall from scratch
 echo    3  Exit
 echo.
-set CHOICE=
-set /p CHOICE="  Your choice (1/2/3): "
+:choice_loop
+set /p CHOICE="  Type 1, 2, or 3 and press Enter: "
 if "%CHOICE%"=="1" goto :update_mode
 if "%CHOICE%"=="2" goto :clean_install
 if "%CHOICE%"=="3" exit /b 0
-echo  Invalid choice. Please type 1, 2, or 3.
-goto :already_installed_menu
+echo    Please type 1, 2, or 3.
+goto :choice_loop
 
 :update_mode
-:: Preserve server\.env so password and cookie secret survive
 set PRESERVE_ENV=1
-echo.
-echo  Backing up your settings...
-if exist "%INSTALL_DIR%\server\.env" (
-    copy /y "%INSTALL_DIR%\server\.env" "%TEMP%\swarm_env_backup.txt" >nul 2>&1
-)
+call :step "Saving your settings..."
+if exist "%INSTALL_DIR%\server\.env" copy /y "%INSTALL_DIR%\server\.env" "%TEMP%\swarm_env_bak.txt" >nul 2>&1
+call :ok "Settings saved."
 goto :download
 
 :clean_install
 set PRESERVE_ENV=0
-echo.
-call :print_step "Removing previous installation..."
+call :step "Removing previous installation..."
 rd /s /q "%INSTALL_DIR%" >nul 2>&1
-call :print_ok "Removed."
+call :ok "Removed."
 goto :download
 
+:: ─── Download repo ────────────────────────────────────────────────────────────
 :download
-
-:: ─── Step 4: Download repo ────────────────────────────────────────────────────
 echo.
-call :print_step "Downloading Swarm Gallery..."
+call :step "Downloading Swarm Gallery..."
 set ZIP=%TEMP%\swarm-gallery.zip
-set EXTRACT_TEMP=%TEMP%\swarm-gallery-extract
-
-:: Remove any previous partial download
+set XTMP=%TEMP%\swarm-gallery-extract
 del /f /q "%ZIP%" >nul 2>&1
-rd /s /q "%EXTRACT_TEMP%" >nul 2>&1
+rd /s /q "%XTMP%" >nul 2>&1
 
-:: Download with retry (3 attempts)
-set DOWNLOAD_OK=0
-for /l %%t in (1,1,3) do (
-    if !DOWNLOAD_OK!==0 (
-        powershell -NoProfile -Command ^
-          "try { $wc=New-Object Net.WebClient; $wc.DownloadFile('%REPO_URL%','%ZIP%'); exit 0 } catch { exit 1 }" >nul 2>&1
-        if !errorlevel!==0 (
-            set DOWNLOAD_OK=1
-        ) else (
-            echo   Attempt %%t failed. Retrying...
-            timeout /t 3 /nobreak >nul
-        )
-    )
-)
-if %DOWNLOAD_OK%==0 (
-    call :print_error "Could not download Swarm Gallery."
-    echo.
-    echo   Please check your internet connection and try again.
-    echo   If this keeps happening, contact support.
-    echo.
-    call :wait_exit
-)
-call :print_ok "Downloaded."
+call :download_file "%REPO_URL%" "%ZIP%" "Swarm Gallery"
+call :ok "Downloaded."
 
-:: ─── Step 5: Extract ─────────────────────────────────────────────────────────
-call :print_step "Extracting files..."
-
+:: ─── Extract ─────────────────────────────────────────────────────────────────
+call :step "Unpacking files..."
 powershell -NoProfile -Command ^
-  "Expand-Archive -LiteralPath '%ZIP%' -DestinationPath '%EXTRACT_TEMP%' -Force" >nul 2>&1
+  "Expand-Archive -LiteralPath '%ZIP%' -DestinationPath '%XTMP%' -Force" >nul 2>&1
 if %errorlevel% neq 0 (
-    call :print_error "Failed to extract the download."
-    echo.
-    echo   The downloaded file may be corrupt. Try running this
-    echo   installer again. If the problem continues, contact support.
-    echo.
     del /f /q "%ZIP%" >nul 2>&1
-    call :wait_exit
+    call :fail "Could not unpack the download." ^
+               "The file may be corrupt. Run the installer again."
 )
-
-:: GitHub ZIP extracts to a subfolder named "swarm-gallery-main"
-:: Move its contents to the install directory
 if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%" >nul 2>&1
-robocopy "%EXTRACT_TEMP%\swarm-gallery-main" "%INSTALL_DIR%" /e /is /it /njh /njs /ndl /nc /ns >nul 2>&1
-
-:: Cleanup temp files
-rd /s /q "%EXTRACT_TEMP%" >nul 2>&1
+robocopy "%XTMP%\swarm-gallery-main" "%INSTALL_DIR%" /e /is /it /njh /njs /ndl /nc /ns >nul 2>&1
+rd /s /q "%XTMP%" >nul 2>&1
 del /f /q "%ZIP%" >nul 2>&1
 
-:: Restore server\.env if this was an update
 if "%PRESERVE_ENV%"=="1" (
-    if exist "%TEMP%\swarm_env_backup.txt" (
-        copy /y "%TEMP%\swarm_env_backup.txt" "%INSTALL_DIR%\server\.env" >nul 2>&1
-        del /f /q "%TEMP%\swarm_env_backup.txt" >nul 2>&1
-        call :print_ok "Settings restored."
+    if exist "%TEMP%\swarm_env_bak.txt" (
+        copy /y "%TEMP%\swarm_env_bak.txt" "%INSTALL_DIR%\server\.env" >nul 2>&1
+        del /f /q "%TEMP%\swarm_env_bak.txt" >nul 2>&1
     )
 )
+call :ok "Files ready."
 
-call :print_ok "Files ready."
-
-:: ─── Step 6: Run setup ────────────────────────────────────────────────────────
+:: ─── Run setup ────────────────────────────────────────────────────────────────
 echo.
-echo  ──────────────────────────────────────────────────────────────
-echo    Installing dependencies and building the app...
-echo    This is the longest step — about 2-3 minutes.
-echo    You will see a lot of text. That is normal.
-echo  ──────────────────────────────────────────────────────────────
+echo  Setting up the app — the next few steps take 2-3 minutes.
+echo  You will see some technical output. That is normal.
 echo.
-pause
-
 cd /d "%INSTALL_DIR%"
 call setup.bat
 if %errorlevel% neq 0 (
-    echo.
-    call :print_error "Setup did not complete successfully."
-    echo.
-    echo   See the output above for details.
-    echo   Try running this installer again.
-    echo   If the problem continues, contact support.
-    echo.
-    call :wait_exit
+    call :fail "Setup did not complete." ^
+               "Try running the installer again. If it keeps failing, contact support."
 )
 
 :: ─── Done ─────────────────────────────────────────────────────────────────────
 cls
 echo.
 echo  ============================================================
-echo    Installation complete!
+echo    All done!
 echo.
-echo    Swarm Gallery is installed at:
-echo      %INSTALL_DIR%
+echo    Double-click  "Swarm Gallery"  on your Desktop to start.
 echo.
-echo    To start the app:
-echo      Double-click  "Swarm Gallery"  on your Desktop
-echo.
-echo    You will NOT need to run this installer again.
-echo    To update in the future, run  update.bat  inside the
-echo    installed folder, or run this installer again.
+echo    You will not need to run this installer again.
+echo    To update later, run  update.bat  inside  C:\swarm-gallery
 echo  ============================================================
 echo.
 pause
 exit /b 0
 
-:: ═══════════════════════════════════════════════════════════════════
+:: ═════════════════════════════════════════════════════════════════════
 ::  Helpers
-:: ═══════════════════════════════════════════════════════════════════
+:: ═════════════════════════════════════════════════════════════════════
 
-:print_step
+:step
 echo.
-echo  ^> %~1
+echo  ...  %~1
 goto :eof
 
-:print_ok
-echo    [OK] %~1
+:ok
+echo    OK   %~1
 goto :eof
 
-:print_error
+:fail
 echo.
 echo  ============================================================
-echo    ERROR: %~1
+echo    Something went wrong:
+echo    %~1
+if not "%~2"=="" echo.
+if not "%~2"=="" echo    %~2
 echo  ============================================================
-goto :eof
-
-:wait_exit
-echo  Press any key to close this window.
+echo.
+echo  Press any key to close.
 pause >nul
 exit /b 1
+
+:download_file
+:: %1 = URL, %2 = dest path, %3 = friendly name
+set _DL_OK=0
+for /l %%t in (1,1,3) do (
+    if !_DL_OK!==0 (
+        powershell -NoProfile -Command ^
+          "try{$wc=New-Object Net.WebClient;$wc.DownloadFile('%~1','%~2');exit 0}catch{exit 1}" >nul 2>&1
+        if !errorlevel!==0 (
+            set _DL_OK=1
+        ) else (
+            if %%t LSS 3 (
+                echo    Download attempt %%t failed — retrying...
+                timeout /t 4 /nobreak >nul
+            )
+        )
+    )
+)
+if %_DL_OK%==0 (
+    call :fail "Could not download %~3 after 3 attempts." ^
+               "Check your internet connection and try again."
+)
+goto :eof
