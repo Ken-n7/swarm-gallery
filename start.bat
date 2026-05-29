@@ -28,8 +28,19 @@ echo.
 call setup.bat
 if %errorlevel% neq 0 exit /b 1
 
-:: ─── Launch ───────────────────────────────────────────────────────
+:: ─── Build client ─────────────────────────────────────────────────
 :launch
+echo  Building client (picking up latest changes)...
+cd client
+call npm run build
+if %errorlevel% neq 0 (
+  echo  ERROR: Build failed. Check output above.
+  pause & exit /b 1
+)
+cd ..
+echo.
+
+:: ─── Launch ───────────────────────────────────────────────────────
 echo  Starting server...
 start "Swarm Gallery - Server" cmd /k "title Swarm Gallery - Server && cd /d "%~dp0server" && node index.js"
 timeout /t 3 /nobreak >nul

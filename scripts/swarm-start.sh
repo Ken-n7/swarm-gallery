@@ -45,12 +45,11 @@ if [[ ! -d "$ROOT_DIR/client/node_modules" ]]; then
   (cd "$ROOT_DIR/client" && npm install)
 fi
 
-# ── First-run build ───────────────────────────────────────────────────
-if [[ ! -d "$ROOT_DIR/client/.next" ]]; then
-  echo "Building client (first run — takes ~1 min)..."
-  (cd "$ROOT_DIR/client" && npm run build) >"$LOG_DIR/client-build.log" 2>&1
-  echo "Build complete."
-fi
+# ── Build client (always, so code changes are picked up on every start) ──
+echo "Building client..."
+(cd "$ROOT_DIR/client" && npm run build) >"$LOG_DIR/client-build.log" 2>&1 \
+  && echo "Build complete." \
+  || { echo "Build failed. Check $LOG_DIR/client-build.log"; exit 1; }
 
 # ── Launch ────────────────────────────────────────────────────────────
 echo "Starting server..."
