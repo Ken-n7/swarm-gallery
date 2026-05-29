@@ -86,38 +86,36 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
         </div>
       </div>
 
-      {/* Log message */}
-      <div className="rounded-[10px] px-4 py-3 text-[12px]" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)', minHeight: '48px' }}>
+      {/* Status log */}
+      <div className="rounded-[10px] px-4 py-3 text-[12px]" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}>
         <p>{log}</p>
         {lastChecked && (
-          <p className="mt-1 text-[10px]" style={{ color: 'var(--muted)' }}>
+          <p className="mt-0.5 text-[10px]" style={{ color: 'var(--muted)' }}>
             Last checked {lastChecked.toLocaleTimeString()}
           </p>
         )}
       </div>
 
-      {/* Detected IPs */}
-      {ips.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          {ips.map((ip) => (
-            <div key={ip} className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
-              <span className="text-[13px] font-mono" style={{ color: 'var(--ink)' }}>{ip}</span>
-            </div>
-          ))}
+      {/* Guest link — flex-1 so it absorbs the card's extra height */}
+      <div className="rounded-[10px] px-4 py-4 flex-1 flex flex-col justify-between" style={{ background: 'var(--bg-deep)', border: '1px solid var(--line)' }}>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--muted)' }}>Guest Link</p>
+          <p className="text-[13px] font-mono break-all leading-relaxed" style={{ color: guestUrl ? 'var(--ink)' : 'var(--muted)' }}>
+            {guestUrl ?? 'Detecting…'}
+          </p>
         </div>
-      )}
-
-      {/* Guest link + copy */}
-      {guestUrl && (
-        <div className="rounded-[10px] px-4 py-3" style={{ background: 'var(--bg-deep)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--muted)' }}>Guest link</p>
-          <p className="text-[12px] break-all" style={{ color: 'var(--ink-soft)' }}>{guestUrl}</p>
-        </div>
-      )}
+        {ips.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+              {ips[0]}{ips.length > 1 ? ` +${ips.length - 1} more` : ''}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Buttons */}
-      <div className="flex gap-2 mt-auto">
+      <div className="flex gap-2">
         <button
           onClick={resync}
           disabled={status === 'syncing'}
