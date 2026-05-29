@@ -148,58 +148,156 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
   );
 }
 
-function QRCard() {
+function QRNetworkCard() {
   const [liveIp, setLiveIp] = useState('');
+  const [ips, setIps] = useState<string[]>([]);
+  const [status, setStatus] = useState<SyncStatus>('syncing');
+  const [log, setLog] = useState('Detecting network…');
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    function refresh() {
-      getNetworkInfo()
-        .then(({ liveIp: ip }) => { if (ip) setLiveIp(ip); })
-        .catch(() => {});
-    }
-    refresh();
-    const id = window.setInterval(refresh, 10_000);
-    return () => window.clearInterval(id);
-  }, []);
-
+  const guestUrl = liveIp ? `http://${liveIp}:3000/event/demo` : null;
   const qrSrc = liveIp
     ? `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp)}`
     : `${SERVER}/events/demo/qr`;
-  const joinUrl = liveIp ? `http://${liveIp}:3000/event/demo` : null;
+
+  function resync() {
+    setStatus('syncing');
+    getNetworkInfo()
+      .then(({ ips: detected, liveIp: ip }) => {
+        setLastChecked(new Date());
+        if (!detected.length) {
+          setStatus('error');
+          setLog('No network found. Connect to Wi-Fi or a router first.');
+        } else {
+          setIps(detected);
+          setLiveIp(ip ?? '');
+          setStatus('ok');
+          setLog('Network ready. Guest link is live.');
+        }
+      })
+      .catch(() => {
+        setLastChecked(new Date());
+        setStatus('error');
+        setLog('Could not reach the server. Is it still running?');
+      });
+  }
+
+  useEffect(() => {
+    resync();
+    const id = window.setInterval(resync, 10_000);
+    return () => window.clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function copyLink() {
+    if (!guestUrl) return;
+    navigator.clipboard.writeText(guestUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const dotColor =
+    status === 'ok' ? 'var(--good)' :
+    status === 'error' ? 'var(--danger)' :
+    status === 'syncing' ? '#f59e0b' :
+    'var(--muted)';
 
   return (
-    <div className="rounded-[14px] p-6 flex flex-col gap-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+    <div className="rounded-[14px] p-6 flex flex-col gap-4" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Event QR Code</h3>
-        <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>
-          Accepting guests
-        </span>
+        <div className="flex items-center gap-3">
+          <h3 className="text-[17px] font-semibold" style={{ color: 'var(--ink)' }}>Event</h3>
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: 'var(--good-tint)', color: 'var(--good)' }}>
+            Accepting guests
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: dotColor, transition: 'background .3s' }} />
+          <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: dotColor }}>
+            {status === 'syncing' ? 'Checking…' : status === 'ok' ? 'Connected' : 'Error'}
+          </span>
+        </div>
       </div>
 
+      {/* QR code */}
       <div className="flex justify-center">
         <div className="relative w-44 h-44 rounded-[14px] overflow-hidden p-3 border" style={{ borderColor: 'var(--line)' }}>
           <Image src={qrSrc} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
         </div>
       </div>
 
-      <div className="rounded-[10px] px-4 py-3 text-[12px] break-all" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--muted)' }}>Join link</p>
-        {joinUrl ?? <span style={{ color: 'var(--muted)' }}>Detecting network…</span>}
+      {/* Status log */}
+      <div className="rounded-[10px] px-4 py-3 text-[12px]" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}>
+        <p>{log}</p>
+        {lastChecked && (
+          <p className="mt-0.5 text-[10px]" style={{ color: 'var(--muted)' }}>
+            Last checked {lastChecked.toLocaleTimeString()}
+          </p>
+        )}
       </div>
 
-      <a
-        href={qrSrc}
-        download="event-qr.png"
-        target="_blank"
-        rel="noreferrer"
-        className="w-full py-2.5 rounded-[10px] text-[13px] font-semibold text-center flex items-center justify-center gap-2"
-        style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-        </svg>
-        Download QR
-      </a>
+      {/* Guest link — flex-1 fills remaining height */}
+      <div className="rounded-[10px] px-4 py-4 flex-1 flex flex-col justify-between" style={{ background: 'var(--bg-deep)', border: '1px solid var(--line)' }}>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--muted)' }}>Guest Link</p>
+          <p className="text-[13px] font-mono break-all leading-relaxed" style={{ color: guestUrl ? 'var(--ink)' : 'var(--muted)' }}>
+            {guestUrl ?? 'Detecting…'}
+          </p>
+        </div>
+        {ips.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+              {ips[0]}{ips.length > 1 ? ` +${ips.length - 1} more` : ''}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <a
+          href={qrSrc}
+          download="event-qr.png"
+          target="_blank"
+          rel="noreferrer"
+          className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2"
+          style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Download QR
+        </a>
+        <button
+          onClick={resync}
+          disabled={status === 'syncing'}
+          className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
+        >
+          <svg className={`w-4 h-4 ${status === 'syncing' ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+        {guestUrl && (
+          <button
+            onClick={copyLink}
+            className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2"
+            style={{ background: copied ? 'var(--good-tint)' : 'var(--bg-deep)', color: copied ? 'var(--good)' : 'var(--ink-soft)', border: '1px solid var(--line)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {copied
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              }
+            </svg>
+            Copy
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -300,15 +398,14 @@ export function AdminDashboard() {
           <StatCard title="Temp Storage" value="0 MB" accent="#f59e0b" icon={<svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <QRCard />
-          <NetworkCard />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="rounded-[14px] p-8 flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
             <div className="text-[18px] font-semibold mb-2" style={{ color: 'var(--ink)' }}>Ready for guests</div>
             <div className="text-sm max-w-xs" style={{ color: 'var(--muted)' }}>
               Share the QR code so guests can join. Activity, uploads, and recent guests will appear here once people start joining.
             </div>
           </div>
+          <QRNetworkCard />
         </div>
       </div>
     );
@@ -347,10 +444,8 @@ export function AdminDashboard() {
         } />
       </div>
 
-      {/* QR code + Network + Recent Photos */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <QRCard />
-        <NetworkCard />
+      {/* Recent Photos + QR/Network */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <div className="rounded-[14px] p-6" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
           <div className="flex items-center justify-between mb-4">
@@ -376,6 +471,7 @@ export function AdminDashboard() {
             </div>
           )}
         </div>
+        <QRNetworkCard />
       </div>
 
       {/* Recent Guests */}
