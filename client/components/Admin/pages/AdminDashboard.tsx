@@ -19,6 +19,7 @@ function timeAgo(ms: number): string {
 }
 
 function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) {
+  const [ips, setIps] = useState<string[]>([]);
   const [hotspotIp, setHotspotIp] = useState<string | null>(null);
   const [status, setStatus] = useState<SyncStatus>('syncing');
   const [copied, setCopied] = useState(false);
@@ -38,6 +39,7 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
           setStatus('error');
           setLog('No network found. Connect to Wi-Fi or a router first.');
         } else {
+          setIps(detected);
           setHotspotIp(liveIp);
           setStatus('ok');
           setLog(`Network ready. Guest link is live.`);
@@ -94,7 +96,17 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
         )}
       </div>
 
-
+      {/* Detected IPs */}
+      {ips.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {ips.map((ip) => (
+            <div key={ip} className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--good)' }} />
+              <span className="text-[13px] font-mono" style={{ color: 'var(--ink)' }}>{ip}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Guest link + copy */}
       {guestUrl && (
