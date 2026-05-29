@@ -18,18 +18,10 @@ function getLiveIp() {
 }
 
 function getEventJoinUrl(eventId) {
-  // Extract the port from CLIENT_URL (default 3000)
-  const portMatch = (config.CLIENT_URL || '').match(/:(\d+)(?:\/|$)/);
-  const clientPort = portMatch ? portMatch[1] : '3000';
-
+  const clientPort = config.CLIENT_PORT || 3000;
   const liveIp = getLiveIp();
-  if (liveIp) {
-    return `http://${liveIp}:${clientPort}/event/${encodeURIComponent(eventId)}`;
-  }
-
-  // Fallback to whatever is in .env
-  const base = (config.CLIENT_URL || 'http://localhost:3000').replace(/\/$/, '');
-  return `${base}/event/${encodeURIComponent(eventId)}`;
+  const host = liveIp || 'localhost';
+  return `http://${host}:${clientPort}/event/${encodeURIComponent(eventId)}`;
 }
 
 async function generateEventQr(eventId) {

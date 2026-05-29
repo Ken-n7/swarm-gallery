@@ -5,7 +5,7 @@ const ROOT = path.join(__dirname);
 
 module.exports = {
   PORT: parseInt(process.env.PORT, 10) || 4000,
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  CLIENT_PORT: parseInt(process.env.CLIENT_PORT, 10) || 3000,
 
   DB_PATH: path.join(ROOT, 'data', 'gallery.db'),
 

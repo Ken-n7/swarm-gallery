@@ -1,11 +1,12 @@
 import type { Photo } from '@/types';
 
 // Derive server URL from the browser's own hostname so the build works on
-// any network without rebuilding. Falls back to env / localhost for SSR.
+// any network without rebuilding. Falls back to localhost for SSR (no server
+// calls happen during static rendering, so this is never actually used).
 const SERVER =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}:4000`
-    : process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+    : 'http://localhost:4000';
 
 function adminFetch(input: string, init?: RequestInit) {
   return fetch(input, { ...init, credentials: 'include' });

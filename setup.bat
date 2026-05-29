@@ -72,6 +72,7 @@ if "%COOKIE_SECRET%"=="" set COOKIE_SECRET=swarm-change-before-event
 if not exist "server\.env" (
   (
     echo PORT=4000
+    echo CLIENT_PORT=3000
     echo ADMIN_PASSWORD=admin123
     echo COOKIE_SECRET=%COOKIE_SECRET%
   ) > server\.env
@@ -83,11 +84,10 @@ if not exist "server\.env" (
 :: Client .env.local — NEXT_PUBLIC_SERVER_URL is an SSR fallback only.
 :: At runtime the client derives the server URL from window.location.hostname,
 :: so this just needs to point to port 4000 on the same host.
+:: client/.env.local has no vars — server URL is runtime-derived.
+:: Create it as an empty marker so re-runs skip this block.
 if not exist "client\.env.local" (
-  echo NEXT_PUBLIC_SERVER_URL=http://localhost:4000> client\.env.local
-  echo         Created client\.env.local
-) else (
-  echo         client\.env.local already exists — keeping existing config.
+  echo.> client\.env.local
 )
 
 echo.
