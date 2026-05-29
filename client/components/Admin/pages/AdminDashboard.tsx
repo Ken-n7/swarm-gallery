@@ -137,10 +137,13 @@ function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) 
 }
 
 function QRCard({ liveIp }: { liveIp: string }) {
-  // Cache-bust the QR image whenever the detected IP changes.
-  // The server regenerates the QR from the live IP on every request.
-  const qrUrl = `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp || 'unknown')}`;
-  const joinUrl = liveIp ? `http://${liveIp}:3000/event/demo` : '';
+  // The server reads the live IP on every request, so the image loads
+  // immediately. liveIp is only used as a cache-bust key so the browser
+  // re-fetches when the hotspot IP actually changes.
+  const qrSrc = liveIp
+    ? `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp)}`
+    : `${SERVER}/events/demo/qr`;
+  const joinUrl = liveIp ? `http://${liveIp}:3000/event/demo` : null;
 
   return (
     <div className="rounded-[14px] p-6 flex flex-col gap-5" style={{ background: 'var(--bg)', border: '1px solid var(--line)' }}>
@@ -153,25 +156,22 @@ function QRCard({ liveIp }: { liveIp: string }) {
 
       <div className="flex justify-center">
         <div className="relative w-44 h-44 rounded-[14px] overflow-hidden p-3 border" style={{ borderColor: 'var(--line)' }}>
-          {liveIp
-            ? <Image src={qrUrl} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
-            : <div className="w-full h-full flex items-center justify-center text-[11px]" style={{ color: 'var(--muted)' }}>Detecting IP…</div>
-          }
+          <Image src={qrSrc} alt="Event QR code" fill unoptimized sizes="176px" className="object-contain p-2" />
         </div>
       </div>
 
       <div className="rounded-[10px] px-4 py-3 text-[12px] break-all" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)' }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--muted)' }}>Join link</p>
-        {joinUrl || 'Detecting network…'}
+        {joinUrl ?? <span style={{ color: 'var(--muted)' }}>Detecting network…</span>}
       </div>
 
       <a
-        href={liveIp ? qrUrl : undefined}
+        href={qrSrc}
         download="event-qr.png"
         target="_blank"
         rel="noreferrer"
         className="w-full py-2.5 rounded-[10px] text-[13px] font-semibold text-center flex items-center justify-center gap-2"
-        style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)', opacity: liveIp ? 1 : 0.4, pointerEvents: liveIp ? 'auto' : 'none' }}
+        style={{ background: 'var(--violet-tint)', color: 'var(--violet-dark)' }}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
