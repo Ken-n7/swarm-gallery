@@ -5,6 +5,10 @@
     "start":   "bash scripts/swarm-start.sh",
     "stop":    "bash scripts/swarm-stop.sh",
     "restart": "bash scripts/swarm-restart.sh",
-    "reset":   "bash scripts/swarm-reset.sh"
+    "reset":   "bash scripts/swarm-reset.sh",
+    "test:api":     "node test/api.test.mjs",
+    "test:smoke":   "node test/smoke.test.mjs",
+    "test:browser": "node test/browser.test.mjs",
+    "test":         "node test/api.test.mjs && node test/smoke.test.mjs"
   }
 }

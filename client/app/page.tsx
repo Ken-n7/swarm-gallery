@@ -40,8 +40,8 @@ export default function Home() {
           {['Scan', 'Join', 'Share'].map((label, i) => (
             <div key={label} className="flex items-center">
               <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full border-2 border-violet-400 flex items-center justify-center">
-                  <span className="text-violet-600 font-bold text-lg">{i + 1}</span>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ border: '2px solid var(--violet)', color: 'var(--violet)' }}>
+                  <span className="font-bold text-lg">{i + 1}</span>
                 </div>
                 <span className="text-sm font-semibold" style={{ color: 'var(--ink-soft)' }}>{label}</span>
               </div>
@@ -55,7 +55,7 @@ export default function Home() {
           <Link
             href="/event/demo"
             className="w-full text-white font-bold text-base py-4 rounded-2xl text-center transition-opacity active:opacity-80"
-            style={{ background: 'var(--ink)' }}
+            style={{ background: 'var(--neon-gradient)', boxShadow: '0 6px 24px rgba(124,58,237,.4)' }}
           >
             Get Started
           </Link>

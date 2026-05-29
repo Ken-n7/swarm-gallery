@@ -12,17 +12,20 @@ import { GuestSettingsContent } from '@/components/GuestSettingsContent';
 import { useUser } from '@/hooks/useUser';
 import { useGallery } from '@/hooks/useGallery';
 import { useOrientation } from '@/hooks/useOrientation';
+import { SERVER } from '@/lib/api';
 
 function GalleryView({
   username,
   userId,
   avatarUrl,
   eventId,
+  eventName,
 }: {
   username: string;
   userId: string;
   avatarUrl: string | null;
   eventId: string;
+  eventName: string;
 }) {
   const { photos, userCount } = useGallery(userId);
   const orientation = useOrientation();
@@ -64,6 +67,7 @@ function GalleryView({
         <Sidebar
           username={username}
           eventId={eventId}
+          eventName={eventName}
           userCount={userCount}
           photos={photos}
           filter={filter}
@@ -83,6 +87,7 @@ function GalleryView({
             currentUserAvatarUrl={avatarUrl}
             filter={filter}
             onFilterChange={setFilter}
+            eventName={eventName}
             hidePadBottom
           />
         </div>
@@ -100,6 +105,7 @@ function GalleryView({
       <Sidebar
         username={username}
         eventId={eventId}
+        eventName={eventName}
         userCount={userCount}
         photos={photos}
         filter={filter}
@@ -118,6 +124,7 @@ function GalleryView({
         currentUserAvatarUrl={avatarUrl}
         filter={filter}
         onFilterChange={setFilter}
+        eventName={eventName}
         onOpenSidebar={() => setSidebarOpen(true)}
       />
 
@@ -159,13 +166,21 @@ export default function EventPage() {
   const params = useParams();
   const eventId = params.id as string;
   const { user, join, joining, checking, error } = useUser();
+  const [eventName, setEventName] = useState<string>('');
+
+  useEffect(() => {
+    fetch(`${SERVER}/events/${encodeURIComponent(eventId)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.name) setEventName(data.name); })
+      .catch(() => {});
+  }, [eventId]);
 
   // Device check in flight — show nothing so join screen never flashes
   if (checking) return null;
 
   if (!user) {
-    return <JoinScreen onJoin={join} joining={joining} error={error} />;
+    return <JoinScreen eventName={eventName || undefined} onJoin={join} joining={joining} error={error} />;
   }
 
-  return <GalleryView username={user.username} userId={user.userId} avatarUrl={user.avatarUrl} eventId={eventId} />;
+  return <GalleryView username={user.username} userId={user.userId} avatarUrl={user.avatarUrl} eventId={eventId} eventName={eventName || 'Event Gallery'} />;
 }

@@ -5,6 +5,7 @@ const fs = require('fs');
 const { nanoid } = require('nanoid');
 const config = require('../config');
 const db = require('../db');
+const { validateUsername } = require('../middleware/validate');
 
 const router = express.Router();
 
@@ -66,9 +67,8 @@ router.get('/device', (req, res) => {
 router.post('/join', uploadAvatar.single('avatar'), (req, res) => {
   const { userId, deviceId, username, eventId = config.DEMO_EVENT_ID } = req.body;
 
-  if (!username?.trim()) {
-    return res.status(400).json({ error: 'Username required' });
-  }
+  const usernameErr = validateUsername(username);
+  if (usernameErr) return res.status(400).json({ error: usernameErr });
 
   // 1. Device rejoin — device is the ground truth
   if (deviceId) {
@@ -130,11 +130,15 @@ router.patch('/:id/avatar', uploadAvatar.single('avatar'), (req, res) => {
 
 // PATCH /users/:id/username — change nickname
 router.patch('/:id/username', (req, res) => {
-  const { username, eventId = config.DEMO_EVENT_ID } = req.body;
-  if (!username?.trim()) return res.status(400).json({ error: 'Username required' });
+  const { username } = req.body;
+  const renameErr = validateUsername(username);
+  if (renameErr) return res.status(400).json({ error: renameErr });
 
   const user = getUserById.get(req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // Always use the DB-authoritative event_id, never trust client-supplied value
+  const eventId = user.event_id;
 
   const trimmed = username.trim();
   if (trimmed === user.username) return res.json({ username: trimmed });

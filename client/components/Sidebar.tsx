@@ -7,6 +7,7 @@ import { GalleryFilter } from './Gallery';
 interface Props {
   username: string;
   eventId: string;
+  eventName?: string;
   userCount: number;
   photos: Photo[];
   filter: GalleryFilter;
@@ -59,7 +60,7 @@ function StatPill({ value, label }: { value: string | number; label: string }) {
 }
 
 function SidebarContent({
-  username, userCount, photos, filter, onFilterChange, onOpenSettings, onLeave, onClose, compact = false,
+  username, eventName = 'Event Gallery', userCount, photos, filter, onFilterChange, onOpenSettings, onLeave, onClose, compact = false,
 }: Omit<Props, 'open'>) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -126,7 +127,7 @@ function SidebarContent({
           />
           <span className="text-[11px] font-bold tracking-wide" style={{ color: '#4ade80' }}>LIVE</span>
         </div>
-        <p className="text-white font-bold text-[14px] leading-tight mb-3">Event Gallery</p>
+        <p className="text-white font-bold text-[14px] leading-tight mb-3">{eventName}</p>
         <div className="grid grid-cols-2 gap-1.5">
           <StatPill value={photos.length} label="Photos" />
           <StatPill value={userCount || '—'} label="Guests" />

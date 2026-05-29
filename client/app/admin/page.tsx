@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { checkAdmin, getAdminStats } from '@/lib/api';
+import { SERVER, checkAdmin, getAdminStats } from '@/lib/api';
 import { AdminLayout } from '@/components/Admin/AdminLayout';
 import { AdminLoginForm } from '@/components/Admin/AdminLoginForm';
 import type { AdminStats } from '@/components/Admin/shared/AdminShared';
@@ -16,19 +16,23 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [eventName, setEventName] = useState('Demo Event');
 
   useEffect(() => {
     let cancelled = false;
 
     const refreshStats = () => {
-      getAdminStats()
-        .then((data) => {
-          if (!cancelled) {
-            setStats(data);
-            setStatsUpdatedAt(Date.now());
-          }
-        })
-        .catch(() => {});
+      Promise.all([
+        getAdminStats(),
+        // Fetch event name without requiring admin auth — just needs the event to exist
+        fetch(`${SERVER}/events/demo`).then((r) => r.ok ? r.json() : null).catch(() => null),
+      ]).then(([data, eventData]) => {
+        if (!cancelled) {
+          setStats(data);
+          setStatsUpdatedAt(Date.now());
+          if (eventData?.name) setEventName(eventData.name);
+        }
+      }).catch(() => {});
     };
 
     refreshStats();
@@ -102,6 +106,7 @@ export default function AdminPage() {
       subtitle={getPageSubtitle(currentPage)}
       activeGuests={stats?.activeGuests || 0}
       photoCount={stats?.photoCount || 0}
+      eventName={eventName}
       lastSyncedAt={statsUpdatedAt}
     >
       {renderContent()}

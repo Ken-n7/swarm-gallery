@@ -4,7 +4,7 @@ const path = require('path');
 const ROOT = path.join(__dirname);
 
 module.exports = {
-  PORT: process.env.PORT || 4000,
+  PORT: parseInt(process.env.PORT, 10) || 4000,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
 
   DB_PATH: path.join(ROOT, 'data', 'gallery.db'),

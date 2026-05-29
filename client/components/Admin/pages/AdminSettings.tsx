@@ -7,6 +7,7 @@ import {
   deleteAdminEventMedia,
   deleteAdminEventRecord,
   getAdminEventSettings,
+  getNetworkInfo,
   markAdminHandoffComplete,
   prepareAdminEventExport,
   saveAdminEventSettings,
@@ -15,7 +16,6 @@ import { FormRow } from '@/components/Admin/shared/AdminShared';
 
 export function AdminSettings() {
   const [eventName, setEventName] = useState('Demo Event');
-  const [organizerName, setOrganizerName] = useState('Swarm Gallery');
   const [eventDate, setEventDate] = useState('2026-05-05');
   const [eventType, setEventType] = useState('Corporate / Conference');
   const [expectedGuests, setExpectedGuests] = useState('300');
@@ -39,21 +39,57 @@ export function AdminSettings() {
     deleteMedia: 'idle',
     deleteEvent: 'idle',
   });
+  const [liveIp, setLiveIp] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Saved-state snapshot — Discard restores to these, not compile-time defaults
+  const [savedState, setSavedState] = useState({
+    eventName: 'Demo Event',
+    eventDate: '2026-05-05',
+    eventType: 'Corporate / Conference',
+    expectedGuests: '300',
+    retentionPolicy: 'Until handoff',
+    storageWarning: '80',
+  });
+
   const storagePercent = (storageUsed / storageTotal) * 100;
-  const qrUrl = `${SERVER}/events/demo/qr`;
-  const joinUrl = typeof window === 'undefined' ? '' : `${window.location.origin}/event/demo`;
+  // Cache-bust QR with liveIp so browser refetches when IP changes
+  const qrUrl = liveIp
+    ? `${SERVER}/events/demo/qr?ip=${encodeURIComponent(liveIp)}`
+    : `${SERVER}/events/demo/qr`;
+  // Use hotspot IP for the join link — localhost is wrong for guests
+  const joinUrl = liveIp ? `http://${liveIp}:3000/event/demo` : null;
+
+  // Fetch hotspot IP every 10 s
+  useEffect(() => {
+    function refreshIp() {
+      getNetworkInfo()
+        .then(({ liveIp: ip }) => { if (ip) setLiveIp(ip); })
+        .catch(() => {});
+    }
+    refreshIp();
+    const id = window.setInterval(refreshIp, 10_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     getAdminEventSettings('demo')
       .then((data) => {
-        setEventName(data.name || 'Demo Event');
-        setOrganizerName(data.organizerName || 'Swarm Gallery');
-        setEventDate(data.eventDate || '2026-05-05');
-        setEventType(data.eventType || 'Corporate / Conference');
-        setExpectedGuests(String(data.expectedGuests || 300));
-        setRetentionPolicy(data.retentionPolicy || 'Until handoff');
-        setStorageWarning(String(data.storageWarning || 80));
+        const snap = {
+          eventName: data.name || 'Demo Event',
+          eventDate: data.eventDate || '2026-05-05',
+          eventType: data.eventType || 'Corporate / Conference',
+          expectedGuests: String(data.expectedGuests || 300),
+          retentionPolicy: data.retentionPolicy || 'Until handoff',
+          storageWarning: String(data.storageWarning || 80),
+        };
+        setSavedState(snap);
+        setEventName(snap.eventName);
+        setEventDate(snap.eventDate);
+        setEventType(snap.eventType);
+        setExpectedGuests(snap.expectedGuests);
+        setRetentionPolicy(snap.retentionPolicy);
+        setStorageWarning(snap.storageWarning);
         setStorageUsed(data.storageUsed || 0);
         setWorkflow({
           handoffPrepared: !!data.handoffPreparedAt,
@@ -74,12 +110,16 @@ export function AdminSettings() {
   ) => setActionState((current) => ({ ...current, [action]: next }));
 
   const handleSave = () => {
+    if (!eventName.trim()) {
+      setNotice({ tone: 'warning', message: 'Event name cannot be empty.' });
+      return;
+    }
     setSaveState('saving');
     setNotice(null);
     saveAdminEventSettings({
       eventId: 'demo',
       name: eventName,
-      organizerName,
+      organizerName: 'K3DP Events',
       eventDate,
       eventType,
       expectedGuests,
@@ -94,6 +134,15 @@ export function AdminSettings() {
           mediaDeleted: !!data.mediaDeletedAt,
           eventClosed: !!data.closedAt,
         });
+        // Update saved snapshot so Discard restores to these values
+        setSavedState({
+          eventName,
+          eventDate,
+          eventType,
+          expectedGuests,
+          retentionPolicy,
+          storageWarning,
+        });
         setHasChanges(false);
         setSaveState('saved');
         setNotice({ tone: 'success', message: 'Event settings saved to the server.' });
@@ -105,13 +154,13 @@ export function AdminSettings() {
   };
 
   const handleDiscard = () => {
-    setEventName('Demo Event');
-    setOrganizerName('Swarm Gallery');
-    setEventDate('2026-05-05');
-    setEventType('Corporate / Conference');
-    setExpectedGuests('300');
-    setRetentionPolicy('Until handoff');
-    setStorageWarning('80');
+    // Restore to last-saved server values, not compile-time defaults
+    setEventName(savedState.eventName);
+    setEventDate(savedState.eventDate);
+    setEventType(savedState.eventType);
+    setExpectedGuests(savedState.expectedGuests);
+    setRetentionPolicy(savedState.retentionPolicy);
+    setStorageWarning(savedState.storageWarning);
     setHasChanges(false);
     setSaveState('idle');
     setNotice({ tone: 'warning', message: 'Unsaved settings were discarded.' });
@@ -234,10 +283,10 @@ export function AdminSettings() {
               </div>
               <div className="p-6 space-y-6">
                 <FormRow label="Event name" sub="Displayed to guests when they join the gallery.">
-                  <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
+                  <input type="text" value={eventName} onChange={(e) => { setEventName(e.target.value); setHasChanges(true); }} required maxLength={80} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                 </FormRow>
-                <FormRow label="Organizer name" sub="Shown on the join screen as the host.">
-                  <input type="text" value={organizerName} onChange={(e) => { setOrganizerName(e.target.value); setHasChanges(true); }} className="w-full md:w-60 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
+                <FormRow label="Organizer" sub="Fixed organizer name shown on the join screen.">
+                  <span className="px-3 py-2 rounded-lg text-sm font-semibold" style={{ background: 'var(--bg-deep)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}>K3DP Events</span>
                 </FormRow>
                 <FormRow label="Event date" sub="For display and record-keeping.">
                   <input type="date" value={eventDate} onChange={(e) => { setEventDate(e.target.value); setHasChanges(true); }} className="w-full md:w-40 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
@@ -309,7 +358,7 @@ export function AdminSettings() {
                     </FormRow>
                     <FormRow label="Storage warning" sub="Alert the team when temporary event storage is nearing capacity before export.">
                       <div className="flex items-center gap-2">
-                        <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} className="w-16 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
+                        <input type="number" value={storageWarning} onChange={(e) => { setStorageWarning(e.target.value); setHasChanges(true); }} min={1} max={100} className="w-16 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" style={{ border: '1px solid var(--line)', background: 'var(--bg-soft)', color: 'var(--ink)' }} />
                         <span className="text-sm" style={{ color: 'var(--muted)' }}>%</span>
                       </div>
                     </FormRow>

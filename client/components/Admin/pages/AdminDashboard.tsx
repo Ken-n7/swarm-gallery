@@ -7,29 +7,43 @@ import { AdminImage, GuestAvatar, type AdminGuest, type AdminPhoto, type AdminSt
 
 type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error';
 
+function timeAgo(ms: number): string {
+  const diff = Date.now() - ms;
+  const s = Math.floor(diff / 1000);
+  if (s < 60)  return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60)  return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 function NetworkCard({ onIpDetected }: { onIpDetected?: (ip: string) => void }) {
   const [ips, setIps] = useState<string[]>([]);
+  const [hotspotIp, setHotspotIp] = useState<string | null>(null);
   const [status, setStatus] = useState<SyncStatus>('syncing');
   const [copied, setCopied] = useState(false);
   const [log, setLog] = useState('Detecting network…');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
-  const guestUrl = ips[0] ? `http://${ips[0]}:3000/event/demo` : null;
+  // Use the hotspot-preferred liveIp for the guest link, not ips[0] (arbitrary order)
+  const guestUrl = hotspotIp ? `http://${hotspotIp}:3000/event/demo` : null;
 
   function resync() {
     setStatus('syncing');
     setLog('Detecting network…');
     getNetworkInfo()
-      .then(({ ips: detected }) => {
+      .then(({ ips: detected, liveIp }) => {
         setLastChecked(new Date());
         if (!detected.length) {
           setStatus('error');
           setLog('No network found. Connect to Wi-Fi or a router first.');
         } else {
           setIps(detected);
+          setHotspotIp(liveIp);
           setStatus('ok');
           setLog(`Network ready. Guest link is live.`);
-          if (detected[0]) onIpDetected?.(detected[0]);
+          if (liveIp) onIpDetected?.(liveIp);
         }
       })
       .catch(() => {
@@ -381,7 +395,7 @@ export function AdminDashboard() {
                 </div>
               ))}
             </div>
-            {recentGuests.map((guest, index) => {
+            {recentGuests.map((guest) => {
               const status = (guest.status as GuestStatus) ?? 'Left event';
               const isNewest = guest.id === newestGuestId;
               return (
@@ -394,13 +408,13 @@ export function AdminDashboard() {
                           <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</span>
                           {isNewest && <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'var(--violet)', color: 'white', letterSpacing: '0.04em' }}>NEW</span>}
                         </div>
-                        <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{index + 2}m ago</div>
+                        <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{timeAgo(guest.joinedAt)}</div>
                       </div>
                     </div>
                     <div className="text-[12px]" style={{ color: 'var(--muted)' }}>{new Date(guest.joinedAt).toLocaleDateString()}</div>
                     <div className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>{guest.photoCount}</div>
                     <div><StatusBadge status={status} /></div>
-                    <div className="text-[11px] font-semibold" style={{ color: 'var(--muted)' }}>Summary</div>
+                    <div />
                   </div>
 
                   <div className="xl:hidden px-[18px] py-4 space-y-3">
@@ -409,7 +423,7 @@ export function AdminDashboard() {
                         <GuestAvatar guest={guest} size="md" />
                         <div className="min-w-0">
                           <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--ink)' }}>{guest.username}</div>
-                          <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{index + 2}m ago</div>
+                          <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{timeAgo(guest.joinedAt)}</div>
                         </div>
                       </div>
                       <StatusBadge status={status} />
@@ -424,7 +438,6 @@ export function AdminDashboard() {
                         <div className="text-[12px] font-semibold" style={{ color: 'var(--ink)' }}>{guest.photoCount}</div>
                       </div>
                     </div>
-                    <div className="text-[12px] font-semibold" style={{ color: 'var(--muted)' }}>Summary</div>
                   </div>
                 </div>
               );

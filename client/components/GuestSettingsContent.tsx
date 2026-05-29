@@ -159,6 +159,10 @@ export function GuestSettingsContent({
       setEditingName(false);
       return;
     }
+    if (trimmed.length < 2) {
+      setNameError('Use at least 2 characters');
+      return;
+    }
     setNameError('');
     try {
       await rename(trimmed);

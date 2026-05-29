@@ -63,9 +63,10 @@ interface AdminSidebarProps {
   onClose?: () => void;
   photoCount?: number;
   activeGuests?: number;
+  eventName?: string;
 }
 
-export function AdminSidebar({ currentPage, onPageChange, onClose, photoCount = 0, activeGuests = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ currentPage, onPageChange, onClose, photoCount = 0, activeGuests = 0, eventName = 'Demo Event' }: AdminSidebarProps) {
   const bg = 'linear-gradient(180deg, #1a0f3a 0%, #120d2a 40%, #0f0d1f 100%)';
 
   return (
@@ -119,7 +120,7 @@ export function AdminSidebar({ currentPage, onPageChange, onClose, photoCount = 
           </span>
           <span className="text-[11px] font-bold tracking-wide" style={{ color: '#4ade80' }}>LIVE</span>
         </div>
-        <p className="text-white font-bold text-[14px] leading-tight mb-3">Demo Event</p>
+        <p className="text-white font-bold text-[14px] leading-tight mb-3">{eventName}</p>
         <div className="grid grid-cols-2 gap-1.5">
           <StatPill value={photoCount} label="Photos" />
           <StatPill value={activeGuests > 0 ? activeGuests : '—'} label="Active" />

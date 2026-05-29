@@ -5,6 +5,8 @@ const archiver = require('archiver');
 const config = require('../config');
 const db = require('../db');
 const { requireAdmin } = require('../middleware/auth');
+const { loginRateLimit, clearLoginAttempts } = require('../middleware/rateLimit');
+const { validateEventName, validateStorageWarning, validateExpectedGuests } = require('../middleware/validate');
 const { liveGuestCount, connectedUserIds } = require('../liveCount');
 
 const router = express.Router();
@@ -89,7 +91,7 @@ function eventStateResponse(eventId) {
   return {
     id: event.id,
     name: event.name,
-    organizerName: event.organizer_name || 'Swarm Gallery',
+    organizerName: event.organizer_name || 'K3DP Events',
     eventDate: event.event_date || new Date().toISOString().slice(0, 10),
     eventType: event.event_type || 'Corporate / Conference',
     expectedGuests: event.expected_guests || 300,
@@ -142,11 +144,13 @@ function mapGuestRow(row, eventId) {
   };
 }
 
-router.post('/login', (req, res) => {
+router.post('/login', loginRateLimit, (req, res) => {
   const { password } = req.body;
   if (!password || password !== config.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Wrong password' });
   }
+  // Clear the attempt counter on success so a legitimate user isn't locked out
+  clearLoginAttempts(req._rateLimitIp);
   res.cookie('admin', 'true', COOKIE_OPTS);
   res.json({ ok: true });
 });
@@ -513,7 +517,13 @@ router.patch('/event-settings', requireAdmin, (req, res) => {
     storageWarning,
   } = req.body;
 
-  db.prepare('UPDATE events SET name = ? WHERE id = ?').run(name || event.name, eventId);
+  const nameErr     = validateEventName(name);
+  const warningErr  = validateStorageWarning(storageWarning);
+  const guestsErr   = validateExpectedGuests(expectedGuests);
+  const firstErr    = nameErr || warningErr || guestsErr;
+  if (firstErr) return res.status(400).json({ error: firstErr });
+
+  db.prepare('UPDATE events SET name = ? WHERE id = ?').run(name?.trim() || event.name, eventId);
   upsertEventSettings.run({
     event_id: eventId,
     organizer_name: organizerName || null,

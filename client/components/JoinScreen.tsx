@@ -83,7 +83,7 @@ export function JoinScreen({ eventName = 'Swarm Gallery Event', guestCount, onJo
         <div className="text-center">
           <p className="text-sm mb-1" style={{ color: 'var(--muted)' }}>Welcome to</p>
           <h1 className="text-3xl font-black leading-tight" style={{ color: 'var(--ink)' }}>{eventName}</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Swarm Gallery · Offline event</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>K3DP Events · Offline event</p>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2">

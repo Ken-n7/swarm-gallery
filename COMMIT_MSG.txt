@@ -1,0 +1,16 @@
+fix: server fixes, admin UI corrections, full test suites
+
+Server:
+- config: parseInt PORT so type===number
+- users: username PATCH uses DB-authoritative event_id
+
+Client:
+- AdminDashboard: real timeAgo(), hotspotIp from liveIp, rm fake labels
+- AdminSettings: live IP poll, joinUrl/QR use liveIp, savedState discard
+
+Tests:
+- api.test.mjs: 147 assertions covering all routes
+- smoke.test.mjs: 47 HTTP checks (pages, PWA, assets, CORS)
+- browser.test.mjs: Playwright E2E (join, admin, mobile, PWA)
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
