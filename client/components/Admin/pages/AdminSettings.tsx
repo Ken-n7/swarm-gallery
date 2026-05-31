@@ -474,14 +474,27 @@ export function AdminSettings() {
         </div>
       </div>
 
-      {hasChanges && (
-        <div className="px-6 py-4 flex justify-end gap-3" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
-          <button onClick={handleDiscard} className="px-4 py-2 rounded-lg" style={{ border: '1px solid var(--line)', color: 'var(--muted)', background: 'var(--bg-soft)' }}>Discard</button>
-          <button onClick={handleSave} disabled={saveState === 'saving'} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-60">
-            {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : 'Save Changes'}
-          </button>
-        </div>
-      )}
+      <div className="px-6 py-4 flex items-center justify-end gap-3" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
+        {hasChanges && (
+          <span className="text-[12px] mr-auto" style={{ color: 'var(--muted)' }}>You have unsaved changes</span>
+        )}
+        <button
+          onClick={handleDiscard}
+          disabled={!hasChanges}
+          className="px-4 py-2 rounded-lg text-sm transition-opacity"
+          style={{ border: '1px solid var(--line)', color: 'var(--muted)', background: 'var(--bg-soft)', opacity: hasChanges ? 1 : 0.35 }}
+        >
+          Discard
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges || saveState === 'saving'}
+          className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity"
+          style={{ background: 'var(--violet)', opacity: hasChanges ? 1 : 0.35 }}
+        >
+          {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save Changes'}
+        </button>
+      </div>
       </>
       )}
     </div>
