@@ -69,7 +69,7 @@ echo.
 
 :: [1/4] Server packages
 powershell -NoProfile -Command "Write-Host '  [1/4]  Server packages' -ForegroundColor DarkCyan"
-powershell -NoProfile -File "%TOOLS%\run.ps1" -Msg "npm install (server)" -Cmd "npm install --prefer-offline" -Dir "%~dp0server" -Log "%LOG%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\run.ps1" -Msg "npm install (server)" -Cmd "npm install --prefer-offline" -Dir "%~dp0server" -Log "%LOG%"
 if %errorlevel% neq 0 (
     echo.
     powershell -NoProfile -Command "if(Test-Path '%LOG%'){Get-Content '%LOG%' | Select-Object -Last 20}"
@@ -80,7 +80,7 @@ echo.
 
 :: [2/4] Client packages
 powershell -NoProfile -Command "Write-Host '  [2/4]  Client packages' -ForegroundColor DarkCyan"
-powershell -NoProfile -File "%TOOLS%\run.ps1" -Msg "npm install (client)" -Cmd "npm install --prefer-offline" -Dir "%~dp0client" -Log "%LOG%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\run.ps1" -Msg "npm install (client)" -Cmd "npm install --prefer-offline" -Dir "%~dp0client" -Log "%LOG%"
 if %errorlevel% neq 0 (
     echo.
     powershell -NoProfile -Command "if(Test-Path '%LOG%'){Get-Content '%LOG%' | Select-Object -Last 20}"
@@ -113,7 +113,7 @@ echo.
 
 :: [4/4] Build
 powershell -NoProfile -Command "Write-Host '  [4/4]  Building the app  (slowest step - 1-2 min)' -ForegroundColor DarkCyan"
-powershell -NoProfile -File "%TOOLS%\run.ps1" -Msg "next build" -Cmd "npm run build" -Dir "%~dp0client" -Log "%LOG%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\run.ps1" -Msg "next build" -Cmd "npm run build" -Dir "%~dp0client" -Log "%LOG%"
 if %errorlevel% neq 0 (
     echo.
     powershell -NoProfile -Command "if(Test-Path '%LOG%'){Get-Content '%LOG%' | Select-Object -Last 20}"

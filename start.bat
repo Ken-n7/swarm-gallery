@@ -53,10 +53,10 @@ goto :launch
 :: [1/2] Server
 powershell -NoProfile -Command "Write-Host '  [1/2]  Server' -ForegroundColor DarkCyan"
 
-powershell -NoProfile -File "%TOOLS%\kill-port.ps1" -Port 4000
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\kill-port.ps1" -Port 4000
 
 powershell -NoProfile -Command "Write-Host '   ~    Launching server...' -ForegroundColor DarkGray"
-powershell -NoProfile -File "%TOOLS%\launch.ps1" -Bin "index.js" -Dir "%~dp0server" -StdOut "%~dp0logs\server.log" -StdErr "%~dp0logs\server-err.log" -PidFile "%TEMP%\swarm-server.pid"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\launch.ps1" -Bin "index.js" -Dir "%~dp0server" -StdOut "%~dp0logs\server.log" -StdErr "%~dp0logs\server-err.log" -PidFile "%TEMP%\swarm-server.pid"
 set /p SERVER_PID=<"%TEMP%\swarm-server.pid"
 del "%TEMP%\swarm-server.pid" >nul 2>&1
 
@@ -66,7 +66,7 @@ if not defined SERVER_PID (
     pause & exit /b 1
 )
 
-powershell -NoProfile -File "%TOOLS%\wait-port.ps1" -Msg "Server (pid %SERVER_PID%)" -Port 4000 -MaxWait 30
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\wait-port.ps1" -Msg "Server (pid %SERVER_PID%)" -Port 4000 -MaxWait 30
 if %errorlevel% neq 0 (
     powershell -NoProfile -Command "Write-Host '   [!]  Server did not come up - last log lines:' -ForegroundColor Red"
     powershell -NoProfile -Command "if(Test-Path 'logs\server-err.log'){Get-Content 'logs\server-err.log' | Select-Object -Last 10 | ForEach-Object { Write-Host '        '$_ -ForegroundColor DarkGray }}"
@@ -77,10 +77,10 @@ if %errorlevel% neq 0 (
 :: [2/2] Client
 powershell -NoProfile -Command "Write-Host '  [2/2]  Client' -ForegroundColor DarkCyan"
 
-powershell -NoProfile -File "%TOOLS%\kill-port.ps1" -Port 3000
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\kill-port.ps1" -Port 3000
 
 powershell -NoProfile -Command "Write-Host '   ~    Launching client...' -ForegroundColor DarkGray"
-powershell -NoProfile -File "%TOOLS%\launch.ps1" -Bin "node_modules\next\dist\bin\next start" -Dir "%~dp0client" -StdOut "%~dp0logs\client.log" -StdErr "%~dp0logs\client-err.log" -PidFile "%TEMP%\swarm-client.pid"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\launch.ps1" -Bin "node_modules\next\dist\bin\next start" -Dir "%~dp0client" -StdOut "%~dp0logs\client.log" -StdErr "%~dp0logs\client-err.log" -PidFile "%TEMP%\swarm-client.pid"
 set /p CLIENT_PID=<"%TEMP%\swarm-client.pid"
 del "%TEMP%\swarm-client.pid" >nul 2>&1
 
@@ -90,7 +90,7 @@ if not defined CLIENT_PID (
     pause & exit /b 1
 )
 
-powershell -NoProfile -File "%TOOLS%\wait-port.ps1" -Msg "Client (pid %CLIENT_PID%)" -Port 3000 -MaxWait 30
+powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\wait-port.ps1" -Msg "Client (pid %CLIENT_PID%)" -Port 3000 -MaxWait 30
 if %errorlevel% neq 0 (
     powershell -NoProfile -Command "Write-Host '   [!]  Client did not come up - last log lines:' -ForegroundColor Red"
     powershell -NoProfile -Command "if(Test-Path 'logs\client-err.log'){Get-Content 'logs\client-err.log' | Select-Object -Last 10 | ForEach-Object { Write-Host '        '$_ -ForegroundColor DarkGray }}"
@@ -106,7 +106,7 @@ for /f "tokens=2 delims==" %%p in ('findstr /i "ADMIN_PASSWORD" server\.env 2^>n
 
 :: Detect guest URL
 set GUEST_URL=http://localhost:3000/event/demo
-for /f "tokens=*" %%u in ('powershell -NoProfile -File "%TOOLS%\get-guest-url.ps1"') do (
+for /f "tokens=*" %%u in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%TOOLS%\get-guest-url.ps1"') do (
   if not "%%u"=="" set GUEST_URL=%%u
 )
 
