@@ -16,7 +16,7 @@ At the end of the event, all photos are packaged and handed off to the client, t
 swarm-gallery/
   client/        ← Next.js frontend
   server/        ← Node.js/Express backend
-  CLAUDE.md      ← this file
+  ARCHITECTURE.md ← this file
   .gitignore
   README.md
 ```
@@ -264,17 +264,23 @@ Three screens exist:
 | 4 | SQLite setup | ✅ Done |
 | 5 | Admin auth | ✅ Done |
 | 6 | User identity (join screen, avatars, localStorage) | ✅ Done |
-| 7 | Multi-event management | ⏭ Skipped — single hardcoded event sufficient for now |
+| 7 | Multi-event management | ⏭ Skipped — single hardcoded `demo` event is enough for now |
 | 8 | Guest UI from Figma | ✅ Done |
-| 9 | Admin dashboard from Figma | 🔲 TODO |
-| 10 | Rate limiting + upload queue | 🔲 TODO |
-| 11 | Photo cleanup + expiry | 🔲 TODO |
-| 12 | mDNS + network resilience | 🔲 TODO |
+| 9 | Admin dashboard from Figma | ✅ Done |
+| 10 | Rate limiting + upload queue | ✅ Done |
+| 11 | Photo cleanup + expiry | ✅ Done |
+| 12 | mDNS + network resilience | 🔲 TODO — `bonjour-service` is a dependency but not wired up |
 | 13 | End-of-event handoff (ZIP + local export + server wipe) | 🔲 TODO |
-| 14 | Photo flagging | 🔲 TODO |
+| 14 | Photo flagging | ✅ Done |
 | 15 | Polish + event readiness | 🔲 TODO |
 
-**Current status: Phases 1–6 done. Phase 7 skipped. Phase 8 done. Starting Phase 9 (admin dashboard from Figma).**
+Also shipped, beyond the original plan: likes, video uploads with generated
+thumbnails, per-user album export, and the face-blur workflow.
+
+**Current status:** the core loop and everything around it works — join, upload,
+live gallery, identity, admin. What is left is multi-event support, mDNS
+discovery, and the end-of-event handoff and wipe. Not hardened for production:
+change the default admin password and cookie secret before a real event.
 
 ---
 
@@ -296,10 +302,8 @@ Three screens exist:
 
 ## Environment
 
-- Developer machine: Ubuntu 24, IdeaPad Slim 3
-- Node: v24.15.0 (LTS "Krypton"), npm: v11.12.1 (via nvm)
-- Client deployment target: Windows laptop
-- SSH key configured for GitHub
+- Server: Node 24, CommonJS, no build step
+- Client deployment target: a Windows laptop; development on Linux
 
 ---
 

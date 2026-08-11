@@ -130,7 +130,7 @@ swarm-gallery/
 ├── test/                   # api / smoke / browser test scripts
 ├── docs/                   # RUNBOOK, OPERATIONS, TESTING
 ├── start.bat / setup.bat   # one-click Windows launcher + setup
-└── CLAUDE.md               # detailed project design context
+└── ARCHITECTURE.md         # detailed project design context
 ```
 
 ---
@@ -263,7 +263,7 @@ See `docs/TESTING.md` for the verified baseline and manual verification steps.
 
 ## Documentation
 
-- **`CLAUDE.md`** — full project design context: goals, network architecture, roadmap, and key decisions.
+- **`ARCHITECTURE.md`** — full project design context: goals, network architecture, roadmap, and key decisions.
 - **`docs/RUNBOOK.md`** — operational runbook: quick start, command reference, logs, pre-event checklist.
 - **`docs/OPERATIONS.md`** — admin operations and the event closeout flow.
 - **`docs/TESTING.md`** — testing guide and known setup gotchas.
@@ -272,4 +272,4 @@ See `docs/TESTING.md` for the verified baseline and manual verification steps.
 
 ## Project status
 
-Actively **in development**. The core real-time sharing loop (join → upload → live gallery), guest identity/avatars, likes, video support with thumbnails, per-user album export, admin auth/dashboard, and the face-blur workflow are implemented. The current build targets a single hardcoded `demo` event; multi-event management and the full end-of-event handoff/wipe are on the roadmap (see `CLAUDE.md`). Not yet hardened for production — change the default admin password and cookie secret before any real event.
+Actively **in development**. The core real-time sharing loop (join → upload → live gallery), guest identity/avatars, likes, video support with thumbnails, per-user album export, admin auth/dashboard, and the face-blur workflow are implemented. The current build targets a single hardcoded `demo` event; multi-event management and the full end-of-event handoff/wipe are on the roadmap (see `ARCHITECTURE.md`). Not yet hardened for production — change the default admin password and cookie secret before any real event.
